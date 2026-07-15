@@ -17,6 +17,7 @@ import { renderPlaceCard, renderNoData } from "./infocard";
 import { getCurrentLocation } from "./geolocation";
 import { renderAttribution, renderPrivacy } from "./attribution";
 import { readAllowedParams } from "./urlparams";
+import { handleHistoricalBackgroundClick } from "./map-click";
 import {
   eraRegistry,
   isVisualLayerEnabled,
@@ -242,10 +243,11 @@ function main(): void {
 
   // 何もない場所のクリック: データなし表示(マーカークリックはイベントが止まる)
   map.on("click", () => {
-    if (!infoCard.hidden) return;
-    if (eraRegistry.get(eraSelect.value)?.placeDatasetId) {
-      renderNoData(infoCard, map.getContainer());
-    }
+    handleHistoricalBackgroundClick(
+      infoCard,
+      Boolean(eraRegistry.get(eraSelect.value)?.placeDatasetId),
+      () => renderNoData(infoCard, map.getContainer()),
+    );
   });
 
   // --- 現在地 ---

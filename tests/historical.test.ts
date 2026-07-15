@@ -56,6 +56,7 @@ describe("createHistoricalLayer", () => {
     const marker = layer.layer.getLayers()[0] as L.CircleMarker;
     expect(marker.options.pane).toBe(HISTORICAL_PANE);
     expect(marker.options.interactive).toBe(true);
+    expect(marker.options.bubblingMouseEvents).toBe(false);
     expect(marker.options.color).toBe(categoryStyle("屋敷地").color);
     expect(marker.options.dashArray).toBe(categoryStyle("屋敷地").dashArray);
     marker.fire("click");

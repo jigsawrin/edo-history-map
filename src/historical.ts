@@ -55,6 +55,8 @@ export function createHistoricalLayer(
       opacity: 0.9,
       pane: HISTORICAL_PANE,
       interactive: true,
+      // Canvas上の地点選択を地図の空白クリック処理へ伝播させない。
+      bubblingMouseEvents: false,
       // スクリーンリーダー・キーボード用: マーカーにフォーカス可能な代替は
       // Leaflet の CircleMarker では限定的なため、情報カード側で補完する
     });
