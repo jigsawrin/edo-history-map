@@ -1,15 +1,13 @@
 import L from "leaflet";
 import type { PlaceFeature } from "./validate";
+import { MAP_PANES } from "./leaflet-layers";
 
 /**
  * 歴史レイヤー(江戸後期の地名ポイント)。
  * 分類ごとに色と枠線スタイルを変える(色だけに依存しない: 枠線の実線/破線でも区別し、
  * 情報カードに分類名を文字で表示する)。
  *
- * 将来の古地図画像レイヤー:
- * addHistoricalImageLayer() は設計上のフックとして用意しているが、
- * 権利確認済み(DATA_SOURCES.yml で review_status: approved)の画像が存在しないため、
- * 現在は常に無効(null を返す)。
+ * 古地図画像の権利ゲートは historical-raster.ts に分離している。
  */
 
 interface CategoryStyle {
@@ -28,7 +26,7 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
 const DEFAULT_STYLE: CategoryStyle = { color: "#5d4037", dashArray: "4 3" };
 
 /** 歴史地点だけを描画する Leaflet pane。現在地などの通常レイヤーとは分離する。 */
-export const HISTORICAL_PANE = "historical-points";
+export const HISTORICAL_PANE = MAP_PANES.historicalPoints;
 
 export function categoryStyle(category: string): CategoryStyle {
   return CATEGORY_STYLES[category] ?? DEFAULT_STYLE;
@@ -77,10 +75,4 @@ export function createHistoricalLayer(
   };
 }
 
-/**
- * 古地図画像レイヤー(無効)。
- * 権利確認済み画像が DATA_SOURCES.yml に approved で登録されるまで、常に null。
- */
-export function addHistoricalImageLayer(): null {
-  return null;
-}
+export { addHistoricalImageLayer } from "./historical-raster";

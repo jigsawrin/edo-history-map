@@ -18,6 +18,7 @@ import {
   readdirSync,
 } from "node:fs";
 import { join, relative, extname } from "node:path";
+import { createHash } from "node:crypto";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -257,12 +258,13 @@ for (const f of allFiles) {
 // ---- 2. DATA_SOURCES.yml の検査 --------------------------------------------
 
 const dsPath = join(ROOT, "DATA_SOURCES.yml");
+const approvedFiles = new Set();
+const approvedRasterFiles = new Set();
 if (!existsSync(dsPath)) {
   addFinding("error", "ライセンス台帳", "DATA_SOURCES.yml", 0, "台帳がありません");
 } else {
   const ds = readFileSync(dsPath, "utf8");
   const entries = ds.split(P("\\n  - id: ")).slice(1);
-  const approvedFiles = new Set();
   for (const entry of entries) {
     const id = entry.split("\n")[0].trim();
     const statusMatch = entry.match(new RegExp("review_status:\\s*(\\w+)"));
@@ -270,6 +272,86 @@ if (!existsSync(dsPath)) {
     const files = [...entry.matchAll(P("^\\s+- (public/[^\\s]+)$", "gm"))].map((m) => m[1]);
     if (status === "approved") {
       files.forEach((f) => approvedFiles.add(f));
+      const assetType = entry.match(P("^\\s+asset_type:\\s*(\\S+)", "m"))?.[1];
+      if (assetType === "historical-raster") {
+        const requiredTrueFields = [
+          "redistribution_allowed",
+          "modification_allowed",
+          "cropping_allowed",
+          "georeferencing_allowed",
+          "tiling_allowed",
+        ];
+        for (const field of requiredTrueFields) {
+          if (!P(`^\\s+${field}:\\s*true\\s*$`, "m").test(entry)) {
+            addFinding("error", "歴史画像権利条件", "DATA_SOURCES.yml", 0, `${id}: ${field}=true の確認がありません`);
+          }
+        }
+        const requiredTextFields = [
+          "attribution",
+          "era_id",
+          "geographic_bounds",
+          "sha256_manifest",
+        ];
+        for (const field of requiredTextFields) {
+          if (!P(`^\\s+${field}:\\s*(?!null\\s*$).+`, "m").test(entry)) {
+            addFinding("error", "歴史画像メタデータ", "DATA_SOURCES.yml", 0, `${id}: ${field} がありません`);
+          }
+        }
+        const sha = entry.match(P("^\\s+sha256:\\s*([0-9a-f]{64})\\s*$", "m"))?.[1];
+        if (!sha) {
+          addFinding("error", "歴史画像ハッシュ", "DATA_SOURCES.yml", 0, `${id}: SHA-256 がありません`);
+        }
+        const manifest = entry.match(
+          P("^\\s+sha256_manifest:\\s*(public/data/historical-rasters/[^\\s]+\\.json)\\s*$", "m"),
+        )?.[1];
+        if (!manifest || files.length !== 1 || files[0] !== manifest) {
+          addFinding("error", "歴史画像manifest", "DATA_SOURCES.yml", 0, `${id}: local_files にはsha256_manifestだけを登録してください`);
+        } else {
+          approvedRasterFiles.add(manifest);
+          const manifestFull = join(ROOT, manifest);
+          if (!existsSync(manifestFull)) {
+            addFinding("error", "歴史画像manifest", manifest, 0, "SHA-256 manifestがありません");
+          } else {
+            const manifestBuffer = readFileSync(manifestFull);
+            const actual = createHash("sha256").update(manifestBuffer).digest("hex");
+            if (sha && actual !== sha) {
+              addFinding("error", "歴史画像ハッシュ", manifest, 0, "manifestのSHA-256が台帳と一致しません");
+            }
+            try {
+              const hashes = JSON.parse(manifestBuffer.toString("utf8"));
+              if (!hashes || Array.isArray(hashes) || typeof hashes !== "object") throw new Error();
+              const hashEntries = Object.entries(hashes);
+              if (hashEntries.length === 0) {
+                addFinding("error", "歴史画像manifest", manifest, 0, "登録ファイルが空です");
+              }
+              for (const [file, expectedHash] of hashEntries) {
+                if (
+                  !file.startsWith("public/data/historical-rasters/") ||
+                  file.includes("..") ||
+                  !P("^[0-9a-f]{64}$").test(String(expectedHash))
+                ) {
+                  addFinding("error", "歴史画像manifest", manifest, 0, "不正なパスまたはSHA-256があります");
+                  continue;
+                }
+                const full = join(ROOT, file);
+                if (!existsSync(full) || statSync(full).isDirectory()) {
+                  addFinding("error", "歴史画像ファイル", file, 0, "manifest登録ファイルがありません");
+                  continue;
+                }
+                const fileHash = createHash("sha256").update(readFileSync(full)).digest("hex");
+                if (fileHash !== expectedHash) {
+                  addFinding("error", "歴史画像ハッシュ", file, 0, "manifestのSHA-256と一致しません");
+                  continue;
+                }
+                approvedFiles.add(file);
+                approvedRasterFiles.add(file);
+              }
+            } catch {
+              addFinding("error", "歴史画像manifest", manifest, 0, "JSONとして解析できません");
+            }
+          }
+        }
+      }
       infos.push(`データ ${id}: approved (${files.length} ファイル)`);
     } else {
       if (files.length > 0) {
@@ -335,6 +417,12 @@ if (existsSync(distDir)) {
   for (const rel of distFiles) {
     if (rel.endsWith(".map")) {
       addFinding("error", "ソースマップ露出", rel, 0, "本番ビルドに .map を含めない");
+    }
+    if (rel.startsWith("dist/data/historical-rasters/")) {
+      const sourcePath = `public/${rel.slice("dist/".length)}`;
+      if (!approvedRasterFiles.has(sourcePath)) {
+        addFinding("error", "未承認歴史画像の公開", rel, 0, "approved の全権利条件を満たす台帳登録がありません");
+      }
     }
   }
   infos.push(`dist: ${distFiles.length} ファイル`);

@@ -78,6 +78,52 @@ body {
   font-size: 0.9rem;
 }
 
+.history-controls {
+  display: contents;
+}
+
+.era-caution {
+  margin: 0;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid #8d7955;
+  background-color: #f7f0df;
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0,
+    transparent 10px,
+    rgba(92, 69, 37, 0.08) 10px,
+    rgba(92, 69, 37, 0.08) 12px
+  );
+  color: #342a1d;
+  font-size: 0.8rem;
+}
+
+.reconstructed-base-tile {
+  width: 256px;
+  height: 256px;
+  border: 1px solid rgba(87, 66, 37, 0.12);
+  background-color: #eee2c3;
+  background-image:
+    repeating-linear-gradient(
+      8deg,
+      rgba(94, 71, 38, 0.045) 0,
+      rgba(94, 71, 38, 0.045) 1px,
+      transparent 1px,
+      transparent 13px
+    ),
+    repeating-linear-gradient(
+      98deg,
+      rgba(255, 255, 255, 0.12) 0,
+      rgba(255, 255, 255, 0.12) 2px,
+      transparent 2px,
+      transparent 17px
+    );
+}
+
+[hidden] {
+  display: none !important;
+}
+
 button {
   font-size: 0.9rem;
   padding: 0.45rem 0.8rem;
@@ -188,5 +234,31 @@ dialog::backdrop {
     left: 1rem;
     right: 1rem;
     max-width: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .reconstructed-base-tile {
+    border-color: #5c4b31;
+    background-color: #fff4d6;
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent 0,
+      transparent 14px,
+      rgba(46, 36, 22, 0.2) 14px,
+      rgba(46, 36, 22, 0.2) 16px
+    );
+  }
+
+  .era-caution {
+    border-color: currentColor;
+    background-color: #fff4d6;
+    color: #000;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaflet-pane {
+    transition: none !important;
   }
 }

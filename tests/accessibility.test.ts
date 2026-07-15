@@ -39,6 +39,13 @@ describe("アクセシビリティ(静的マークアップ)", () => {
     expect(doc.getElementById("opacity-label")?.textContent).toContain(
       "不透明度",
     );
+    const baseSlider = doc.getElementById("base-opacity-slider");
+    expect(baseSlider?.getAttribute("aria-labelledby")).toBe(
+      "base-opacity-label",
+    );
+    expect(doc.getElementById("base-opacity-label")?.textContent).toContain(
+      "現代基図",
+    );
   });
 
   it("セレクトボックスに aria-label がある", () => {

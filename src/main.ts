@@ -8,20 +8,38 @@ import {
   MIN_ZOOM,
   MAX_ZOOM,
   GSI_TILE_URLS,
-  GSI_ATTRIBUTION,
   CODH_ATTRIBUTION,
   type BaseLayerKey,
 } from "./config";
 import { loadPlaces } from "./places";
-import {
-  createHistoricalLayer,
-  HISTORICAL_PANE,
-  type HistoricalLayer,
-} from "./historical";
+import { createHistoricalLayer, type HistoricalLayer } from "./historical";
 import { renderPlaceCard, renderNoData } from "./infocard";
 import { getCurrentLocation } from "./geolocation";
 import { renderAttribution, renderPrivacy } from "./attribution";
 import { readAllowedParams } from "./urlparams";
+import {
+  eraRegistry,
+  isVisualLayerEnabled,
+  populateEraSelect,
+  VISUAL_LAYER_IDS,
+} from "./eras";
+import {
+  eraTransitionDuration,
+  LayerTransitionController,
+  type TransitionLayer,
+} from "./layer-transition";
+import {
+  createHistoricalPointsTransitionLayer,
+  createMapPanes,
+  createReconstructedBackground,
+  LeafletTransitionLayer,
+  MAP_PANES,
+  ModernBaseTransitionLayer,
+} from "./leaflet-layers";
+
+const ERA_TRANSITION_MS = 220;
+
+type HistoricalViewMode = "reconstructed" | "compare" | "points";
 
 function byId<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -61,59 +79,136 @@ function main(): void {
   });
   map.attributionControl.setPrefix(false);
 
-  const historicalPane = map.createPane(HISTORICAL_PANE);
-  // タイルより上、現在地などの通常 overlayPane より下に分離する。
-  historicalPane.style.zIndex = "390";
+  const panes = createMapPanes(map);
 
   // --- 基図(地理院タイル) ---
-  const baseLayers: Record<BaseLayerKey, L.TileLayer> = {
-    pale: L.tileLayer(GSI_TILE_URLS.pale, {
-      attribution: GSI_ATTRIBUTION,
-      maxZoom: MAX_ZOOM,
-    }),
-    std: L.tileLayer(GSI_TILE_URLS.std, {
-      attribution: GSI_ATTRIBUTION,
-      maxZoom: MAX_ZOOM,
-    }),
-  };
   const baseSelect = byId<HTMLSelectElement>("base-select");
   const initialBase = (params["base"] as BaseLayerKey) ?? "pale";
   baseSelect.value = initialBase;
-  let currentBase: BaseLayerKey = initialBase;
-  baseLayers[currentBase].addTo(map);
+  const modernBase = new ModernBaseTransitionLayer(
+    map,
+    panes.get(MAP_PANES.modernBase) as HTMLElement,
+    initialBase,
+  );
   baseSelect.addEventListener("change", () => {
     const next = baseSelect.value as BaseLayerKey;
-    if (next === currentBase || !(next in baseLayers)) return;
-    map.removeLayer(baseLayers[currentBase]);
-    baseLayers[next].addTo(map);
-    currentBase = next;
+    if (!Object.hasOwn(GSI_TILE_URLS, next)) return;
+    modernBase.setBase(next);
   });
 
   // --- 歴史レイヤー ---
   const eraSelect = byId<HTMLSelectElement>("era-select");
+  populateEraSelect(eraSelect);
+  const requestedEra = params["era"] === "none" ? "modern" : params["era"];
+  eraSelect.value = eraRegistry.get(requestedEra ?? "")?.id ?? "edo-late";
+  const historyViewSelect = byId<HTMLSelectElement>("history-view-select");
+  const historyControls = byId<HTMLElement>("history-controls");
+  const eraCaution = byId<HTMLElement>("era-caution");
   const opacitySlider = byId<HTMLInputElement>("opacity-slider");
+  const baseOpacitySlider = byId<HTMLInputElement>("base-opacity-slider");
   const infoCard = byId<HTMLElement>("info-card");
   let historical: HistoricalLayer | null = null;
+  let historicalPointsLayer: TransitionLayer | null = null;
+  let codhAttributionVisible = false;
 
-  function applyEra(): void {
-    if (!historical) return;
-    if (eraSelect.value === "edo-late") {
-      historical.layer.addTo(map);
-      map.attributionControl.addAttribution(CODH_ATTRIBUTION);
+  const reconstructedLayer = createReconstructedBackground();
+  const reconstructedTransition = new LeafletTransitionLayer(
+    VISUAL_LAYER_IDS.reconstructedBackground,
+    map,
+    reconstructedLayer,
+    panes.get(MAP_PANES.historicalRaster) as HTMLElement,
+    (opacity) => {
+      const pane = panes.get(MAP_PANES.historicalRaster);
+      if (pane) pane.style.opacity = String(opacity);
+    },
+  );
+  const transitions = new LayerTransitionController();
+
+  function prefersReducedMotion(): boolean {
+    return (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
+  function percentage(slider: HTMLInputElement): number {
+    const value = Number(slider.value);
+    return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
+  }
+
+  function syncCodhAttribution(show: boolean): void {
+    if (show === codhAttributionVisible) return;
+    if (show) map.attributionControl.addAttribution(CODH_ATTRIBUTION);
+    else map.attributionControl.removeAttribution(CODH_ATTRIBUTION);
+    codhAttributionVisible = show;
+  }
+
+  function applyEra(animate = true): void {
+    const era = eraRegistry.get(eraSelect.value) ?? eraRegistry.get("modern");
+    if (!era) return;
+    const targets: { layer: TransitionLayer; opacity: number }[] = [];
+    const isHistorical = era.baseMode !== "modern";
+    const view = historyViewSelect.value as HistoricalViewMode;
+    historyControls.hidden = !isHistorical;
+    baseOpacitySlider.disabled = !isHistorical || view !== "compare";
+    eraCaution.hidden = !isHistorical;
+    eraCaution.textContent = era.uncertaintyNote;
+
+    if (!isHistorical) {
+      targets.push({ layer: modernBase, opacity: 1 });
     } else {
-      map.removeLayer(historical.layer);
-      map.attributionControl.removeAttribution(CODH_ATTRIBUTION);
+      if (
+        view !== "points" &&
+        era.visualLayers.includes(VISUAL_LAYER_IDS.reconstructedBackground) &&
+        isVisualLayerEnabled(VISUAL_LAYER_IDS.reconstructedBackground)
+      ) {
+        targets.push({
+          layer: reconstructedTransition,
+          opacity: view === "compare" ? 0.78 : 1,
+        });
+      }
+      if (view === "compare") {
+        targets.push({
+          layer: modernBase,
+          opacity: percentage(baseOpacitySlider) / 100,
+        });
+      } else if (view === "points") {
+        targets.push({ layer: modernBase, opacity: 1 });
+      }
+      if (
+        historicalPointsLayer &&
+        era.visualLayers.includes(VISUAL_LAYER_IDS.historicalPoints) &&
+        isVisualLayerEnabled(VISUAL_LAYER_IDS.historicalPoints)
+      ) {
+        targets.push({
+          layer: historicalPointsLayer,
+          opacity: percentage(opacitySlider) / 100,
+        });
+      }
     }
+
+    const duration = animate
+      ? eraTransitionDuration(prefersReducedMotion(), ERA_TRANSITION_MS)
+      : 0;
+    transitions.switchTo(targets, duration);
+    syncCodhAttribution(
+      isHistorical &&
+        historicalPointsLayer !== null &&
+        era.attributionIds.includes("codh-edo-maps-places"),
+    );
   }
 
-  function applyOpacity(): void {
-    const value = Number(opacitySlider.value);
-    if (!Number.isFinite(value)) return;
-    historical?.setOpacity(value / 100);
+  function applyHistoricalOpacity(): void {
+    const value = percentage(opacitySlider);
     opacitySlider.setAttribute("aria-valuetext", `${value}パーセント`);
+    applyEra(false);
   }
 
-  if (params["era"]) eraSelect.value = params["era"];
+  function applyBaseOpacity(): void {
+    const value = percentage(baseOpacitySlider);
+    baseOpacitySlider.setAttribute("aria-valuetext", `${value}パーセント`);
+    applyEra(false);
+  }
 
   loadPlaces()
     .then((places) => {
@@ -122,10 +217,14 @@ function main(): void {
         (place) => {
           renderPlaceCard(infoCard, place, map.getContainer());
         },
-        historicalPane,
+        panes.get(MAP_PANES.historicalPoints) as HTMLElement,
       );
-      applyEra();
-      applyOpacity();
+      historicalPointsLayer = createHistoricalPointsTransitionLayer(
+        map,
+        historical,
+        panes.get(MAP_PANES.historicalPoints) as HTMLElement,
+      );
+      applyEra(false);
     })
     .catch(() => {
       showStatus(
@@ -134,13 +233,17 @@ function main(): void {
       );
     });
 
-  eraSelect.addEventListener("change", applyEra);
-  opacitySlider.addEventListener("input", applyOpacity);
+  eraSelect.addEventListener("change", () => applyEra(true));
+  historyViewSelect.addEventListener("change", () => applyEra(true));
+  opacitySlider.addEventListener("input", applyHistoricalOpacity);
+  baseOpacitySlider.addEventListener("input", applyBaseOpacity);
+  applyHistoricalOpacity();
+  applyBaseOpacity();
 
   // 何もない場所のクリック: データなし表示(マーカークリックはイベントが止まる)
   map.on("click", () => {
     if (!infoCard.hidden) return;
-    if (eraSelect.value === "edo-late") {
+    if (eraRegistry.get(eraSelect.value)?.placeDatasetId) {
       renderNoData(infoCard, map.getContainer());
     }
   });
@@ -180,6 +283,7 @@ function main(): void {
             color: "#0d47a1",
             fillColor: "#2196f3",
             fillOpacity: 0.9,
+            pane: MAP_PANES.currentLocation,
           }).addTo(map);
           if (Number.isFinite(accuracy) && accuracy > 0 && accuracy < 5000) {
             accuracyCircle = L.circle([lat, lon], {
@@ -187,6 +291,7 @@ function main(): void {
               color: "#0d47a1",
               weight: 1,
               fillOpacity: 0.08,
+              pane: MAP_PANES.currentLocation,
             }).addTo(map);
           }
           map.setView([lat, lon], Math.max(map.getZoom(), 15));
@@ -238,6 +343,10 @@ function main(): void {
   byId<HTMLButtonElement>("privacy-close").addEventListener("click", () =>
     privacyDialog.close(),
   );
+
+  window.addEventListener("beforeunload", () => transitions.dispose(), {
+    once: true,
+  });
 }
 
 document.addEventListener("DOMContentLoaded", main);
