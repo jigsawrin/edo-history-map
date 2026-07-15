@@ -89,6 +89,12 @@ export function renderAttribution(container: HTMLElement): void {
       "江戸切絵図などの古地図「画像」そのものは、画像単位の利用条件の確認が完了していないため、本アプリには含めていません。権利確認済みの画像レイヤーのみ将来追加される可能性があります。",
     ),
   );
+  container.append(heading("古地図原本の表現に関する注意(将来用)"));
+  container.append(
+    para(
+      "将来、権利確認済みの古地図原本を表示する場合、当時の社会的背景を反映し、現在では不適切な名称・区分・表現が含まれる可能性があります。原本の歴史的文脈を説明する注意を併記します。",
+    ),
+  );
 
   container.append(heading("免責"));
   container.append(

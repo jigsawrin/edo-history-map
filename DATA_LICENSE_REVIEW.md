@@ -47,8 +47,10 @@
 - 個々の画像の利用条件確認(公開範囲、転載可否、改変可否)が
   完了していないため、MVP では画像を一切使用しない。
 - アプリは古地図画像レイヤーを追加できる設計だが、コード上は無効
-  (`addHistoricalImageLayer()` は常に null)であり、DATA_SOURCES.yml で
-  approved になった画像のみ将来追加できる。
+  (`addHistoricalImageLayer()` は現在の空レジストリに対して null)であり、
+  DATA_SOURCES.yml で approved となり、再配布・改変・切り抜き・位置合わせ・
+  タイル化・出典・SHA-256・年代・地理的範囲の監査をすべて通過した画像だけを
+  将来追加できる。
 
 ### CODH 歴史GIS(街道・海岸線) — 保留
 

@@ -1,6 +1,9 @@
 # 使用データの管理台帳。
 # review_status が approved のデータだけをビルド・公開物に含めることができる。
 # 検証は scripts/prepublish-audit.mjs が行う。
+# historical-raster を approved にする場合は、再配布・改変・切り抜き・
+# 位置合わせ・タイル化の各許可、出典、年代、地理的範囲、各タイルの
+# SHA-256を持つmanifest、そのmanifest自体のSHA-256がすべて必須。
 
 sources:
   - id: gsi-tiles
@@ -57,6 +60,7 @@ sources:
       原CSVはリポジトリに含めず、変換後 GeoJSON のみ同梱。
 
   - id: kiriezu-images
+    asset_type: historical-raster
     title: 江戸切絵図(尾張屋版)デジタル画像
     provider: 国立国会図書館ほか
     official_source: https://dl.ndl.go.jp/

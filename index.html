@@ -23,8 +23,8 @@
       <label class="control">
         <span>年代</span>
         <select id="era-select" aria-label="表示する歴史データの年代">
-          <option value="none">現代のみ</option>
-          <option value="edo-late" selected>江戸後期(1849–1862)</option>
+          <option value="modern">現代</option>
+          <option value="edo-late" selected>江戸後期 1849–1862</option>
         </select>
       </label>
 
@@ -36,24 +36,56 @@
         </select>
       </label>
 
-      <label class="control">
-        <span id="opacity-label">歴史レイヤー不透明度</span>
-        <input
-          type="range"
-          id="opacity-slider"
-          min="0"
-          max="100"
-          value="85"
-          step="5"
-          aria-labelledby="opacity-label"
-          aria-valuetext="85パーセント"
-        />
-      </label>
+      <div id="history-controls" class="history-controls">
+        <label class="control">
+          <span>歴史表示</span>
+          <select id="history-view-select" aria-label="江戸後期の表示方法">
+            <option value="reconstructed" selected>歴史復元地図</option>
+            <option value="compare">現代地図を薄く残す</option>
+            <option value="points">歴史地点だけ表示</option>
+          </select>
+        </label>
+
+        <label class="control">
+          <span id="base-opacity-label">比較用の現代基図不透明度</span>
+          <input
+            type="range"
+            id="base-opacity-slider"
+            min="0"
+            max="100"
+            value="35"
+            step="5"
+            aria-labelledby="base-opacity-label"
+            aria-valuetext="35パーセント"
+          />
+        </label>
+
+        <label class="control">
+          <span id="opacity-label">歴史地点不透明度</span>
+          <input
+            type="range"
+            id="opacity-slider"
+            min="0"
+            max="100"
+            value="85"
+            step="5"
+            aria-labelledby="opacity-label"
+            aria-valuetext="85パーセント"
+          />
+        </label>
+      </div>
 
       <button type="button" id="locate-button">現在地を表示</button>
       <button type="button" id="attribution-button">出典・ライセンス</button>
       <button type="button" id="privacy-button">プライバシー</button>
     </div>
+
+    <p id="era-caution" class="era-caution" role="note">
+      歴史地図は複数の史料と位置合わせデータを基にした推定表示です。当時の地形・道路・敷地境界を完全に再現するものではなく、測量・権利・境界確認には使用できません。
+    </p>
+    <p id="historical-original-note" class="era-caution" role="note" hidden>
+      この古地図原本には、当時の社会的背景を反映し、現在では不適切な名称・区分・表現が含まれる場合があります。
+    </p>
 
     <div
       id="map"

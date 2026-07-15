@@ -55,6 +55,6 @@ export const DATA_BOUNDS = {
 /** URL クエリパラメータの許可リスト。ここにない値・キーはすべて無視する。 */
 export const ALLOWED_QUERY_PARAMS: Readonly<Record<string, readonly string[]>> =
   {
-    era: ["none", "edo-late"],
+    era: ["modern", "none", "edo-late"],
     base: ["pale", "std"],
   };
