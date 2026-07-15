@@ -98,6 +98,7 @@ Content Security Policy で制限しています。
 - [DATA_LICENSE_REVIEW.md](DATA_LICENSE_REVIEW.md) — ライセンス調査記録
 - [CONTRIBUTING.md](CONTRIBUTING.md) — 開発ルール
 - [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) — 脅威モデル
+- [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) — アクセシビリティ設計と今後の代替操作
 
 ## ライセンス
 

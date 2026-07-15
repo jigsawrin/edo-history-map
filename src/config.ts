@@ -44,7 +44,7 @@ export const LIMITS = {
   fetchTimeoutMs: 15000,
 } as const;
 
-/** 東京23区周辺の妥当な座標範囲(この範囲外のデータ点は不正として拒否)。 */
+/** 東京23区周辺の対象範囲(妥当な世界座標でも、この範囲外の点は読み飛ばす)。 */
 export const DATA_BOUNDS = {
   minLat: 35.4,
   maxLat: 35.95,

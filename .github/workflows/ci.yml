@@ -28,6 +28,8 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+      - name: Prepublish audit (公開ビルドを含む)
+        run: npm run audit:prepublish
       - name: npm audit (high 以上で失敗)
         run: npm audit --audit-level=high
 

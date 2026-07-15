@@ -23,7 +23,13 @@ describe("アクセシビリティ(静的マークアップ)", () => {
 
   it("地図領域に aria-label とキーボード操作の説明がある", () => {
     const map = doc.getElementById("map");
+    expect(map?.getAttribute("role")).toBe("region");
     expect(map?.getAttribute("aria-label")).toContain("キー");
+    const describedBy = map?.getAttribute("aria-describedby");
+    expect(describedBy).toBe("map-help");
+    expect(doc.getElementById(describedBy as string)?.textContent).toContain(
+      "地図を直接操作しにくい場合",
+    );
   });
 
   it("透明度スライダーがラベルと関連付き、aria-valuetext を持つ", () => {
@@ -47,6 +53,7 @@ describe("アクセシビリティ(静的マークアップ)", () => {
   it("情報カードが aria-live リージョンである", () => {
     const card = doc.getElementById("info-card");
     expect(card?.getAttribute("aria-live")).toBe("polite");
+    expect(card?.getAttribute("aria-atomic")).toBe("true");
   });
 
   it("各ダイアログに見出しが関連付けられている", () => {

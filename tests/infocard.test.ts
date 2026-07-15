@@ -86,6 +86,20 @@ describe("renderPlaceCard", () => {
     const button = container.querySelector("button");
     expect(button?.getAttribute("aria-label")).toBeTruthy();
   });
+
+  it("表示時は地図のフォーカスを奪わず、閉じると地図へ戻す", () => {
+    const map = document.createElement("div");
+    map.tabIndex = 0;
+    document.body.prepend(map);
+    map.focus();
+    renderPlaceCard(container, place(), map);
+    expect(document.activeElement).toBe(map);
+
+    const button = container.querySelector("button");
+    button?.focus();
+    button?.click();
+    expect(document.activeElement).toBe(map);
+  });
 });
 
 describe("renderNoData", () => {

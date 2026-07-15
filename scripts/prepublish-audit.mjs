@@ -49,6 +49,7 @@ function git(...args) {
 
 const EXCLUDE_DIRS = new Set([
   ".git",
+  ".claude",
   "node_modules",
   "audit",
   "coverage",
@@ -363,7 +364,7 @@ if (historyText !== null) {
 
 // 追跡ファイルと .gitignore の整合(追跡中の除外対象がないか)
 for (const t of tracked) {
-  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith("audit/")) {
+  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || t.startsWith("audit/")) {
     addFinding("error", "追跡対象違反", t, 0, "公開対象外ファイルが Git 追跡されています");
   }
 }

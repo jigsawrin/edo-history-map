@@ -66,7 +66,8 @@ export function sanitizeLinkUrl(v: unknown): string | null {
 
 /**
  * 取得した GeoJSON テキストを検証し、型付きの地名配列へ変換する。
- * サイズ・件数・座標範囲・型を検証し、条件を満たさない場合は例外を投げる。
+ * サイズ・件数・型・世界座標としての範囲を検証し、不正なら例外を投げる。
+ * 世界座標として妥当でも DATA_BOUNDS の対象地域外にある点は読み飛ばす。
  */
 export function parsePlacesGeoJson(text: string): PlaceFeature[] {
   if (text.length > LIMITS.maxBytes) {

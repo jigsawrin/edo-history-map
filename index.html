@@ -58,9 +58,14 @@
     <div
       id="map"
       tabindex="-1"
-      role="application"
+      role="region"
       aria-label="地図。矢印キーで移動、+と-キーでズームできます。"
+      aria-describedby="map-help"
     ></div>
+
+    <p id="map-help" class="visually-hidden">
+      地図はキーボードでも移動とズームができます。地図を直接操作しにくい場合も、上の年代・基図・不透明度の各コントロールはキーボードで操作できます。地点情報の検索・一覧による代替操作は今後の課題です。
+    </p>
 
     <noscript>
       <p class="noscript-note">
@@ -73,6 +78,7 @@
       id="info-card"
       class="info-card"
       aria-live="polite"
+      aria-atomic="true"
       aria-label="地点の歴史情報"
       hidden
     ></section>

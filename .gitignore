@@ -55,3 +55,4 @@ data-raw/
 # このリポジトリと無関係なローカル作業ファイル
 PROMPT.md
 RULES.md
+.claude/

@@ -16,6 +16,7 @@ function addRow(dl: HTMLDListElement, term: string, value: string): void {
 export function renderPlaceCard(
   container: HTMLElement,
   place: PlaceFeature,
+  returnFocus?: HTMLElement,
 ): void {
   container.replaceChildren();
   container.hidden = false;
@@ -60,12 +61,16 @@ export function renderPlaceCard(
   close.addEventListener("click", () => {
     container.hidden = true;
     container.replaceChildren();
+    returnFocus?.focus();
   });
   container.append(close);
 }
 
 /** データがない地点向けの表示。 */
-export function renderNoData(container: HTMLElement): void {
+export function renderNoData(
+  container: HTMLElement,
+  returnFocus?: HTMLElement,
+): void {
   container.replaceChildren();
   container.hidden = false;
   const p = document.createElement("p");
@@ -78,6 +83,7 @@ export function renderNoData(container: HTMLElement): void {
   close.addEventListener("click", () => {
     container.hidden = true;
     container.replaceChildren();
+    returnFocus?.focus();
   });
   container.append(close);
 }

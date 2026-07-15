@@ -27,6 +27,9 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
 
 const DEFAULT_STYLE: CategoryStyle = { color: "#5d4037", dashArray: "4 3" };
 
+/** 歴史地点だけを描画する Leaflet pane。現在地などの通常レイヤーとは分離する。 */
+export const HISTORICAL_PANE = "historical-points";
+
 export function categoryStyle(category: string): CategoryStyle {
   return CATEGORY_STYLES[category] ?? DEFAULT_STYLE;
 }
@@ -39,8 +42,8 @@ export interface HistoricalLayer {
 export function createHistoricalLayer(
   places: PlaceFeature[],
   onSelect: (place: PlaceFeature) => void,
+  pane: HTMLElement,
 ): HistoricalLayer {
-  const markers: L.CircleMarker[] = [];
   const group = L.layerGroup();
   for (const place of places) {
     const style = categoryStyle(place.category);
@@ -52,6 +55,8 @@ export function createHistoricalLayer(
       fillColor: style.color,
       fillOpacity: 0.5,
       opacity: 0.9,
+      pane: HISTORICAL_PANE,
+      interactive: true,
       // スクリーンリーダー・キーボード用: マーカーにフォーカス可能な代替は
       // Leaflet の CircleMarker では限定的なため、情報カード側で補完する
     });
@@ -61,19 +66,13 @@ export function createHistoricalLayer(
         .originalEvent?.key;
       if (key === "Enter" || key === " ") onSelect(place);
     });
-    markers.push(marker);
     group.addLayer(marker);
   }
   return {
     layer: group,
     setOpacity(opacity: number) {
       const clamped = Math.min(1, Math.max(0, opacity));
-      for (const m of markers) {
-        m.setStyle({
-          opacity: 0.9 * clamped,
-          fillOpacity: 0.5 * clamped,
-        });
-      }
+      pane.style.opacity = String(clamped);
     },
   };
 }

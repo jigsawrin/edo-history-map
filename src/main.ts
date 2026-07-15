@@ -13,7 +13,11 @@ import {
   type BaseLayerKey,
 } from "./config";
 import { loadPlaces } from "./places";
-import { createHistoricalLayer, type HistoricalLayer } from "./historical";
+import {
+  createHistoricalLayer,
+  HISTORICAL_PANE,
+  type HistoricalLayer,
+} from "./historical";
 import { renderPlaceCard, renderNoData } from "./infocard";
 import { getCurrentLocation } from "./geolocation";
 import { renderAttribution, renderPrivacy } from "./attribution";
@@ -25,7 +29,7 @@ function byId<T extends HTMLElement>(id: string): T {
   return el as T;
 }
 
-function showStatus(message: string): void {
+function showStatus(message: string, returnFocus?: HTMLElement): void {
   const card = byId<HTMLElement>("info-card");
   card.replaceChildren();
   card.hidden = false;
@@ -38,6 +42,7 @@ function showStatus(message: string): void {
   close.addEventListener("click", () => {
     card.hidden = true;
     card.replaceChildren();
+    returnFocus?.focus();
   });
   card.append(close);
 }
@@ -52,8 +57,13 @@ function main(): void {
     maxZoom: MAX_ZOOM,
     keyboard: true,
     zoomControl: true,
+    preferCanvas: true,
   });
   map.attributionControl.setPrefix(false);
+
+  const historicalPane = map.createPane(HISTORICAL_PANE);
+  // タイルより上、現在地などの通常 overlayPane より下に分離する。
+  historicalPane.style.zIndex = "390";
 
   // --- 基図(地理院タイル) ---
   const baseLayers: Record<BaseLayerKey, L.TileLayer> = {
@@ -107,15 +117,20 @@ function main(): void {
 
   loadPlaces()
     .then((places) => {
-      historical = createHistoricalLayer(places, (place) => {
-        renderPlaceCard(infoCard, place);
-      });
+      historical = createHistoricalLayer(
+        places,
+        (place) => {
+          renderPlaceCard(infoCard, place, map.getContainer());
+        },
+        historicalPane,
+      );
       applyEra();
       applyOpacity();
     })
     .catch(() => {
       showStatus(
         "歴史データを読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。",
+        map.getContainer(),
       );
     });
 
@@ -125,7 +140,9 @@ function main(): void {
   // 何もない場所のクリック: データなし表示(マーカークリックはイベントが止まる)
   map.on("click", () => {
     if (!infoCard.hidden) return;
-    if (eraSelect.value === "edo-late") renderNoData(infoCard);
+    if (eraSelect.value === "edo-late") {
+      renderNoData(infoCard, map.getContainer());
+    }
   });
 
   // --- 現在地 ---
@@ -175,22 +192,26 @@ function main(): void {
           map.setView([lat, lon], Math.max(map.getZoom(), 15));
           showStatus(
             "現在地を表示しました。この座標は保存されません。マーカーはページを再読み込みすると消えます。",
+            map.getContainer(),
           );
           break;
         }
         case "denied":
           showStatus(
             "位置情報の利用が許可されませんでした。地図の閲覧は引き続き利用できます。",
+            map.getContainer(),
           );
           break;
         case "unsupported":
           showStatus(
             "このブラウザは位置情報に対応していません。地図の閲覧は引き続き利用できます。",
+            map.getContainer(),
           );
           break;
         default:
           showStatus(
             "現在地を取得できませんでした。地図の閲覧は引き続き利用できます。",
+            map.getContainer(),
           );
       }
     });
