@@ -88,6 +88,15 @@ const SECRET_PATTERNS = [
   ["npm トークン", P("np" + "m_[A-Za-z0-9]{30,}")],
 ];
 
+/**
+ * 公開してよいメールアドレス(個人情報に当たらない公開用アドレス)。
+ * - GitHub の noreply アドレス(コミット用の公開識別子)
+ * - ツールの定型 Co-Authored-By アドレス
+ */
+const ALLOWED_EMAILS = P(
+  "([A-Za-z0-9._%+-]+@users\\.noreply\\.github\\.com|noreply@anthropic\\.com)",
+);
+
 const PII_PATTERNS = [
   ["メールアドレス", P("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}")],
   ["日本の電話番号らしき文字列", P("0\\d{1,4}-\\d{1,4}-\\d{3,4}(?![\\d-])")],
@@ -148,8 +157,12 @@ function scanText(rel, content, { isDist = false } = {}) {
     if (rel === SELF && category === "秘密情報") return;
     for (const [name, re] of patterns) {
       for (let i = 0; i < lines.length; i++) {
+        const line =
+          category === "個人情報"
+            ? lines[i].replace(ALLOWED_EMAILS, "")
+            : lines[i];
         re.lastIndex = 0;
-        const m = re.exec(lines[i]);
+        const m = re.exec(line);
         if (m) {
           addFinding(severity, category, rel, i + 1, `${name}: ${mask(m[0])}`);
         }
@@ -336,7 +349,7 @@ if (historyText !== null) {
   for (const [name, re] of [...SECRET_PATTERNS, ...PII_PATTERNS]) {
     for (let i = 0; i < histLines.length; i++) {
       re.lastIndex = 0;
-      const m = re.exec(histLines[i]);
+      const m = re.exec(histLines[i].replace(ALLOWED_EMAILS, ""));
       if (m) {
         addFinding("error", "Git履歴", "(git history)", 0, `${name}: ${mask(m[0])}`);
         break; // 同一パターンは1回報告
