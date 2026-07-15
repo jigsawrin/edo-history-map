@@ -1,0 +1,80 @@
+# 使用データの管理台帳。
+# review_status が approved のデータだけをビルド・公開物に含めることができる。
+# 検証は scripts/prepublish-audit.mjs が行う。
+
+sources:
+  - id: gsi-tiles
+    title: 地理院タイル(標準地図・淡色地図)
+    provider: 国土地理院
+    official_source: https://maps.gsi.go.jp/development/ichiran.html
+    original_item: 標準地図 (std), 淡色地図 (pale)
+    license: 国土地理院コンテンツ利用規約(出典明示で利用可、Web上のリアルタイム読み込みは申請不要)
+    license_url: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
+    attribution: 地理院タイル(https://maps.gsi.go.jp/development/ichiran.html)
+    modification: なし(実行時にブラウザがタイルを直接読み込み。リポジトリには含めない)
+    redistribution_allowed: 該当なし(再配布しない。実行時読み込みのみ)
+    accessed_at: "2026-07-15"
+    downloaded_at: null
+    sha256: null
+    local_files: []
+    review_status: approved
+    reviewer_note: >-
+      公式の利用規約ページで、ウェブサイトでのリアルタイム読み込みは
+      出典明示のみで申請不要であることを確認済み。タイル画像は
+      リポジトリに含めず、CSP の img-src で cyberjapandata.gsi.go.jp
+      のみを許可して実行時に読み込む。
+
+  - id: codh-edo-maps-places
+    title: 江戸マップ地名データセット
+    provider: ROIS-DS人文学オープンデータ共同利用センター(CODH)
+    official_source: https://codh.rois.ac.jp/edo-maps/dataset/
+    original_item: owariya.csv(2025年7月23日版、8788地名)
+    license: CC BY 4.0
+    license_url: https://creativecommons.org/licenses/by/4.0/deed.ja
+    attribution: >-
+      『江戸マップ地名データセット』
+      (ROIS-DS人文学オープンデータ共同利用センター作成)
+      doi:10.20676/00000445
+    modification: >-
+      項目の抽出(地名・分類・緯度経度・収載切絵図名・詳細URL)、
+      GeoJSON への変換、座標の小数6桁への丸め、
+      東京23区周辺(lat 35.4-35.95, lon 139.4-140.05)への範囲限定、
+      制御文字除去・フィールド長制限。
+      変換スクリプト: scripts/convert-owariya.mjs
+    redistribution_allowed: true
+    accessed_at: "2026-07-15"
+    downloaded_at: "2026-07-15"
+    sha256: b83960ac1e4f1061c84a23580ed41282be230ff2f3f4f0335308434ac6620161
+    local_files:
+      - public/data/edo-places.geojson
+    review_status: approved
+    reviewer_note: >-
+      データセット公式ページで CC BY 4.0 と出典表記
+      (doi:10.20676/00000445)を確認済み。CODH のポリシーページは
+      データセットごとにライセンスが異なると明記しているため、
+      本データセット個別ページの表記を根拠とする。原資料の江戸切絵図
+      「画像」は本データセットの対象外であり、本アプリでは使用しない。
+      原CSVはリポジトリに含めず、変換後 GeoJSON のみ同梱。
+
+  - id: kiriezu-images
+    title: 江戸切絵図(尾張屋版)デジタル画像
+    provider: 国立国会図書館ほか
+    official_source: https://dl.ndl.go.jp/
+    original_item: 切絵図の資料画像
+    license: 未確認(画像単位の公開範囲・転載可否の確認が未完了)
+    license_url: null
+    attribution: null
+    modification: null
+    redistribution_allowed: null
+    accessed_at: "2026-07-15"
+    downloaded_at: null
+    sha256: null
+    local_files: []
+    review_status: rejected
+    reviewer_note: >-
+      原資料の著作権保護期間は満了していると考えられるが、
+      デジタル画像の利用条件は所蔵機関・画像単位で確認が必要。
+      「インターネット公開」の表示だけでは転載可否を判断できないため、
+      MVP では画像レイヤーを実装せず(historical.ts の
+      addHistoricalImageLayer は常に無効)、権利確認完了後に
+      本台帳へ approved で登録した場合のみ追加可能とする。

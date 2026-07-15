@@ -1,0 +1,57 @@
+# 依存・ビルド
+node_modules/
+dist/
+coverage/
+*.local
+
+# 環境変数・秘密情報(そもそも作らないこと)
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa*
+id_ed25519*
+
+# ログ・一時ファイル・ダンプ
+*.log
+logs/
+*.tmp
+*.bak
+*.swp
+*~
+*.dmp
+*.stackdump
+
+# OS 固有
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# エディタ
+.vscode/
+.idea/
+*.suo
+*.user
+
+# 監査レポート(実行ごとに生成。公開しない)
+audit/
+
+# 原データ(公式配布元から取得する。リポジトリで再配布しない)
+data-raw/
+
+# 危険・不要な拡張子(そもそも置かないこと)
+*.exe
+*.dll
+*.msi
+*.scr
+*.bat
+*.cmd
+*.zip
+*.db
+*.sqlite
+
+# このリポジトリと無関係なローカル作業ファイル
+PROMPT.md
+RULES.md
