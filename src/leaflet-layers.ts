@@ -37,8 +37,10 @@ export function createMapPanes(map: L.Map): ReadonlyMap<string, HTMLElement> {
   for (const [name, zIndex] of Object.entries(PANE_Z_INDEX)) {
     const pane = map.createPane(name);
     pane.style.zIndex = String(zIndex);
-    // pane自体は地図操作を妨げない。Leafletのinteractive要素だけがイベントを受ける。
-    pane.style.pointerEvents = "none";
+    // Canvas renderer は pane 配下の canvas でヒットテストするため、
+    // 地名paneだけはイベントを受ける。背景系と現在地paneは地図操作を遮らない。
+    pane.style.pointerEvents =
+      name === MAP_PANES.historicalPoints ? "auto" : "none";
     panes.set(name, pane);
   }
   return panes;

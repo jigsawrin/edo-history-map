@@ -85,7 +85,7 @@ const ERA_DEFINITIONS: EraDefinition[] = [
     placeDatasetId: "codh-edo-maps-places",
     attributionIds: ["codh-edo-maps-places"],
     uncertaintyNote:
-      "歴史地図は複数の史料と位置合わせデータを基にした推定表示です。当時の地形・道路・敷地境界を完全に再現するものではなく、測量・権利・境界確認には使用できません。",
+      "江戸地名の位置は、古地図を現代地図へ位置合わせしたデータに基づく推定です。現在の歴史背景は、古地図原本や当時の道路・海岸線・敷地境界を再現したものではありません。測量・境界・権利確認には使用できません。",
     enabled: true,
     localizedLabels: { ja: "江戸後期", en: "Late Edo" },
   },

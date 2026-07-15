@@ -83,6 +83,13 @@ export function renderAttribution(container: HTMLElement): void {
     ]),
   );
 
+  container.append(heading("歴史背景について"));
+  container.append(
+    para(
+      "和紙風の歴史背景は本プロジェクト独自の装飾です。古地図原本や当時の道路・海岸線・河川・堀・町割り・土地利用を再現した地図ではありません。史料と位置合わせに基づく推定情報は、江戸地名ポイントの位置です。",
+    ),
+  );
+
   container.append(heading("古地図画像について"));
   container.append(
     para(
