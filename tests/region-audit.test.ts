@@ -7,23 +7,31 @@ const ROOT = join(__dirname, "..");
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
 
 describe("地域パック公開ゲート", () => {
-  it("本番地域manifestは東京・江戸1件だけである", () => {
-    const pack = JSON.parse(read("src/regions/edo-pack.json"));
-    expect(pack.region.id).toBe("edo");
-    expect(pack.region.enabled).toBe(true);
-    expect(pack.region.enabledEraIds).toEqual(["modern", "edo-late"]);
-    const text = JSON.stringify(pack);
-    expect(text).not.toContain("kyoto");
-    expect(text).not.toContain("shiga");
-    expect(text).not.toContain("osaka");
+  it("本番地域manifestは東京・江戸と京都の2件である", () => {
+    const edo = JSON.parse(read("src/regions/edo-pack.json"));
+    const kyoto = JSON.parse(read("src/regions/kyoto-pack.json"));
+    expect(edo.region.id).toBe("edo");
+    expect(edo.region.enabled).toBe(true);
+    expect(edo.region.enabledEraIds).toEqual(["modern", "edo-late"]);
+    expect(kyoto.region.id).toBe("kyoto");
+    expect(kyoto.region.enabled).toBe(true);
+    expect(kyoto.region.defaultEraId).toBe("bakumatsu");
+    expect(kyoto.region.enabledEraIds).toEqual(["modern", "bakumatsu"]);
+    const edoText = JSON.stringify(edo);
+    const kyotoText = JSON.stringify(kyoto);
+    expect(edoText).not.toContain("project-kyoto-bakumatsu-places");
+    expect(kyotoText).not.toContain("codh-edo-");
+    expect(`${edoText}${kyotoText}`).not.toContain("shiga");
+    expect(`${edoText}${kyotoText}`).not.toContain("osaka");
   });
 
-  it("承認済み3データだけを固定manifestへ登録する", () => {
+  it("承認済み4データだけを固定manifestへ登録する", () => {
     const manifest = JSON.parse(read("src/dataset-manifest.json"));
     expect(manifest.map((item: { id: string }) => item.id)).toEqual([
       "codh-edo-maps-places",
       "codh-edo-machiya-areas",
       "codh-edo-coastline",
+      "project-kyoto-bakumatsu-places",
     ]);
     for (const item of manifest) {
       expect(item.path).toMatch(/^data\/[a-z0-9.-]+\.geojson$/);

@@ -1,0 +1,47 @@
+{
+  "region": {
+    "id": "kyoto",
+    "label": "京都",
+    "localizedLabels": { "ja": "京都", "en": "Kyoto" },
+    "center": [34.993708, 135.752445],
+    "defaultZoom": 11,
+    "bounds": {
+      "minLat": 34.85,
+      "maxLat": 35.12,
+      "minLon": 135.65,
+      "maxLon": 135.85
+    },
+    "defaultEraId": "bakumatsu",
+    "enabledEraIds": ["modern", "bakumatsu"],
+    "enabled": true,
+    "pageTitle": "いま・むかし地図 | 京都・幕末",
+    "metaDescription": "現在の京都地図上で、根拠確認済みの幕末史跡を確認できる無料のWebアプリ。位置情報は保存しません。",
+    "tagline": "京都 × 幕末"
+  },
+  "eras": [
+    {
+      "eraId": "modern",
+      "enabled": true,
+      "baseMode": "modern",
+      "visualLayers": ["modern-base"],
+      "datasetIds": [],
+      "placeDatasetId": null,
+      "attributionIds": ["gsi-tiles"],
+      "uncertaintyNote": "",
+      "allowedHistoricalViewModes": ["points"],
+      "defaultHistoricalViewMode": "points"
+    },
+    {
+      "eraId": "bakumatsu",
+      "enabled": true,
+      "baseMode": "historical-points",
+      "visualLayers": ["historical-points"],
+      "datasetIds": ["project-kyoto-bakumatsu-places"],
+      "placeDatasetId": "project-kyoto-bakumatsu-places",
+      "attributionIds": ["gsi-tiles", "project-kyoto-bakumatsu-places"],
+      "uncertaintyNote": "本アプリでは、京都の幕末史を扱う表示範囲として1853年から1868年を採用しています。幕末の始期・終期には複数の区分方法があります。各地点は公的・学術資料を基に独自編集したもので、現在の碑や建物が幕末当時の現場・建物と一致しない場合があります。",
+      "allowedHistoricalViewModes": ["points"],
+      "defaultHistoricalViewMode": "points"
+    }
+  ]
+}

@@ -10,6 +10,8 @@ import {
 } from "./config";
 import { createHistoricalLayer, type HistoricalLayer } from "./historical";
 import { renderPlaceCard, renderNoData } from "./infocard";
+import { renderKyotoNoData, renderKyotoPlaceCard } from "./kyoto-infocard";
+import { createKyotoBakumatsuLayer } from "./kyoto-layer";
 import { getCurrentLocation } from "./geolocation";
 import { renderAttribution, renderPrivacy } from "./attribution";
 import { readAllowedParams } from "./urlparams";
@@ -129,8 +131,14 @@ function main(): void {
     requestedEra,
   );
   const historyViewSelect = byId<HTMLSelectElement>("history-view-select");
+  const historyViewControl = byId<HTMLElement>("history-view-control");
   const historyControls = byId<HTMLElement>("history-controls");
   const eraCaution = byId<HTMLElement>("era-caution");
+  const regionTagline = byId<HTMLElement>("region-tagline");
+  const opacityLabel = byId<HTMLElement>("opacity-label");
+  const footerCaution = byId<HTMLElement>("footer-caution");
+  const edoLegend = byId<HTMLElement>("edo-legend");
+  const kyotoLegend = byId<HTMLElement>("kyoto-legend");
   const opacitySlider = byId<HTMLInputElement>("opacity-slider");
   const baseOpacitySlider = byId<HTMLInputElement>("base-opacity-slider");
   const machiyaControls = byId<HTMLFieldSetElement>("machiya-controls");
@@ -167,6 +175,41 @@ function main(): void {
     },
   );
   const transitions = new LayerTransitionController();
+
+  const edoPresentation = Object.freeze({
+    pageTitle: "いま・むかし地図 | 東京23区・江戸後期",
+    metaDescription:
+      "現在の地図と江戸後期の江戸地名・町家領域・推定海岸線を重ねて表示する無料のWebアプリ。位置情報はボタン操作時のみ取得し、保存しません。",
+    tagline: "東京23区 × 江戸後期(嘉永・文久期)",
+    opacityLabel: "歴史地点不透明度",
+    footer:
+      "江戸地名・町家領域・江戸末期海岸線は現代地図上への推定です。海岸線は約20万分の1相当で、時期・潮位・河道変化・地図の歪み等により実際と異なる可能性があります。現代の浸水・津波・高潮リスク、正確な地籍・所有・境界を示しません。和紙風の歴史背景は装飾です。測量・防災・権利関係の証拠には使用しないでください。",
+  });
+
+  function applyRegionPresentation(pack: Readonly<RegionPack>): void {
+    const isKyoto = pack.region.id === "kyoto";
+    document.title = pack.region.pageTitle ?? edoPresentation.pageTitle;
+    const description = document.querySelector<HTMLMetaElement>(
+      'meta[name="description"]',
+    );
+    if (description) {
+      description.content =
+        pack.region.metaDescription ?? edoPresentation.metaDescription;
+    }
+    regionTagline.textContent = pack.region.tagline ?? edoPresentation.tagline;
+    opacityLabel.textContent = isKyoto
+      ? "幕末地点不透明度"
+      : edoPresentation.opacityLabel;
+    historyViewSelect.setAttribute(
+      "aria-label",
+      isKyoto ? "京都・幕末の表示方法" : "江戸後期の表示方法",
+    );
+    edoLegend.hidden = isKyoto;
+    kyotoLegend.hidden = !isKyoto;
+    footerCaution.textContent = isKyoto
+      ? "京都・幕末地点は公的・学術資料を基に独自編集した表示です。現在の碑・再建建物・顕彰地が幕末当時の現場や建物と一致しない場合があります。測量・境界・所有権の判断には使用しないでください。"
+      : edoPresentation.footer;
+  }
 
   function prefersReducedMotion(): boolean {
     return (
@@ -220,14 +263,25 @@ function main(): void {
     const supportsCoastline = era.visualLayers.includes(
       VISUAL_LAYER_IDS.historicalCoastline,
     );
+    const allowedViews = era.allowedHistoricalViewModes ?? [
+      "reconstructed",
+      "compare",
+      "points",
+    ];
+    if (!allowedViews.includes(historyViewSelect.value as HistoricalViewMode)) {
+      historyViewSelect.value = era.defaultHistoricalViewMode ?? "reconstructed";
+    }
     const view = historyViewSelect.value as HistoricalViewMode;
     historyControls.hidden = !isHistorical;
+    historyViewControl.hidden = !isHistorical || allowedViews.length === 1;
+    historyViewSelect.disabled = !isHistorical || allowedViews.length === 1;
     machiyaControls.hidden =
       !isHistorical || (!supportsMachiya && !supportsCoastline);
     coastlineControls.hidden = !isHistorical || !supportsCoastline;
     machiyaAreaControls.hidden = !isHistorical || !supportsMachiya;
     pointsOpacityControl.hidden = !isHistorical || !supportsPoints;
-    baseOpacityControl.hidden = !isHistorical;
+    baseOpacityControl.hidden =
+      !isHistorical || !allowedViews.includes("compare");
     machiyaVisible.disabled =
       !isHistorical || !supportsMachiya || machiyaLayer === null;
     machiyaOpacitySlider.disabled =
@@ -312,6 +366,9 @@ function main(): void {
     transitions.switchTo(targets, duration);
     const visibleIds = era.attributionIds.filter((id) => {
       if (id === "codh-edo-maps-places") return historicalPointsLayer !== null;
+      if (id === "project-kyoto-bakumatsu-places") {
+        return historicalPointsLayer !== null;
+      }
       if (id === "codh-edo-machiya-areas") {
         return machiyaLayer !== null && machiyaVisible.checked;
       }
@@ -355,32 +412,51 @@ function main(): void {
     applyEra(false);
   }
 
-  let pointsLayerPromise: Promise<TransitionLayer> | null = null;
+  type PointDatasetId =
+    | "codh-edo-maps-places"
+    | "project-kyoto-bakumatsu-places";
+  const pointLayerPromises = new Map<
+    PointDatasetId,
+    Promise<TransitionLayer>
+  >();
   let machiyaLayerPromise: Promise<MachiyaAreaTransitionLayer> | null = null;
   let coastlineLayerPromise: Promise<CoastlineTransitionLayer> | null = null;
 
-  function cachedPointsLayer(): Promise<TransitionLayer> {
-    if (!pointsLayerPromise) {
-      pointsLayerPromise = datasetRegistry
-        .load("codh-edo-maps-places")
-        .then((places) => {
-          const historical: HistoricalLayer = createHistoricalLayer(
-            places,
-            (place) => renderPlaceCard(infoCard, place, map.getContainer()),
-            panes.get(MAP_PANES.historicalPoints) as HTMLElement,
-          );
-          return createHistoricalPointsTransitionLayer(
-            map,
-            historical,
-            panes.get(MAP_PANES.historicalPoints) as HTMLElement,
-          );
-        })
-        .catch((error: unknown) => {
-          pointsLayerPromise = null;
-          throw error;
-        });
-    }
-    return pointsLayerPromise;
+  const LAYER_FACTORIES: Readonly<
+    Record<PointDatasetId, () => Promise<HistoricalLayer>>
+  > = Object.freeze({
+    "codh-edo-maps-places": async () =>
+      createHistoricalLayer(
+        await datasetRegistry.load("codh-edo-maps-places"),
+        (place) => renderPlaceCard(infoCard, place, map.getContainer()),
+        panes.get(MAP_PANES.historicalPoints) as HTMLElement,
+      ),
+    "project-kyoto-bakumatsu-places": async () =>
+      createKyotoBakumatsuLayer(
+        await datasetRegistry.load("project-kyoto-bakumatsu-places"),
+        (place) =>
+          renderKyotoPlaceCard(infoCard, place, map.getContainer()),
+        panes.get(MAP_PANES.historicalPoints) as HTMLElement,
+      ),
+  });
+
+  function cachedPointsLayer(id: PointDatasetId): Promise<TransitionLayer> {
+    const cached = pointLayerPromises.get(id);
+    if (cached) return cached;
+    const promise = LAYER_FACTORIES[id]()
+      .then((historical) =>
+        createHistoricalPointsTransitionLayer(
+          map,
+          historical,
+          panes.get(MAP_PANES.historicalPoints) as HTMLElement,
+        ),
+      )
+      .catch((error: unknown) => {
+        pointLayerPromises.delete(id);
+        throw error;
+      });
+    pointLayerPromises.set(id, promise);
+    return promise;
   }
 
   function cachedMachiyaLayer(): Promise<MachiyaAreaTransitionLayer> {
@@ -438,12 +514,12 @@ function main(): void {
     const ids = regionDatasetIds(pack);
     const load = <T extends TransitionLayer>(
       id: ApprovedDatasetId,
-      promise: Promise<T>,
+      getPromise: () => Promise<T>,
       assign: (layer: T) => void,
       message: string,
     ): void => {
       if (!ids.has(id)) return;
-      void promise
+      void getPromise()
         .then((layer) => {
           if (!loadCoordinator.isCurrent(token)) return;
           assign(layer);
@@ -455,17 +531,23 @@ function main(): void {
           applyEra(false);
         });
     };
-    load(
-      "codh-edo-maps-places",
-      cachedPointsLayer(),
-      (layer) => {
-        historicalPointsLayer = layer;
-      },
-      "歴史データを読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。",
-    );
+    for (const pointDatasetId of Object.keys(
+      LAYER_FACTORIES,
+    ) as PointDatasetId[]) {
+      load(
+        pointDatasetId,
+        () => cachedPointsLayer(pointDatasetId),
+        (layer) => {
+          historicalPointsLayer = layer;
+        },
+        pointDatasetId === "project-kyoto-bakumatsu-places"
+          ? "京都・幕末地点を読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。"
+          : "歴史データを読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。",
+      );
+    }
     load(
       "codh-edo-machiya-areas",
-      cachedMachiyaLayer(),
+      cachedMachiyaLayer,
       (layer) => {
         machiyaLayer = layer;
       },
@@ -473,7 +555,7 @@ function main(): void {
     );
     load(
       "codh-edo-coastline",
-      cachedCoastlineLayer(),
+      cachedCoastlineLayer,
       (layer) => {
         coastlineLayer = layer;
       },
@@ -490,15 +572,18 @@ function main(): void {
     machiyaLayer = null;
     coastlineLayer = null;
     populateRegionEraSelect(eraSelect, pack);
+    applyRegionPresentation(pack);
+    applyEra(false);
     if (moveMap) {
+      map.invalidateSize({ pan: false });
       applyRegionMapView(map, pack);
       closeRegionInfoCard(infoCard, regionSelect);
       announceRegionChange(regionStatus, pack);
     }
-    applyEra(false);
     loadRegionLayers(pack);
   }
 
+  applyRegionPresentation(currentRegion);
   loadRegionLayers(currentRegion);
 
   regionSelect.addEventListener("change", () => {
@@ -540,7 +625,13 @@ function main(): void {
     handleHistoricalBackgroundClick(
       infoCard,
       Boolean(binding?.placeDatasetId),
-      () => renderNoData(infoCard, map.getContainer()),
+      () => {
+        if (currentRegion.region.id === "kyoto") {
+          renderKyotoNoData(infoCard, map.getContainer());
+        } else {
+          renderNoData(infoCard, map.getContainer());
+        }
+      },
     );
   });
 

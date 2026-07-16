@@ -26,11 +26,12 @@ describe("町家領域の権利・公開ゲート", () => {
     );
   });
 
-  it("公開データをapprovedの3 GeoJSONだけに限定し、原形式をGit追跡しない", () => {
+  it("公開データをapprovedの4 GeoJSONだけに限定し、原形式をGit追跡しない", () => {
     expect(readdirSync(join(ROOT, "public", "data")).sort()).toEqual([
       "edo-coastlines.geojson",
       "edo-machiya-areas.geojson",
       "edo-places.geojson",
+      "kyoto-bakumatsu-places.geojson",
     ]);
     const tracked = execFileSync("git", ["ls-files"], {
       cwd: ROOT,

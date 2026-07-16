@@ -1,4 +1,4 @@
-import type { EraBaseMode } from "../eras";
+import type { EraBaseMode, HistoricalViewMode } from "../eras";
 
 export type LocaleId = "ja" | "en";
 export type RegionId = string;
@@ -20,6 +20,9 @@ export interface RegionDefinition {
   defaultEraId: string;
   enabledEraIds: readonly string[];
   enabled: boolean;
+  pageTitle?: string;
+  metaDescription?: string;
+  tagline?: string;
 }
 
 export interface RegionEraDefinition {
@@ -31,6 +34,8 @@ export interface RegionEraDefinition {
   placeDatasetId: string | null;
   attributionIds: readonly string[];
   uncertaintyNote: string;
+  allowedHistoricalViewModes?: readonly HistoricalViewMode[];
+  defaultHistoricalViewMode?: HistoricalViewMode;
 }
 
 export interface RegionPack {

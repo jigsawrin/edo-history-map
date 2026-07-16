@@ -14,6 +14,13 @@
     "endYear": 1862
   },
   {
+    "id": "bakumatsu",
+    "label": "幕末",
+    "localizedLabels": { "ja": "幕末", "en": "Bakumatsu" },
+    "startYear": 1853,
+    "endYear": 1868
+  },
+  {
     "id": "edo-early",
     "label": "江戸前期",
     "localizedLabels": { "ja": "江戸前期", "en": "Early Edo" },
