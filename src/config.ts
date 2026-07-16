@@ -1,8 +1,12 @@
+import { EDO_REGION_PACK } from "./regions/edo";
+
 /** アプリ全体の定数。外部通信先はここに列挙されたものだけを許可する。 */
 
 /** 初期表示: 皇居(旧江戸城)付近。実在の個人の現在地ではなく公共のランドマーク。 */
-export const INITIAL_CENTER: [number, number] = [35.6852, 139.7528];
-export const INITIAL_ZOOM = 14;
+export const INITIAL_CENTER: [number, number] = [
+  ...EDO_REGION_PACK.region.center,
+];
+export const INITIAL_ZOOM = EDO_REGION_PACK.region.defaultZoom;
 export const MIN_ZOOM = 5;
 export const MAX_ZOOM = 18;
 
@@ -83,16 +87,12 @@ export const COASTLINE_DATA_BOUNDS = {
 } as const;
 
 /** 東京23区周辺の対象範囲(妥当な世界座標でも、この範囲外の点は読み飛ばす)。 */
-export const DATA_BOUNDS = {
-  minLat: 35.4,
-  maxLat: 35.95,
-  minLon: 139.4,
-  maxLon: 140.05,
-} as const;
+export const DATA_BOUNDS = EDO_REGION_PACK.region.bounds;
 
 /** URL クエリパラメータの許可リスト。ここにない値・キーはすべて無視する。 */
 export const ALLOWED_QUERY_PARAMS: Readonly<Record<string, readonly string[]>> =
   {
     era: ["modern", "none", "edo-late"],
     base: ["pale", "std"],
+    region: ["edo"],
   };

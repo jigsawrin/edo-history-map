@@ -19,6 +19,7 @@ import {
 } from "node:fs";
 import { join, relative, extname } from "node:path";
 import { createHash } from "node:crypto";
+import { URL } from "node:url";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -96,7 +97,7 @@ const SECRET_PATTERNS = [
  * - ツールの定型 Co-Authored-By アドレス
  */
 const ALLOWED_EMAILS = P(
-  "([A-Za-z0-9._%+-]+@users\\.noreply\\.github\\.com|noreply@anthropic\\.com)",
+  "([A-Za-z0-9._%+-]+@users\\.noreply\\.github\\.com|dependabot\\[bot\\]@users\\.noreply\\.github\\.com|support@github\\.com|noreply@anthropic\\.com)",
 );
 
 const PII_PATTERNS = [
@@ -266,6 +267,7 @@ const dsPath = join(ROOT, "DATA_SOURCES.yml");
 const approvedFiles = new Set();
 const approvedRasterFiles = new Set();
 const approvedVectorFiles = new Set();
+const dataSourceEntries = new Map();
 if (!existsSync(dsPath)) {
   addFinding("error", "ライセンス台帳", "DATA_SOURCES.yml", 0, "台帳がありません");
 } else {
@@ -276,6 +278,10 @@ if (!existsSync(dsPath)) {
     const statusMatch = entry.match(new RegExp("review_status:\\s*(\\w+)"));
     const status = statusMatch ? statusMatch[1] : "missing";
     const files = [...entry.matchAll(P("^\\s+- (public/[^\\s]+)$", "gm"))].map((m) => m[1]);
+    if (dataSourceEntries.has(id)) {
+      addFinding("error", "ライセンス台帳", "DATA_SOURCES.yml", 0, `${id}: IDが重複しています`);
+    }
+    dataSourceEntries.set(id, { status, files, entry });
     if (status === "approved") {
       files.forEach((f) => approvedFiles.add(f));
       const assetType = entry.match(P("^\\s+asset_type:\\s*(\\S+)", "m"))?.[1];
@@ -466,7 +472,209 @@ if (!existsSync(dsPath)) {
   }
 }
 
-// ---- 3. 出典表示の確認 -------------------------------------------------------
+// ---- 3. 地域パック・固定データセット参照の検査 -------------------------------
+
+const eraCatalogPath = join(ROOT, "src", "era-catalog.json");
+const datasetManifestPath = join(ROOT, "src", "dataset-manifest.json");
+const regionManifestFiles = allFiles
+  .map((file) => file.rel)
+  .filter((rel) => P("^src/regions/[a-z0-9-]+-pack\\.json$").test(rel));
+
+let eraIds = new Set();
+let datasetManifest = [];
+if (!existsSync(eraCatalogPath)) {
+  addFinding("error", "地域パック", "src/era-catalog.json", 0, "年代カタログがありません");
+} else {
+  try {
+    const catalog = JSON.parse(readFileSync(eraCatalogPath, "utf8"));
+    if (!Array.isArray(catalog) || catalog.length === 0) throw new Error();
+    eraIds = new Set(catalog.map((era) => era?.id));
+    if (eraIds.size !== catalog.length || [...eraIds].some((id) => !P("^[a-z0-9]+(?:-[a-z0-9]+)*$").test(String(id)))) {
+      throw new Error();
+    }
+  } catch {
+    addFinding("error", "地域パック", "src/era-catalog.json", 0, "年代カタログが不正です");
+  }
+}
+
+if (!existsSync(datasetManifestPath)) {
+  addFinding("error", "地域データセット", "src/dataset-manifest.json", 0, "固定データセットmanifestがありません");
+} else {
+  try {
+    datasetManifest = JSON.parse(readFileSync(datasetManifestPath, "utf8"));
+    if (!Array.isArray(datasetManifest) || datasetManifest.length === 0) throw new Error();
+    const ids = new Set();
+    for (const dataset of datasetManifest) {
+      if (
+        !dataset ||
+        typeof dataset.id !== "string" ||
+        ids.has(dataset.id) ||
+        dataset.sourceId !== dataset.id ||
+        typeof dataset.path !== "string" ||
+        !P("^data/[a-z0-9][a-z0-9.-]*\\.geojson$").test(dataset.path) ||
+        dataset.path.includes("..") ||
+        dataset.path.includes(":") ||
+        dataset.path.startsWith("/") ||
+        !P("^[0-9a-f]{64}$").test(String(dataset.publicSha256))
+      ) {
+        throw new Error();
+      }
+      ids.add(dataset.id);
+      const source = dataSourceEntries.get(dataset.id);
+      const publicFile = `public/${dataset.path}`;
+      if (!source || source.status !== "approved") {
+        addFinding("error", "地域データセット", "DATA_SOURCES.yml", 0, `${dataset.id}: approved台帳登録がありません`);
+      } else if (source.files.length === 0 || !source.files.includes(publicFile)) {
+        addFinding("error", "地域データセット", "DATA_SOURCES.yml", 0, `${dataset.id}: local_filesが固定パスと一致しません`);
+      }
+      const full = join(ROOT, publicFile);
+      if (!existsSync(full)) {
+        addFinding("error", "地域データセット", publicFile, 0, "公開ファイルがありません");
+        continue;
+      }
+      const buffer = readFileSync(full);
+      const actual = createHash("sha256").update(buffer).digest("hex");
+      if (actual !== dataset.publicSha256) {
+        addFinding("error", "地域データセット", publicFile, 0, "公開SHAが固定manifestと一致しません");
+      }
+      try {
+        const geojson = JSON.parse(buffer.toString("utf8"));
+        const invalidBase =
+          geojson?.type !== "FeatureCollection" ||
+          !Array.isArray(geojson.features) ||
+          geojson.features.length === 0;
+        const invalidSource =
+          dataset.kind === "places"
+            ? geojson.features.some(
+                (feature) =>
+                  typeof feature?.properties?.source !== "string" ||
+                  !feature.properties.source.startsWith(
+                    "https://codh.rois.ac.jp/edo-maps/",
+                  ),
+              )
+            : geojson.features.some(
+                (feature) => feature?.properties?.sourceId !== dataset.sourceId,
+              );
+        if (invalidBase || invalidSource) throw new Error();
+      } catch {
+        addFinding("error", "地域データセット", publicFile, 0, "FeatureCollectionまたはsourceIdが不正です");
+      }
+    }
+  } catch {
+    addFinding("error", "地域データセット", "src/dataset-manifest.json", 0, "固定データセットmanifestが不正です");
+    datasetManifest = [];
+  }
+}
+
+if (regionManifestFiles.length === 0) {
+  addFinding("error", "地域パック", "src/regions/", 0, "地域パックmanifestがありません");
+} else {
+  const regionIds = new Set();
+  const datasetIds = new Set(datasetManifest.map((dataset) => dataset.id));
+  let enabledRegionCount = 0;
+  for (const rel of regionManifestFiles) {
+    try {
+      const pack = JSON.parse(readFileSync(join(ROOT, rel), "utf8"));
+      const region = pack?.region;
+      if (
+        !region ||
+        !P("^[a-z0-9]+(?:-[a-z0-9]+)*$").test(String(region.id)) ||
+        regionIds.has(region.id) ||
+        !Array.isArray(region.enabledEraIds) ||
+        !Array.isArray(pack.eras)
+      ) throw new Error();
+      regionIds.add(region.id);
+      if (region.enabled) enabledRegionCount += 1;
+      if (!region.enabledEraIds.includes(region.defaultEraId)) {
+        addFinding("error", "地域パック", rel, 0, "defaultEraIdがenabledEraIdsに含まれません");
+      }
+      for (const eraId of region.enabledEraIds) {
+        if (!eraIds.has(eraId)) addFinding("error", "地域パック", rel, 0, `存在しない年代IDです: ${eraId}`);
+        const binding = pack.eras.find((era) => era?.eraId === eraId && era?.enabled === true);
+        if (!binding) addFinding("error", "地域パック", rel, 0, `有効な年代バインディングがありません: ${eraId}`);
+      }
+      for (const binding of pack.eras) {
+        if (!eraIds.has(binding?.eraId)) addFinding("error", "地域パック", rel, 0, `存在しない年代参照です: ${binding?.eraId}`);
+        if (!Array.isArray(binding?.datasetIds)) throw new Error();
+        for (const id of binding.datasetIds) {
+          if (!datasetIds.has(id)) addFinding("error", "地域パック", rel, 0, `未承認データセット参照です: ${id}`);
+        }
+      }
+    } catch {
+      addFinding("error", "地域パック", rel, 0, "地域パックmanifestが不正です");
+    }
+  }
+  if (enabledRegionCount < 1) {
+    addFinding("error", "地域パック", "src/regions/", 0, "有効地域がありません");
+  }
+  infos.push(`地域パック: ${regionManifestFiles.length} 件、有効 ${enabledRegionCount} 件`);
+}
+
+// CSP・Service Workerの公開禁止を明示的に検査
+const EXPECTED_TILE_ORIGIN = new URL(
+  "https://cyberjapandata.gsi.go.jp",
+).origin;
+
+function cspDirectives(value) {
+  const directives = new Map();
+  for (const part of String(value).split(";")) {
+    const tokens = part.trim().split(/\s+/).filter(Boolean);
+    const name = tokens.shift();
+    if (name) directives.set(name, tokens);
+  }
+  return directives;
+}
+
+function isExactOriginSource(source, expectedOrigin) {
+  try {
+    const url = new URL(source);
+    return (
+      url.origin === expectedOrigin &&
+      url.pathname === "/" &&
+      url.search === "" &&
+      url.hash === ""
+    );
+  } catch {
+    return false;
+  }
+}
+
+const viteConfig = existsSync(join(ROOT, "vite.config.ts"))
+  ? readFileSync(join(ROOT, "vite.config.ts"), "utf8")
+  : "";
+const viteImgSources = viteConfig.match(/"img-src\s+([^"\r\n]+)"/)?.[1]
+  ?.split(/\s+/)
+  .filter(Boolean) ?? [];
+const viteConnectSources = viteConfig.match(/"connect-src\s+([^"\r\n]+)"/)?.[1]
+  ?.split(/\s+/)
+  .filter(Boolean) ?? [];
+if (
+  viteConnectSources.length !== 1 ||
+  viteConnectSources[0] !== "'self'" ||
+  !viteImgSources.some((source) =>
+    isExactOriginSource(source, EXPECTED_TILE_ORIGIN),
+  )
+) {
+  addFinding("error", "CSP", "vite.config.ts", 0, "既存CSPの通信先制限が維持されていません");
+}
+for (const file of allFiles) {
+  const base = file.rel.split("/").pop()?.toLowerCase() ?? "";
+  if (P("^(service-worker|sw)(\\.|$)|^workbox").test(base)) {
+    addFinding("error", "Service Worker", file.rel, 0, "Service Worker関連ファイルは公開禁止です");
+  }
+  if (
+    file.rel !== SELF &&
+    !file.rel.startsWith("tests/") &&
+    TEXT_EXT.has(extname(file.rel).toLowerCase())
+  ) {
+    const content = readFileSync(join(ROOT, file.rel), "utf8");
+    if (content.includes("serviceWorker.register")) {
+      addFinding("error", "Service Worker", file.rel, 0, "Service Worker登録コードがあります");
+    }
+  }
+}
+
+// ---- 4. 出典表示の確認 -------------------------------------------------------
 
 const attrChecks = [
   ["src/config.ts", "地理院タイル"],
@@ -486,7 +694,7 @@ for (const [file, needle] of attrChecks) {
   }
 }
 
-// ---- 4. GitHub Actions の SHA 固定検査 ---------------------------------------
+// ---- 5. GitHub Actions の SHA 固定検査 ---------------------------------------
 
 for (const f of allFiles) {
   if (!f.rel.startsWith(".github/workflows/")) continue;
@@ -504,7 +712,7 @@ for (const f of allFiles) {
   }
 }
 
-// ---- 5. dist(公開ビルド)の検査 ---------------------------------------------
+// ---- 6. dist(公開ビルド)の検査 ---------------------------------------------
 
 const distDir = join(ROOT, "dist");
 if (existsSync(distDir)) {
@@ -517,6 +725,35 @@ if (existsSync(distDir)) {
     }
   };
   walkDist(distDir);
+  const distIndex = join(distDir, "index.html");
+  if (!existsSync(distIndex)) {
+    addFinding("error", "CSP", "dist/index.html", 0, "公開HTMLがありません");
+  } else {
+    const html = readFileSync(distIndex, "utf8");
+    const csp = html.match(
+      /<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"/i,
+    )?.[1];
+    const directives = cspDirectives(csp ?? "");
+    const connectSources = directives.get("connect-src") ?? [];
+    const imgSources = directives.get("img-src") ?? [];
+    if (
+      !csp ||
+      connectSources.length !== 1 ||
+      connectSources[0] !== "'self'" ||
+      !imgSources.some((source) =>
+        isExactOriginSource(source, EXPECTED_TILE_ORIGIN),
+      ) ||
+      [...directives.values()].flat().some((source) => {
+        try {
+          return new URL(source).protocol === "http:";
+        } catch {
+          return false;
+        }
+      })
+    ) {
+      addFinding("error", "CSP", "dist/index.html", 0, "CSP欠落、許可先変更、またはmixed contentがあります");
+    }
+  }
   for (const rel of distFiles) {
     if (rel.endsWith(".map")) {
       addFinding("error", "ソースマップ露出", rel, 0, "本番ビルドに .map を含めない");
@@ -545,7 +782,7 @@ if (existsSync(distDir)) {
   addFinding("warn", "ビルド未確認", "dist/", 0, "dist がありません(npm run build を実行して再監査すること)");
 }
 
-// ---- 6. Git 履歴の検査 --------------------------------------------------------
+// ---- 7. Git 履歴の検査 --------------------------------------------------------
 
 const historyText = git("log", "--all", "-p", "--no-color");
 if (historyText !== null) {
@@ -594,7 +831,7 @@ for (const t of tracked) {
   }
 }
 
-// ---- 7. npm 依存の検査 --------------------------------------------------------
+// ---- 8. npm 依存の検査 --------------------------------------------------------
 
 try {
   const auditOut = execFileSync("npm", ["audit", "--json"], {

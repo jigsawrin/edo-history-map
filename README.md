@@ -5,7 +5,9 @@
 重ねて表示し、「いまいる場所が昔はどんな場所だったか」を確認できる、
 無料・広告なし・トラッカーなしの静的 Web アプリです。
 
-- 対象地域(MVP): 東京23区周辺
+- 現在公開中の地域: 東京・江戸（東京23区周辺）のみ
+- 将来の地域追加に備え、地域・年代・承認済みデータ・出典を結び付ける地域パック方式を採用
+- 京都・滋賀・大阪の歴史データ、地点、画像、GISは未導入
 - 公開 URL: <https://jigsawrin.github.io/edo-history-map/>
 
 ## 機能
@@ -120,6 +122,8 @@ TypeScript / Vite / Leaflet / Vitest / ESLint。
 実行時の外部通信先は地理院タイル(cyberjapandata.gsi.go.jp)のみで、
 Content Security Policy で制限しています。
 
+地域パックは年代カタログと地域固有の年代バインディングを分離し、承認済みデータセットIDを固定ローカルパスへ解決します。新地域の追加には、データセットごとの公式出典、個別ライセンス、再配布・改変可否、位置精度、CRS、SHAの確認が必要です。既存地域のデータや出典を別地域へ無断で流用してはいけません。
+
 ## ドキュメント
 
 - [PRIVACY.md](PRIVACY.md) — プライバシー
@@ -132,6 +136,7 @@ Content Security Policy で制限しています。
 - [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) — 脅威モデル
 - [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) — アクセシビリティ設計と今後の代替操作
 - [docs/HISTORICAL_BASEMAP.md](docs/HISTORICAL_BASEMAP.md) — 年代・pane・歴史画像の安全な拡張設計
+- [docs/REGION_PACKS.md](docs/REGION_PACKS.md) — 地域パックの構造と安全な追加手順
 - [docs/BROWSER_QA.md](docs/BROWSER_QA.md) — Canvas操作とPagesキャッシュの実ブラウザ確認手順
 
 ## ライセンス

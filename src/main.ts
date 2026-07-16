@@ -3,26 +3,18 @@ import "leaflet/dist/leaflet.css";
 import "./style.css";
 
 import {
-  INITIAL_CENTER,
-  INITIAL_ZOOM,
   MIN_ZOOM,
   MAX_ZOOM,
   GSI_TILE_URLS,
-  CODH_ATTRIBUTION,
-  MACHIYA_ATTRIBUTION,
-  COASTLINE_ATTRIBUTION,
   type BaseLayerKey,
 } from "./config";
-import { loadPlaces } from "./places";
 import { createHistoricalLayer, type HistoricalLayer } from "./historical";
 import { renderPlaceCard, renderNoData } from "./infocard";
 import { getCurrentLocation } from "./geolocation";
 import { renderAttribution, renderPrivacy } from "./attribution";
 import { readAllowedParams } from "./urlparams";
 import { handleHistoricalBackgroundClick } from "./map-click";
-import { loadMachiyaAreas } from "./machiya-areas";
 import { MachiyaAreaTransitionLayer } from "./machiya-layer";
-import { loadCoastlines } from "./coastlines";
 import { CoastlineTransitionLayer } from "./coastline-layer";
 import {
   defaultCoastlineVisibilityForView,
@@ -34,11 +26,22 @@ import {
   type HistoricalViewMode,
 } from "./machiya-visibility";
 import {
-  eraRegistry,
   isVisualLayerEnabled,
-  populateEraSelect,
   VISUAL_LAYER_IDS,
 } from "./eras";
+import { ATTRIBUTION_REGISTRY } from "./attribution-registry";
+import { datasetRegistry, type ApprovedDatasetId } from "./datasets";
+import { regionRegistry } from "./regions/registry";
+import type { RegionPack } from "./regions/types";
+import {
+  activeRegionFromParam,
+  announceRegionChange,
+  applyRegionMapView,
+  closeRegionInfoCard,
+  populateRegionEraSelect,
+  populateRegionSelect,
+  RegionLoadCoordinator,
+} from "./region-controller";
 import {
   eraTransitionDuration,
   LayerTransitionController,
@@ -81,10 +84,11 @@ function showStatus(message: string, returnFocus?: HTMLElement): void {
 
 function main(): void {
   const params = readAllowedParams(window.location.search);
+  let currentRegion = activeRegionFromParam(params["region"]);
 
   const map = L.map("map", {
-    center: INITIAL_CENTER,
-    zoom: INITIAL_ZOOM,
+    center: [...currentRegion.region.center] as [number, number],
+    zoom: currentRegion.region.defaultZoom,
     minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM,
     keyboard: true,
@@ -111,10 +115,19 @@ function main(): void {
   });
 
   // --- 歴史レイヤー ---
+  const regionSelect = byId<HTMLSelectElement>("region-select");
+  const regionControl = byId<HTMLElement>("region-control");
+  const regionStatus = byId<HTMLElement>("region-status");
+  populateRegionSelect(regionSelect, regionControl);
+  regionSelect.value = currentRegion.region.id;
   const eraSelect = byId<HTMLSelectElement>("era-select");
-  populateEraSelect(eraSelect);
   const requestedEra = params["era"] === "none" ? "modern" : params["era"];
-  eraSelect.value = eraRegistry.get(requestedEra ?? "")?.id ?? "edo-late";
+  populateRegionEraSelect(
+    eraSelect,
+    currentRegion,
+    undefined,
+    requestedEra,
+  );
   const historyViewSelect = byId<HTMLSelectElement>("history-view-select");
   const historyControls = byId<HTMLElement>("history-controls");
   const eraCaution = byId<HTMLElement>("era-caution");
@@ -129,14 +142,18 @@ function main(): void {
   const coastlineOpacitySlider = byId<HTMLInputElement>(
     "coastline-opacity-slider",
   );
+  const coastlineControls = byId<HTMLElement>("coastline-controls");
+  const machiyaAreaControls = byId<HTMLElement>("machiya-area-controls");
+  const pointsOpacityControl = byId<HTMLElement>("points-opacity-control");
+  const baseOpacityControl = byId<HTMLElement>("base-opacity-control");
   const infoCard = byId<HTMLElement>("info-card");
-  let historical: HistoricalLayer | null = null;
   let historicalPointsLayer: TransitionLayer | null = null;
   let machiyaLayer: MachiyaAreaTransitionLayer | null = null;
   let coastlineLayer: CoastlineTransitionLayer | null = null;
-  let pointsAttributionVisible = false;
-  let machiyaAttributionVisible = false;
-  let coastlineAttributionVisible = false;
+  let activeAttributionIds: readonly string[] = ["gsi-tiles"];
+  const visibleLeafletAttributions = new Set<string>();
+  const loadCoordinator = new RegionLoadCoordinator();
+  let regionToken = loadCoordinator.begin(currentRegion.region.id);
 
   const reconstructedLayer = createReconstructedBackground();
   const reconstructedTransition = new LeafletTransitionLayer(
@@ -163,44 +180,68 @@ function main(): void {
     return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
   }
 
-  function syncAttributions(
-    showPoints: boolean,
-    showMachiya: boolean,
-    showCoastline: boolean,
-  ): void {
-    if (showPoints !== pointsAttributionVisible) {
-      if (showPoints) map.attributionControl.addAttribution(CODH_ATTRIBUTION);
-      else map.attributionControl.removeAttribution(CODH_ATTRIBUTION);
-      pointsAttributionVisible = showPoints;
+  function syncAttributions(ids: readonly string[]): void {
+    activeAttributionIds = [...ids];
+    const next = new Set(
+      ids.filter((id) => id !== "gsi-tiles").map((id) => {
+        const attribution =
+          ATTRIBUTION_REGISTRY[id as keyof typeof ATTRIBUTION_REGISTRY];
+        if (!attribution) throw new Error("未登録の出典IDです");
+        return attribution;
+      }),
+    );
+    for (const attribution of visibleLeafletAttributions) {
+      if (!next.has(attribution)) {
+        map.attributionControl.removeAttribution(attribution);
+        visibleLeafletAttributions.delete(attribution);
+      }
     }
-    if (showMachiya !== machiyaAttributionVisible) {
-      if (showMachiya)
-        map.attributionControl.addAttribution(MACHIYA_ATTRIBUTION);
-      else map.attributionControl.removeAttribution(MACHIYA_ATTRIBUTION);
-      machiyaAttributionVisible = showMachiya;
-    }
-    if (showCoastline !== coastlineAttributionVisible) {
-      if (showCoastline)
-        map.attributionControl.addAttribution(COASTLINE_ATTRIBUTION);
-      else map.attributionControl.removeAttribution(COASTLINE_ATTRIBUTION);
-      coastlineAttributionVisible = showCoastline;
+    for (const attribution of next) {
+      if (!visibleLeafletAttributions.has(attribution)) {
+        map.attributionControl.addAttribution(attribution);
+        visibleLeafletAttributions.add(attribution);
+      }
     }
   }
 
   function applyEra(animate = true): void {
-    const era = eraRegistry.get(eraSelect.value) ?? eraRegistry.get("modern");
+    const era =
+      regionRegistry.getEraBinding(currentRegion.region.id, eraSelect.value) ??
+      regionRegistry.getEraBinding(currentRegion.region.id, "modern");
     if (!era) return;
     const targets: { layer: TransitionLayer; opacity: number }[] = [];
     const isHistorical = era.baseMode !== "modern";
+    const supportsPoints = era.visualLayers.includes(
+      VISUAL_LAYER_IDS.historicalPoints,
+    );
+    const supportsMachiya = era.visualLayers.includes(
+      VISUAL_LAYER_IDS.historicalCommonerAreas,
+    );
+    const supportsCoastline = era.visualLayers.includes(
+      VISUAL_LAYER_IDS.historicalCoastline,
+    );
     const view = historyViewSelect.value as HistoricalViewMode;
     historyControls.hidden = !isHistorical;
-    machiyaControls.hidden = !isHistorical;
-    machiyaVisible.disabled = !isHistorical || machiyaLayer === null;
+    machiyaControls.hidden =
+      !isHistorical || (!supportsMachiya && !supportsCoastline);
+    coastlineControls.hidden = !isHistorical || !supportsCoastline;
+    machiyaAreaControls.hidden = !isHistorical || !supportsMachiya;
+    pointsOpacityControl.hidden = !isHistorical || !supportsPoints;
+    baseOpacityControl.hidden = !isHistorical;
+    machiyaVisible.disabled =
+      !isHistorical || !supportsMachiya || machiyaLayer === null;
     machiyaOpacitySlider.disabled =
-      !isHistorical || machiyaLayer === null || !machiyaVisible.checked;
-    coastlineVisible.disabled = !isHistorical || coastlineLayer === null;
+      !isHistorical ||
+      !supportsMachiya ||
+      machiyaLayer === null ||
+      !machiyaVisible.checked;
+    coastlineVisible.disabled =
+      !isHistorical || !supportsCoastline || coastlineLayer === null;
     coastlineOpacitySlider.disabled =
-      !isHistorical || coastlineLayer === null || !coastlineVisible.checked;
+      !isHistorical ||
+      !supportsCoastline ||
+      coastlineLayer === null ||
+      !coastlineVisible.checked;
     baseOpacitySlider.disabled = !isHistorical || view !== "compare";
     eraCaution.hidden = !isHistorical;
     eraCaution.textContent = era.uncertaintyNote;
@@ -269,19 +310,17 @@ function main(): void {
       ? eraTransitionDuration(prefersReducedMotion(), ERA_TRANSITION_MS)
       : 0;
     transitions.switchTo(targets, duration);
-    syncAttributions(
-      isHistorical &&
-        historicalPointsLayer !== null &&
-        era.attributionIds.includes("codh-edo-maps-places"),
-      isHistorical &&
-        machiyaLayer !== null &&
-        machiyaVisible.checked &&
-        era.attributionIds.includes("codh-edo-machiya-areas"),
-      isHistorical &&
-        coastlineLayer !== null &&
-        coastlineVisible.checked &&
-        era.attributionIds.includes("codh-edo-coastline"),
-    );
+    const visibleIds = era.attributionIds.filter((id) => {
+      if (id === "codh-edo-maps-places") return historicalPointsLayer !== null;
+      if (id === "codh-edo-machiya-areas") {
+        return machiyaLayer !== null && machiyaVisible.checked;
+      }
+      if (id === "codh-edo-coastline") {
+        return coastlineLayer !== null && coastlineVisible.checked;
+      }
+      return true;
+    });
+    syncAttributions(visibleIds);
   }
 
   function applyHistoricalOpacity(): void {
@@ -316,68 +355,160 @@ function main(): void {
     applyEra(false);
   }
 
-  loadPlaces()
-    .then((places) => {
-      historical = createHistoricalLayer(
-        places,
-        (place) => {
-          renderPlaceCard(infoCard, place, map.getContainer());
-        },
-        panes.get(MAP_PANES.historicalPoints) as HTMLElement,
-      );
-      historicalPointsLayer = createHistoricalPointsTransitionLayer(
-        map,
-        historical,
-        panes.get(MAP_PANES.historicalPoints) as HTMLElement,
-      );
-      applyEra(false);
-    })
-    .catch(() => {
-      showStatus(
-        "歴史データを読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。",
-        map.getContainer(),
-      );
-    });
+  let pointsLayerPromise: Promise<TransitionLayer> | null = null;
+  let machiyaLayerPromise: Promise<MachiyaAreaTransitionLayer> | null = null;
+  let coastlineLayerPromise: Promise<CoastlineTransitionLayer> | null = null;
 
-  loadMachiyaAreas()
-    .then((areas) => {
-      machiyaLayer = new MachiyaAreaTransitionLayer(
-        map,
-        areas,
-        panes.get(MAP_PANES.historicalArea) as HTMLElement,
-      );
-      machiyaLayer.setUserOpacity(percentage(machiyaOpacitySlider) / 100);
-      applyEra(false);
-    })
-    .catch(() => {
-      machiyaVisible.disabled = true;
-      machiyaOpacitySlider.disabled = true;
-      showStatus(
-        "町家領域データを読み込めませんでした。現代地図・江戸地名・現在地など、その他の機能は引き続き利用できます。",
-        map.getContainer(),
-      );
-    });
+  function cachedPointsLayer(): Promise<TransitionLayer> {
+    if (!pointsLayerPromise) {
+      pointsLayerPromise = datasetRegistry
+        .load("codh-edo-maps-places")
+        .then((places) => {
+          const historical: HistoricalLayer = createHistoricalLayer(
+            places,
+            (place) => renderPlaceCard(infoCard, place, map.getContainer()),
+            panes.get(MAP_PANES.historicalPoints) as HTMLElement,
+          );
+          return createHistoricalPointsTransitionLayer(
+            map,
+            historical,
+            panes.get(MAP_PANES.historicalPoints) as HTMLElement,
+          );
+        })
+        .catch((error: unknown) => {
+          pointsLayerPromise = null;
+          throw error;
+        });
+    }
+    return pointsLayerPromise;
+  }
 
-  loadCoastlines()
-    .then((coastlines) => {
-      coastlineLayer = new CoastlineTransitionLayer(
-        map,
-        coastlines,
-        panes.get(MAP_PANES.historicalWaterLine) as HTMLElement,
-      );
-      coastlineLayer.setUserOpacity(
-        percentage(coastlineOpacitySlider) / 100,
-      );
-      applyEra(false);
-    })
-    .catch(() => {
-      coastlineVisible.disabled = true;
-      coastlineOpacitySlider.disabled = true;
-      showStatus(
-        "江戸末期海岸線データを読み込めませんでした。現代地図・江戸地名・町家領域・現在地など、その他の機能は引き続き利用できます。",
-        map.getContainer(),
-      );
-    });
+  function cachedMachiyaLayer(): Promise<MachiyaAreaTransitionLayer> {
+    if (!machiyaLayerPromise) {
+      machiyaLayerPromise = datasetRegistry
+        .load("codh-edo-machiya-areas")
+        .then((areas) => {
+          const layer = new MachiyaAreaTransitionLayer(
+            map,
+            areas,
+            panes.get(MAP_PANES.historicalArea) as HTMLElement,
+          );
+          layer.setUserOpacity(percentage(machiyaOpacitySlider) / 100);
+          return layer;
+        })
+        .catch((error: unknown) => {
+          machiyaLayerPromise = null;
+          throw error;
+        });
+    }
+    return machiyaLayerPromise;
+  }
+
+  function cachedCoastlineLayer(): Promise<CoastlineTransitionLayer> {
+    if (!coastlineLayerPromise) {
+      coastlineLayerPromise = datasetRegistry
+        .load("codh-edo-coastline")
+        .then((coastlines) => {
+          const layer = new CoastlineTransitionLayer(
+            map,
+            coastlines,
+            panes.get(MAP_PANES.historicalWaterLine) as HTMLElement,
+          );
+          layer.setUserOpacity(percentage(coastlineOpacitySlider) / 100);
+          return layer;
+        })
+        .catch((error: unknown) => {
+          coastlineLayerPromise = null;
+          throw error;
+        });
+    }
+    return coastlineLayerPromise;
+  }
+
+  function regionDatasetIds(pack: Readonly<RegionPack>): Set<string> {
+    return new Set(
+      pack.eras
+        .filter((binding) => binding.enabled)
+        .flatMap((binding) => binding.datasetIds),
+    );
+  }
+
+  function loadRegionLayers(pack: Readonly<RegionPack>): void {
+    const token = regionToken;
+    const ids = regionDatasetIds(pack);
+    const load = <T extends TransitionLayer>(
+      id: ApprovedDatasetId,
+      promise: Promise<T>,
+      assign: (layer: T) => void,
+      message: string,
+    ): void => {
+      if (!ids.has(id)) return;
+      void promise
+        .then((layer) => {
+          if (!loadCoordinator.isCurrent(token)) return;
+          assign(layer);
+          applyEra(false);
+        })
+        .catch(() => {
+          if (!loadCoordinator.isCurrent(token)) return;
+          showStatus(message, map.getContainer());
+          applyEra(false);
+        });
+    };
+    load(
+      "codh-edo-maps-places",
+      cachedPointsLayer(),
+      (layer) => {
+        historicalPointsLayer = layer;
+      },
+      "歴史データを読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。",
+    );
+    load(
+      "codh-edo-machiya-areas",
+      cachedMachiyaLayer(),
+      (layer) => {
+        machiyaLayer = layer;
+      },
+      "町家領域データを読み込めませんでした。現代地図・江戸地名・現在地など、その他の機能は引き続き利用できます。",
+    );
+    load(
+      "codh-edo-coastline",
+      cachedCoastlineLayer(),
+      (layer) => {
+        coastlineLayer = layer;
+      },
+      "江戸末期海岸線データを読み込めませんでした。現代地図・江戸地名・町家領域・現在地など、その他の機能は引き続き利用できます。",
+    );
+  }
+
+  function activateRegion(pack: Readonly<RegionPack>, moveMap: boolean): void {
+    transitions.switchTo([], 0);
+    syncAttributions(["gsi-tiles"]);
+    currentRegion = pack;
+    regionToken = loadCoordinator.begin(pack.region.id);
+    historicalPointsLayer = null;
+    machiyaLayer = null;
+    coastlineLayer = null;
+    populateRegionEraSelect(eraSelect, pack);
+    if (moveMap) {
+      applyRegionMapView(map, pack);
+      closeRegionInfoCard(infoCard, regionSelect);
+      announceRegionChange(regionStatus, pack);
+    }
+    applyEra(false);
+    loadRegionLayers(pack);
+  }
+
+  loadRegionLayers(currentRegion);
+
+  regionSelect.addEventListener("change", () => {
+    const next = regionRegistry.get(regionSelect.value);
+    if (!next) {
+      regionSelect.value = currentRegion.region.id;
+      return;
+    }
+    activateRegion(next, true);
+  });
 
   eraSelect.addEventListener("change", () => applyEra(true));
   historyViewSelect.addEventListener("change", () => {
@@ -402,9 +533,13 @@ function main(): void {
 
   // 何もない場所のクリック: データなし表示(マーカークリックはイベントが止まる)
   map.on("click", () => {
+    const binding = regionRegistry.getEraBinding(
+      currentRegion.region.id,
+      eraSelect.value,
+    );
     handleHistoricalBackgroundClick(
       infoCard,
-      Boolean(eraRegistry.get(eraSelect.value)?.placeDatasetId),
+      Boolean(binding?.placeDatasetId),
       () => renderNoData(infoCard, map.getContainer()),
     );
   });
@@ -488,7 +623,10 @@ function main(): void {
   byId<HTMLButtonElement>("attribution-button").addEventListener(
     "click",
     () => {
-      renderAttribution(byId<HTMLElement>("attribution-content"));
+      renderAttribution(
+        byId<HTMLElement>("attribution-content"),
+        activeAttributionIds,
+      );
       attrDialog.showModal();
     },
   );

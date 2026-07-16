@@ -1,17 +1,14 @@
+import catalogData from "./era-catalog.json";
+
 export type EraBaseMode = "modern" | "reconstructed" | "historical-image";
 
+/** 地域に依存しない年代カタログ。表示レイヤーと出典は地域パックが所有する。 */
 export interface EraDefinition {
   id: string;
   label: string;
+  localizedLabels?: Partial<Record<"ja" | "en", string>>;
   startYear: number | null;
   endYear: number | null;
-  baseMode: EraBaseMode;
-  visualLayers: string[];
-  placeDatasetId: string | null;
-  attributionIds: string[];
-  uncertaintyNote: string;
-  enabled: boolean;
-  localizedLabels?: Partial<Record<"ja" | "en", string>>;
 }
 
 export const VISUAL_LAYER_IDS = {
@@ -46,88 +43,25 @@ export function isVisualLayerEnabled(id: string): boolean {
   return VISUAL_LAYER_ENABLED[id] === true;
 }
 
-/**
- * 年代UIとレイヤー構成の唯一の定義元。
- * 未導入の歴史GISレイヤーは将来の識別子だけを予約し、実データや形状は登録しない。
- */
-const ERA_DEFINITIONS: EraDefinition[] = [
-  {
-    id: "modern",
-    label: "現代",
-    startYear: null,
-    endYear: null,
-    baseMode: "modern",
-    visualLayers: [VISUAL_LAYER_IDS.modernBase],
-    placeDatasetId: null,
-    attributionIds: ["gsi-tiles"],
-    uncertaintyNote: "",
-    enabled: true,
-    localizedLabels: { ja: "現代", en: "Modern" },
-  },
-  {
-    id: "edo-late",
-    label: "江戸後期",
-    startYear: 1849,
-    endYear: 1862,
-    baseMode: "reconstructed",
-    visualLayers: [
-      VISUAL_LAYER_IDS.reconstructedBackground,
-      VISUAL_LAYER_IDS.historicalCoastline,
-      VISUAL_LAYER_IDS.historicalWater,
-      VISUAL_LAYER_IDS.historicalMoats,
-      VISUAL_LAYER_IDS.historicalRoads,
-      VISUAL_LAYER_IDS.historicalCommonerAreas,
-      VISUAL_LAYER_IDS.historicalSamuraiAreas,
-      VISUAL_LAYER_IDS.historicalTempleAreas,
-      VISUAL_LAYER_IDS.historicalCastle,
-      VISUAL_LAYER_IDS.historicalPoints,
-    ],
-    placeDatasetId: "codh-edo-maps-places",
-    attributionIds: [
-      "codh-edo-maps-places",
-      "codh-edo-machiya-areas",
-      "codh-edo-coastline",
-    ],
-    uncertaintyNote:
-      "江戸地名と町家領域は江戸切絵図を現代地図へ位置合わせした推定データです。江戸末期海岸線は19世紀末の地図等を現代座標へ位置合わせした約20万分の1相当の推定表示です。時期、潮位、地図の歪み等により実際の位置・形状と異なる可能性があり、測量、境界、所有権、浸水・津波・高潮等の災害判断には使用できません。和紙風背景は本プロジェクト独自の装飾です。",
-    enabled: true,
-    localizedLabels: { ja: "江戸後期", en: "Late Edo" },
-  },
-  {
-    id: "edo-early",
-    label: "江戸前期",
-    startYear: null,
-    endYear: null,
-    baseMode: "historical-image",
-    visualLayers: [],
-    placeDatasetId: null,
-    attributionIds: [],
-    uncertaintyNote: "権利・位置合わせ確認済みの画像は未導入です。",
-    enabled: false,
-    localizedLabels: { ja: "江戸前期", en: "Early Edo" },
-  },
-];
+const ERA_DEFINITIONS = catalogData as readonly EraDefinition[];
+
+function cloneDefinition(definition: EraDefinition): Readonly<EraDefinition> {
+  const clone: EraDefinition = { ...definition };
+  if (definition.localizedLabels) {
+    clone.localizedLabels = Object.freeze({ ...definition.localizedLabels });
+  }
+  return Object.freeze(clone);
+}
 
 export class EraRegistry {
   readonly #definitions: ReadonlyMap<string, Readonly<EraDefinition>>;
 
   constructor(definitions: readonly EraDefinition[] = ERA_DEFINITIONS) {
     const entries = definitions.map((definition) => {
-      if (!definition.id || !definition.label) {
-        throw new Error("年代定義のIDとラベルは必須です");
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(definition.id) || !definition.label) {
+        throw new Error("年代定義のIDとラベルが不正です");
       }
-      const cloned: EraDefinition = {
-        ...definition,
-        visualLayers: [...definition.visualLayers],
-        attributionIds: [...definition.attributionIds],
-      };
-      if (definition.localizedLabels) {
-        cloned.localizedLabels = { ...definition.localizedLabels };
-      }
-      return [
-        definition.id,
-        Object.freeze(cloned),
-      ] as const;
+      return [definition.id, cloneDefinition(definition)] as const;
     });
     if (new Set(entries.map(([id]) => id)).size !== entries.length) {
       throw new Error("年代定義のIDが重複しています");
@@ -136,14 +70,11 @@ export class EraRegistry {
   }
 
   get(id: string): Readonly<EraDefinition> | null {
-    const definition = this.#definitions.get(id);
-    return definition?.enabled ? definition : null;
+    return this.#definitions.get(id) ?? null;
   }
 
-  enabled(): readonly Readonly<EraDefinition>[] {
-    return [...this.#definitions.values()].filter(
-      (definition) => definition.enabled,
-    );
+  all(): readonly Readonly<EraDefinition>[] {
+    return [...this.#definitions.values()];
   }
 }
 
@@ -160,18 +91,21 @@ export function formatEraLabel(
 
 export function populateEraSelect(
   select: HTMLSelectElement,
+  eraIds: readonly string[],
   registry: EraRegistry = eraRegistry,
   locale: "ja" | "en" = document.documentElement.lang.startsWith("en")
     ? "en"
     : "ja",
 ): void {
   const selected = select.value;
-  const options = registry.enabled().map((era) => {
+  const options = eraIds.map((eraId) => {
+    const era = registry.get(eraId);
+    if (!era) throw new Error(`存在しない年代IDです: ${eraId}`);
     const option = document.createElement("option");
     option.value = era.id;
     option.textContent = formatEraLabel(era, locale);
     return option;
   });
   select.replaceChildren(...options);
-  if (registry.get(selected)) select.value = selected;
+  if (eraIds.includes(selected)) select.value = selected;
 }
