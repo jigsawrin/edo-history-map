@@ -20,6 +20,9 @@ export const GSI_ATTRIBUTION =
 export const CODH_ATTRIBUTION =
   '<a href="https://codh.rois.ac.jp/edo-maps/" target="_blank" rel="noopener noreferrer">江戸マップ地名データセット(CODH) CC BY 4.0</a>';
 
+export const MACHIYA_ATTRIBUTION =
+  '<a href="https://codh.rois.ac.jp/edo-maps/rekichizu/index.html.ja" target="_blank" rel="noopener noreferrer">「江戸切絵図」町家領域データセット(CODH) CC BY 4.0</a>';
+
 /** 通信を許可する外部オリジン(タイル画像のみ)。 */
 export const ALLOWED_TILE_ORIGIN = "https://cyberjapandata.gsi.go.jp";
 
@@ -31,6 +34,7 @@ export const ALLOWED_LINK_PREFIXES = [
 
 /** 歴史GISデータ(ビルドに同梱、同一オリジンから取得)。 */
 export const PLACES_DATA_PATH = "data/edo-places.geojson";
+export const MACHIYA_DATA_PATH = "data/edo-machiya-areas.geojson";
 
 /** GeoJSON 取り込み時の上限。 */
 export const LIMITS = {
@@ -41,6 +45,17 @@ export const LIMITS = {
   /** 文字列プロパティ1つあたりの最大文字数 */
   maxStringLength: 300,
   /** 取得タイムアウト(ミリ秒) */
+  fetchTimeoutMs: 15000,
+} as const;
+
+/** 町家領域GeoJSON専用上限。実データ(28件、8,243頂点、約198KB)に余裕を持たせる。 */
+export const MACHIYA_LIMITS = {
+  maxBytes: 1024 * 1024,
+  maxFeatures: 100,
+  maxTotalVertices: 25000,
+  maxVerticesPerFeature: 5000,
+  maxStringLength: 120,
+  maxDepth: 10,
   fetchTimeoutMs: 15000,
 } as const;
 

@@ -9,6 +9,7 @@ import {
   MAX_ZOOM,
   GSI_TILE_URLS,
   CODH_ATTRIBUTION,
+  MACHIYA_ATTRIBUTION,
   type BaseLayerKey,
 } from "./config";
 import { loadPlaces } from "./places";
@@ -18,6 +19,13 @@ import { getCurrentLocation } from "./geolocation";
 import { renderAttribution, renderPrivacy } from "./attribution";
 import { readAllowedParams } from "./urlparams";
 import { handleHistoricalBackgroundClick } from "./map-click";
+import { loadMachiyaAreas } from "./machiya-areas";
+import { MachiyaAreaTransitionLayer } from "./machiya-layer";
+import {
+  defaultMachiyaVisibilityForView,
+  shouldShowMachiyaArea,
+  type HistoricalViewMode,
+} from "./machiya-visibility";
 import {
   eraRegistry,
   isVisualLayerEnabled,
@@ -39,8 +47,6 @@ import {
 } from "./leaflet-layers";
 
 const ERA_TRANSITION_MS = 220;
-
-type HistoricalViewMode = "reconstructed" | "compare" | "points";
 
 function byId<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -107,10 +113,17 @@ function main(): void {
   const eraCaution = byId<HTMLElement>("era-caution");
   const opacitySlider = byId<HTMLInputElement>("opacity-slider");
   const baseOpacitySlider = byId<HTMLInputElement>("base-opacity-slider");
+  const machiyaControls = byId<HTMLFieldSetElement>("machiya-controls");
+  const machiyaVisible = byId<HTMLInputElement>("machiya-visible");
+  const machiyaOpacitySlider = byId<HTMLInputElement>(
+    "machiya-opacity-slider",
+  );
   const infoCard = byId<HTMLElement>("info-card");
   let historical: HistoricalLayer | null = null;
   let historicalPointsLayer: TransitionLayer | null = null;
-  let codhAttributionVisible = false;
+  let machiyaLayer: MachiyaAreaTransitionLayer | null = null;
+  let pointsAttributionVisible = false;
+  let machiyaAttributionVisible = false;
 
   const reconstructedLayer = createReconstructedBackground();
   const reconstructedTransition = new LeafletTransitionLayer(
@@ -137,11 +150,18 @@ function main(): void {
     return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
   }
 
-  function syncCodhAttribution(show: boolean): void {
-    if (show === codhAttributionVisible) return;
-    if (show) map.attributionControl.addAttribution(CODH_ATTRIBUTION);
-    else map.attributionControl.removeAttribution(CODH_ATTRIBUTION);
-    codhAttributionVisible = show;
+  function syncAttributions(showPoints: boolean, showMachiya: boolean): void {
+    if (showPoints !== pointsAttributionVisible) {
+      if (showPoints) map.attributionControl.addAttribution(CODH_ATTRIBUTION);
+      else map.attributionControl.removeAttribution(CODH_ATTRIBUTION);
+      pointsAttributionVisible = showPoints;
+    }
+    if (showMachiya !== machiyaAttributionVisible) {
+      if (showMachiya)
+        map.attributionControl.addAttribution(MACHIYA_ATTRIBUTION);
+      else map.attributionControl.removeAttribution(MACHIYA_ATTRIBUTION);
+      machiyaAttributionVisible = showMachiya;
+    }
   }
 
   function applyEra(animate = true): void {
@@ -151,6 +171,10 @@ function main(): void {
     const isHistorical = era.baseMode !== "modern";
     const view = historyViewSelect.value as HistoricalViewMode;
     historyControls.hidden = !isHistorical;
+    machiyaControls.hidden = !isHistorical;
+    machiyaVisible.disabled = !isHistorical || machiyaLayer === null;
+    machiyaOpacitySlider.disabled =
+      !isHistorical || machiyaLayer === null || !machiyaVisible.checked;
     baseOpacitySlider.disabled = !isHistorical || view !== "compare";
     eraCaution.hidden = !isHistorical;
     eraCaution.textContent = era.uncertaintyNote;
@@ -177,6 +201,20 @@ function main(): void {
         targets.push({ layer: modernBase, opacity: 1 });
       }
       if (
+        machiyaLayer &&
+        shouldShowMachiyaArea({
+          isHistorical,
+          layerAvailable: true,
+          registryEnabled:
+            era.visualLayers.includes(
+              VISUAL_LAYER_IDS.historicalCommonerAreas,
+            ) && isVisualLayerEnabled(VISUAL_LAYER_IDS.historicalCommonerAreas),
+          selected: machiyaVisible.checked,
+        })
+      ) {
+        targets.push({ layer: machiyaLayer, opacity: 1 });
+      }
+      if (
         historicalPointsLayer &&
         era.visualLayers.includes(VISUAL_LAYER_IDS.historicalPoints) &&
         isVisualLayerEnabled(VISUAL_LAYER_IDS.historicalPoints)
@@ -192,10 +230,14 @@ function main(): void {
       ? eraTransitionDuration(prefersReducedMotion(), ERA_TRANSITION_MS)
       : 0;
     transitions.switchTo(targets, duration);
-    syncCodhAttribution(
+    syncAttributions(
       isHistorical &&
         historicalPointsLayer !== null &&
         era.attributionIds.includes("codh-edo-maps-places"),
+      isHistorical &&
+        machiyaLayer !== null &&
+        machiyaVisible.checked &&
+        era.attributionIds.includes("codh-edo-machiya-areas"),
     );
   }
 
@@ -208,6 +250,16 @@ function main(): void {
   function applyBaseOpacity(): void {
     const value = percentage(baseOpacitySlider);
     baseOpacitySlider.setAttribute("aria-valuetext", `${value}パーセント`);
+    applyEra(false);
+  }
+
+  function applyMachiyaOpacity(): void {
+    const value = percentage(machiyaOpacitySlider);
+    machiyaOpacitySlider.setAttribute(
+      "aria-valuetext",
+      `${value}パーセント`,
+    );
+    machiyaLayer?.setUserOpacity(value / 100);
     applyEra(false);
   }
 
@@ -234,12 +286,39 @@ function main(): void {
       );
     });
 
+  loadMachiyaAreas()
+    .then((areas) => {
+      machiyaLayer = new MachiyaAreaTransitionLayer(
+        map,
+        areas,
+        panes.get(MAP_PANES.historicalArea) as HTMLElement,
+      );
+      machiyaLayer.setUserOpacity(percentage(machiyaOpacitySlider) / 100);
+      applyEra(false);
+    })
+    .catch(() => {
+      machiyaVisible.disabled = true;
+      machiyaOpacitySlider.disabled = true;
+      showStatus(
+        "町家領域データを読み込めませんでした。現代地図・江戸地名・現在地など、その他の機能は引き続き利用できます。",
+        map.getContainer(),
+      );
+    });
+
   eraSelect.addEventListener("change", () => applyEra(true));
-  historyViewSelect.addEventListener("change", () => applyEra(true));
+  historyViewSelect.addEventListener("change", () => {
+    machiyaVisible.checked = defaultMachiyaVisibilityForView(
+      historyViewSelect.value as HistoricalViewMode,
+    );
+    applyEra(true);
+  });
   opacitySlider.addEventListener("input", applyHistoricalOpacity);
   baseOpacitySlider.addEventListener("input", applyBaseOpacity);
+  machiyaVisible.addEventListener("change", () => applyEra(true));
+  machiyaOpacitySlider.addEventListener("input", applyMachiyaOpacity);
   applyHistoricalOpacity();
   applyBaseOpacity();
+  applyMachiyaOpacity();
 
   // 何もない場所のクリック: データなし表示(マーカークリックはイベントが止まる)
   map.on("click", () => {

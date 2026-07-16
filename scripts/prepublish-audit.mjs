@@ -135,7 +135,8 @@ const ALLOWED_HOSTS = new Set([
 
 const DANGEROUS_EXT = new Set([
   ".exe", ".dll", ".msi", ".scr", ".bat", ".cmd", ".ps1",
-  ".zip", ".7z", ".rar", ".db", ".sqlite", ".pfx", ".p12", ".pem", ".key",
+  ".zip", ".7z", ".rar", ".db", ".sqlite", ".gpkg", ".shp", ".shx",
+  ".dbf", ".prj", ".cpg", ".qmd", ".pfx", ".p12", ".pem", ".key",
 ]);
 
 const TEXT_EXT = new Set([
@@ -149,7 +150,10 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const SELF = "scripts/prepublish-audit.mjs";
 
 // 承認済みデータファイル(座標を含むことが正当)
-const APPROVED_DATA = new Set(["public/data/edo-places.geojson"]);
+const APPROVED_DATA = new Set([
+  "public/data/edo-places.geojson",
+  "public/data/edo-machiya-areas.geojson",
+]);
 
 // ---- 1. ファイル単位の検査 --------------------------------------------------
 
@@ -260,6 +264,7 @@ for (const f of allFiles) {
 const dsPath = join(ROOT, "DATA_SOURCES.yml");
 const approvedFiles = new Set();
 const approvedRasterFiles = new Set();
+const approvedVectorFiles = new Set();
 if (!existsSync(dsPath)) {
   addFinding("error", "ライセンス台帳", "DATA_SOURCES.yml", 0, "台帳がありません");
 } else {
@@ -352,6 +357,80 @@ if (!existsSync(dsPath)) {
           }
         }
       }
+      if (assetType === "historical-vector") {
+        const requiredTextFields = [
+          "title",
+          "provider",
+          "official_source",
+          "original_item",
+          "data_version",
+          "license",
+          "license_url",
+          "attribution",
+          "doi",
+          "modification",
+          "accessed_at",
+          "downloaded_at",
+          "source_crs",
+          "output_crs",
+          "reviewer_note",
+        ];
+        for (const field of requiredTextFields) {
+          if (!P(`^\\s+${field}:\\s*(?!null\\s*$).+`, "m").test(entry)) {
+            addFinding("error", "歴史ベクターメタデータ", "DATA_SOURCES.yml", 0, `${id}: ${field} がありません`);
+          }
+        }
+        if (!P("^\\s+redistribution_allowed:\\s*true\\s*$", "m").test(entry)) {
+          addFinding("error", "歴史ベクター権利条件", "DATA_SOURCES.yml", 0, `${id}: redistribution_allowed=true の確認がありません`);
+        }
+        const originalSha = entry.match(
+          P("^\\s+original_sha256:\\s*([0-9a-f]{64})\\s*$", "m"),
+        )?.[1];
+        const convertedSha = entry.match(
+          P("^\\s+converted_sha256:\\s*([0-9a-f]{64})\\s*$", "m"),
+        )?.[1];
+        if (!originalSha || !convertedSha) {
+          addFinding("error", "歴史ベクターハッシュ", "DATA_SOURCES.yml", 0, `${id}: 原データまたは変換後SHA-256がありません`);
+        }
+        if (
+          files.length !== 1 ||
+          !files[0].startsWith("public/data/") ||
+          !files[0].endsWith(".geojson") ||
+          files[0].includes("..")
+        ) {
+          addFinding("error", "歴史ベクターファイル", "DATA_SOURCES.yml", 0, `${id}: local_filesは公開GeoJSON 1件に限定してください`);
+        } else {
+          const file = files[0];
+          const full = join(ROOT, file);
+          approvedVectorFiles.add(file);
+          if (!existsSync(full) || statSync(full).isDirectory()) {
+            addFinding("error", "歴史ベクターファイル", file, 0, "登録GeoJSONがありません");
+          } else {
+            const buffer = readFileSync(full);
+            const actual = createHash("sha256").update(buffer).digest("hex");
+            if (convertedSha && actual !== convertedSha) {
+              addFinding("error", "歴史ベクターハッシュ", file, 0, "変換後SHA-256が台帳と一致しません");
+            }
+            try {
+              const geojson = JSON.parse(buffer.toString("utf8"));
+              if (
+                geojson?.type !== "FeatureCollection" ||
+                !Array.isArray(geojson.features) ||
+                geojson.features.length === 0 ||
+                geojson.features.some(
+                  (feature) =>
+                    !["Polygon", "MultiPolygon"].includes(feature?.geometry?.type) ||
+                    feature?.properties?.sourceId !== id,
+                )
+              ) {
+                throw new Error();
+              }
+            } catch {
+              addFinding("error", "歴史ベクター形式", file, 0, "Polygon/MultiPolygon FeatureCollectionまたはsourceIdが不正です");
+            }
+          }
+        }
+      }
       infos.push(`データ ${id}: approved (${files.length} ファイル)`);
     } else {
       if (files.length > 0) {
@@ -375,6 +454,9 @@ const attrChecks = [
   ["src/attribution.ts", "江戸マップ地名データセット"],
   ["THIRD_PARTY_NOTICES.md", "CC BY 4.0"],
   ["THIRD_PARTY_NOTICES.md", "Leaflet"],
+  ["src/attribution.ts", "10.20676/00000446"],
+  ["src/attribution.ts", "CC BY 4.0"],
+  ["THIRD_PARTY_NOTICES.md", "町家領域データセット"],
 ];
 for (const [file, needle] of attrChecks) {
   const p = join(ROOT, file);
@@ -424,6 +506,15 @@ if (existsSync(distDir)) {
         addFinding("error", "未承認歴史画像の公開", rel, 0, "approved の全権利条件を満たす台帳登録がありません");
       }
     }
+    if (rel.startsWith("dist/data/") && rel.endsWith(".geojson")) {
+      const sourcePath = `public/${rel.slice("dist/".length)}`;
+      if (!approvedFiles.has(sourcePath)) {
+        addFinding("error", "未承認歴史データの公開", rel, 0, "approved台帳登録がありません");
+      }
+      if (sourcePath.includes("machiya") && !approvedVectorFiles.has(sourcePath)) {
+        addFinding("error", "未承認歴史ベクターの公開", rel, 0, "historical-vectorのapproved条件を満たしていません");
+      }
+    }
   }
   infos.push(`dist: ${distFiles.length} ファイル`);
 } else {
@@ -448,6 +539,28 @@ if (historyText !== null) {
   infos.push("Git 履歴: 秘密情報・個人情報パターンを走査済み");
 } else {
   infos.push("Git 履歴: リポジトリ未初期化のため対象なし");
+}
+
+const forbiddenRawExtensions = new Set([
+  ".zip",
+  ".shp",
+  ".shx",
+  ".dbf",
+  ".prj",
+  ".gpkg",
+]);
+for (const file of tracked) {
+  if (forbiddenRawExtensions.has(extname(file).toLowerCase())) {
+    addFinding("error", "原データ追跡", file, 0, "原ZIP/Shapefile/GeoPackageはGit追跡禁止です");
+  }
+}
+const historyNames = git("log", "--all", "--name-only", "--pretty=format:");
+if (historyNames !== null) {
+  for (const file of new Set(historyNames.split("\n").filter(Boolean))) {
+    if (forbiddenRawExtensions.has(extname(file).toLowerCase())) {
+      addFinding("error", "原データ履歴", file, 0, "Git履歴に原ZIP/Shapefile/GeoPackageがあります");
+    }
+  }
 }
 
 // 追跡ファイルと .gitignore の整合(追跡中の除外対象がないか)
