@@ -100,11 +100,25 @@ body {
   font-weight: 700;
 }
 
-.machiya-description {
+.machiya-description,
+.coastline-description {
   flex-basis: 100%;
   margin: 0;
   font-size: 0.72rem;
   color: #444;
+}
+
+.legend-coastline {
+  width: 1.4rem;
+  height: 0.3rem;
+  border: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    #315f78 0,
+    #315f78 7px,
+    transparent 7px,
+    transparent 11px
+  );
 }
 
 .map-legend {
@@ -306,7 +320,8 @@ dialog::backdrop {
     flex-basis: 100%;
   }
 
-  .machiya-description {
+  .machiya-description,
+  .coastline-description {
     display: none;
   }
 }
@@ -332,6 +347,20 @@ dialog::backdrop {
 
   .leaflet-historical-area-pane-pane {
     filter: contrast(1.45);
+  }
+
+  .leaflet-historical-water-line-pane-pane {
+    filter: contrast(1.8);
+  }
+
+  .legend-coastline {
+    background: repeating-linear-gradient(
+      90deg,
+      #000 0,
+      #000 7px,
+      transparent 7px,
+      transparent 11px
+    );
   }
 
   .legend-machiya {

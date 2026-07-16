@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "data:convert": "node scripts/convert-owariya.mjs",
     "data:convert:machiya": "node scripts/convert-machiya-areas.mjs",
+    "data:convert:coastline": "node scripts/convert-historical-coastline.mjs",
     "audit:prepublish": "node scripts/prepublish-audit.mjs"
   },
   "dependencies": {

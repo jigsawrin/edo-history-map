@@ -23,6 +23,9 @@ export const CODH_ATTRIBUTION =
 export const MACHIYA_ATTRIBUTION =
   '<a href="https://codh.rois.ac.jp/edo-maps/rekichizu/index.html.ja" target="_blank" rel="noopener noreferrer">「江戸切絵図」町家領域データセット(CODH) CC BY 4.0</a>';
 
+export const COASTLINE_ATTRIBUTION =
+  '<a href="https://codh.rois.ac.jp/historical-gis/edo-coast/" target="_blank" rel="noopener noreferrer">『江戸末期海岸線／水域データセット』海岸線(CODH) CC BY 4.0</a>';
+
 /** 通信を許可する外部オリジン(タイル画像のみ)。 */
 export const ALLOWED_TILE_ORIGIN = "https://cyberjapandata.gsi.go.jp";
 
@@ -35,6 +38,7 @@ export const ALLOWED_LINK_PREFIXES = [
 /** 歴史GISデータ(ビルドに同梱、同一オリジンから取得)。 */
 export const PLACES_DATA_PATH = "data/edo-places.geojson";
 export const MACHIYA_DATA_PATH = "data/edo-machiya-areas.geojson";
+export const COASTLINE_DATA_PATH = "data/edo-coastlines.geojson";
 
 /** GeoJSON 取り込み時の上限。 */
 export const LIMITS = {
@@ -57,6 +61,25 @@ export const MACHIYA_LIMITS = {
   maxStringLength: 120,
   maxDepth: 10,
   fetchTimeoutMs: 15000,
+} as const;
+
+/** 海岸線GeoJSON専用上限。実データ(3件、131,462頂点、約2.86MiB)に余裕を持たせる。 */
+export const COASTLINE_LIMITS = {
+  maxBytes: 4 * 1024 * 1024,
+  maxFeatures: 10,
+  maxTotalVertices: 150000,
+  maxVerticesPerFeature: 140000,
+  maxStringLength: 120,
+  maxDepth: 10,
+  fetchTimeoutMs: 15000,
+} as const;
+
+/** 採用元レコードを丸ごと保持するための国内bounds。各FeatureはDATA_BOUNDSとの交差も必須。 */
+export const COASTLINE_DATA_BOUNDS = {
+  minLat: 24,
+  maxLat: 46,
+  minLon: 122,
+  maxLon: 149,
 } as const;
 
 /** 東京23区周辺の対象範囲(妥当な世界座標でも、この範囲外の点は読み飛ばす)。 */

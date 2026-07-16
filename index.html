@@ -7,7 +7,7 @@
     <meta name="referrer" content="no-referrer" />
     <meta
       name="description"
-      content="現在の地図と江戸後期の江戸地名・町家領域を重ねて表示する無料のWebアプリ。位置情報はボタン操作時のみ取得し、保存しません。"
+      content="現在の地図と江戸後期の江戸地名・町家領域・推定海岸線を重ねて表示する無料のWebアプリ。位置情報はボタン操作時のみ取得し、保存しません。"
     />
     <title>いま・むかし地図 | 東京23区・江戸後期</title>
     <script type="module" src="/src/main.ts"></script>
@@ -77,6 +77,33 @@
         <fieldset id="machiya-controls" class="machiya-controls">
           <legend>歴史要素</legend>
           <label class="control">
+            <input type="checkbox" id="coastline-visible" checked disabled />
+            <span>江戸末期海岸線（推定）</span>
+          </label>
+          <label class="control">
+            <span id="coastline-opacity-label">海岸線不透明度</span>
+            <input
+              type="range"
+              id="coastline-opacity-slider"
+              min="0"
+              max="100"
+              value="80"
+              step="5"
+              disabled
+              aria-labelledby="coastline-opacity-label"
+              aria-valuetext="80パーセント"
+            />
+          </label>
+          <p class="coastline-description">
+            19世紀末の地図等を現代座標へ位置合わせした、約20万分の1相当の推定海岸線です。現代の浸水・津波・高潮リスクは示しません。
+            <a
+              href="https://codh.rois.ac.jp/historical-gis/edo-coast/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >出典（CODH）</a
+            >
+          </p>
+          <label class="control">
             <input type="checkbox" id="machiya-visible" checked disabled />
             <span>町家領域（推定）</span>
           </label>
@@ -104,6 +131,7 @@
             >
           </p>
           <div class="map-legend" aria-label="地図の凡例">
+            <span><i class="legend-swatch legend-coastline" aria-hidden="true"></i>江戸末期海岸線（推定）</span>
             <span><i class="legend-swatch legend-machiya" aria-hidden="true"></i>町家領域（推定）</span>
             <span><i class="legend-swatch legend-place" aria-hidden="true"></i>江戸地名</span>
             <span><i class="legend-swatch legend-location" aria-hidden="true"></i>現在地</span>
@@ -117,7 +145,7 @@
     </div>
 
     <p id="era-caution" class="era-caution" role="note">
-      江戸地名と町家領域は、江戸切絵図を現代地図へ位置合わせした推定データです。町家領域は当時の市街地分布を理解する参考情報であり、正確な地籍・人口・所有・境界を示すものではありません。和紙風背景は本プロジェクト独自の装飾です。
+      江戸地名と町家領域は江戸切絵図を現代地図へ位置合わせした推定データです。江戸末期海岸線は19世紀末の地図等を現代座標へ位置合わせした約20万分の1相当の推定表示です。時期、潮位、地図の歪み等により実際の位置・形状と異なる可能性があり、測量、境界、所有権、浸水・津波・高潮等の災害判断には使用できません。和紙風背景は本プロジェクト独自の装飾です。
     </p>
     <p id="historical-original-note" class="era-caution" role="note" hidden>
       この古地図原本には、当時の社会的背景を反映し、現在では不適切な名称・区分・表現が含まれる場合があります。
@@ -186,7 +214,7 @@
 
     <footer class="app-footer">
       <p class="caution">
-        江戸地名と町家領域は現代地図上への<strong>推定</strong>です。町家領域は正確な地籍・人口・所有・境界を示しません。和紙風の歴史背景は装飾であり、当時の地形・道路・境界の復元ではありません。測量図や権利関係の証拠として使用しないでください。
+        江戸地名・町家領域・江戸末期海岸線は現代地図上への<strong>推定</strong>です。海岸線は約20万分の1相当で、時期・潮位・河道変化・地図の歪み等により実際と異なる可能性があります。現代の浸水・津波・高潮リスク、正確な地籍・所有・境界を示しません。和紙風の歴史背景は装飾です。測量・防災・権利関係の証拠には使用しないでください。
       </p>
     </footer>
   </body>

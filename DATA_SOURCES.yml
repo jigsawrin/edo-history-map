@@ -97,6 +97,7 @@ sources:
       （ROIS-DS人文学オープンデータ共同利用センター作成）
       doi:10.20676/00000446
     doi: 10.20676/00000446
+    doi_required: true
     modification: >-
       完成版Shapefile（WGS 84）をGeoJSONへ変換し、fidと切絵図名を
       必要最小限の属性へ写像、座標を小数6桁へ丸め、外周・穴の向きを
@@ -110,6 +111,9 @@ sources:
     converted_sha256: 516fead3b082499ab1fb9d3c50060fc88812531530e9f86f63bcffff81a70bd6
     source_crs: "EPSG:4326 (WGS 84、同梱.prjで確認)"
     output_crs: "RFC 7946 WGS 84（経度・緯度順）"
+    geometry_types: [MultiPolygon]
+    historical_period: "江戸切絵図 尾張屋版 1849-1862年頃"
+    geographic_bounds: "東京23区周辺 lon 139.4-140.05, lat 35.4-35.95"
     local_files:
       - public/data/edo-machiya-areas.geojson
     review_status: approved
@@ -118,3 +122,53 @@ sources:
       内容同一、CC BY 4.0、指定出典、DOIを確認した。CC BY 4.0に基づき
       出典と加工内容を明示して変換後GeoJSONのみ再配布する。原ZIPと
       Shapefile一式はdata-raw/へ保持し、Git・公開物には含めない。
+
+  - id: codh-edo-coastline
+    asset_type: historical-vector
+    title: 江戸末期海岸線／水域データセット（海岸線データ）
+    provider: ROIS-DS人文学オープンデータ共同利用センター(CODH)
+    official_source: https://codh.rois.ac.jp/historical-gis/edo-coast/
+    original_item: coast.zip（海岸線・ラインデータ、coast Shapefile一式）
+    data_version: "2026-05-14更新版（公式配布ページ表示）"
+    license: CC BY 4.0
+    license_url: https://creativecommons.org/licenses/by/4.0/deed.ja
+    attribution: >-
+      『江戸末期海岸線／水域データセット』
+      （ROIS-DS人文学オープンデータ共同利用センター作成）
+      doi:10.20676/00000453
+    doi: 10.20676/00000453
+    doi_required: true
+    modification: >-
+      公式WGS 84 PolyLine Shapefileから、東京23区周辺bounds
+      (lon 139.4-140.05, lat 35.4-35.95)と交差する元レコード3件を
+      レコード単位で抽出し、必要最小限の固定属性を付与してGeoJSONへ変換、
+      座標を小数6桁へ丸め、丸め後に完全同一となった連続点22件を除去した。
+      線の切断・簡略化・平滑化・補間・結合なし。
+      公式入力のNull Shape 2件(record 96, 1596)と対象外の有効レコード
+      1,883件は公開データに含めない。対象外record 1806に連続重複座標1件を
+      確認したが、公開対象3件には重複なし。変換スクリプト:
+      scripts/convert-historical-coastline.mjs
+    redistribution_allowed: true
+    accessed_at: "2026-07-16"
+    downloaded_at: "2026-07-16"
+    original_sha256: 03954bdc92170b1fdd117f2f785d25930ffaf7166f13e5cf35c678173a15194a
+    converted_sha256: c67be67ed6213021a7333774300bc196a52195894130f7670ede45e9a2124a31
+    source_crs: "EPSG:4326 (WGS 84、同梱coast.prjで確認)"
+    output_crs: "RFC 7946 WGS 84（経度・緯度順）"
+    geometry_types: [LineString]
+    historical_period: "江戸時代末期から明治初期（主資料は1884-1894年の地図）"
+    geographic_bounds: >-
+      原データ lon 122.934047-148.893236, lat 24.045673-45.557160。
+      出力は東京対象boundsと交差する元レコード全体を保持するため、
+      lon 130.860803-142.072520, lat 33.433275-41.546638を含む。
+    local_files:
+      - public/data/edo-coastlines.geojson
+    review_status: approved
+    reviewer_note: >-
+      データセット個別公式ページで正式名称、提供者、海岸線ライン版の
+      公式HTTPSダウンロード、CC BY 4.0、指定出典、DOI、更新日を確認した。
+      公式作成方法PDFで対象年代、作成・位置合わせ方法、約20万分の1相当、
+      WGS 84 (EPSG:4326)、Shape/GeoJSON、属性data_name・object_idを確認した。
+      CC BY 4.0に基づき出典と加工内容を明示し変換後GeoJSONのみ再配布する。
+      原ZIPとShapefile一式はdata-raw/へ保持し、Git・公開物には含めない。
+      水域ポリゴン版はgeometryの意味を本アプリ向けに確定できないため未採用。

@@ -24,6 +24,7 @@ describe("EraRegistry", () => {
     expect(edo?.attributionIds).toEqual([
       "codh-edo-maps-places",
       "codh-edo-machiya-areas",
+      "codh-edo-coastline",
     ]);
     expect(edo?.visualLayers).toContain(VISUAL_LAYER_IDS.historicalPoints);
     expect(edo?.visualLayers).toContain(

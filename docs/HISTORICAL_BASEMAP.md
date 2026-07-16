@@ -8,8 +8,9 @@
 表示設計が揃ってから定義を追加する。
 
 江戸後期で現在実装済みなのは、CSSによる自作の和紙風背景
-`reconstructed-background`、承認済み町家領域`historical-commoner-areas`、
-承認済み8,788地名`historical-points`である。海岸線、水域、堀、街道、武家地、
+`reconstructed-background`、承認済み江戸末期海岸線`historical-coastline`、
+承認済み町家領域`historical-commoner-areas`、承認済み8,788地名
+`historical-points`である。水域、堀、街道、武家地、
 寺社地、江戸城・城門はデータ未導入のため実行時レイヤーを作らない。
 
 ## Leaflet pane と重なり順
@@ -18,8 +19,9 @@
 |---|---:|---|
 | `modern-base-pane` | 200 | 地理院タイル |
 | `historical-raster-pane` | 240 | 自作背景、将来の承認済み古地図画像 |
+| `historical-water-line-pane` | 300 | 江戸末期海岸線（町家と独立した不透明度） |
 | `historical-area-pane` | 320 | 町家領域、将来の承認済み面データ |
-| `historical-line-pane` | 360 | 将来の海岸線・堀・街道などの線 |
+| `historical-line-pane` | 360 | 将来の堀・街道などの線 |
 | `historical-points-pane` | 420 | 江戸地名ポイント(Canvas優先) |
 | `current-location-pane` | 650 | 現在地マーカー・精度円 |
 | `ui-overlay` | 700 | 将来の地図内UIオーバーレイ |
@@ -27,7 +29,8 @@
 `historical-points-pane` だけは `pointer-events: auto` とし、Canvas rendererの
 座標ヒットテストへクリック・タップを届ける。他の現行paneは
 `pointer-events: none` とし、背景や現在地表示がドラッグ・ズームを遮らない。
-町家領域はCanvas優先、`interactive: false`でこのpaneへ描画する。地点markerは
+海岸線と町家領域は別々のCanvas rendererへ`interactive: false`で描画し、
+各paneのopacityは相互に影響しない。地点markerは
 `bubblingMouseEvents: false` により、選択クリックを空白地点用の
 地図クリック処理へ伝播させない。
 
@@ -37,13 +40,18 @@
 
 ## 江戸後期の表示モード
 
-- 歴史背景＋江戸地名: 自作の和紙風CSS背景、町家領域、江戸地名。現代地図は非表示。
+- 歴史背景＋江戸地名: 自作の和紙風CSS背景、江戸末期海岸線、町家領域、江戸地名。現代地図は非表示。
 - 現代地図と比較: 上記に地理院タイルを比較用不透明度で重ねる。
-- 現代地図＋江戸地名: 地理院タイルと江戸地名。町家領域はモード切替時にOFFとなるが、利用者がONにできる。
+- 現代地図＋江戸地名: 地理院タイルと江戸地名。海岸線・町家領域はモード切替時にOFFとなるが、利用者がONにできる。
 
 町家領域は28 Feature・8,243頂点のGeoJSONを同一オリジンから一度だけ読み込み、
 検証後にメモリ内で再利用する。形状簡略化は行わない。専用チェックボックスと
 不透明度スライダーはレイヤー表示だけを変更し、`L.Map`を再作成しない。
+
+海岸線はLineString 3 Feature・131,462頂点・約2.86MiBを同一オリジンから一度だけ
+読み込み、専用上限で検証する。東京対象boundsと交差する公式元レコードを丸ごと
+保持するため一部は広域に及ぶが、線の切断・簡略化・補間・結合は行っていない。
+公式入力のNull Shape 2件は公開しない。水域ポリゴンや河川・池の分類は未導入である。
 
 和紙風背景は古地図原本の複製でも地形データでもない。架空の海岸線、道路、
 敷地境界は描かない。外部フォント・画像・アイコンも使用しない。
