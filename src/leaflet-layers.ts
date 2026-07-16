@@ -11,6 +11,7 @@ import type { TransitionLayer } from "./layer-transition";
 export const MAP_PANES = {
   modernBase: "modern-base-pane",
   historicalRaster: "historical-raster-pane",
+  historicalWaterLine: "historical-water-line-pane",
   historicalArea: "historical-area-pane",
   historicalLine: "historical-line-pane",
   historicalPoints: "historical-points-pane",
@@ -19,12 +20,14 @@ export const MAP_PANES = {
 } as const;
 
 /**
- * 下から順に: 現代基図(200)、歴史画像/安全背景(240)、面(320)、線(360)、
- * 地名(420)、現在地(650)、アプリUI(700)。現在地は常に歴史レイヤーより上。
+ * 下から順に: 現代基図(200)、歴史画像/安全背景(240)、歴史海岸線(300)、
+ * 町家等の面(320)、その他の線(360)、地名(420)、現在地(650)、アプリUI(700)。
+ * 海岸線の透明度は町家paneへ影響せず、現在地は常に歴史レイヤーより上。
  */
 export const PANE_Z_INDEX: Readonly<Record<string, number>> = {
   [MAP_PANES.modernBase]: 200,
   [MAP_PANES.historicalRaster]: 240,
+  [MAP_PANES.historicalWaterLine]: 300,
   [MAP_PANES.historicalArea]: 320,
   [MAP_PANES.historicalLine]: 360,
   [MAP_PANES.historicalPoints]: 420,

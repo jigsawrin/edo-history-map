@@ -83,6 +83,39 @@ export function renderAttribution(container: HTMLElement): void {
     ]),
   );
 
+  container.append(heading("江戸末期海岸線データ"));
+  container.append(
+    para(
+      "『江戸末期海岸線／水域データセット』（ROIS-DS人文学オープンデータ共同利用センター作成、doi:10.20676/00000453）の海岸線データを使用しています。ライセンスはCC BY 4.0です。",
+    ),
+  );
+  container.append(
+    para(
+      "本アプリでの加工内容: 公式WGS 84 PolyLine Shapefileから、東京23区周辺の対象boundsと交差する元レコード3件をレコード単位で抽出し、必要属性を付与してGeoJSONへ変換、座標を小数6桁へ丸め、丸め後に完全同一となった連続点22件を除去しました。線の切断・簡略化・平滑化・補間・結合は行っていません。公式入力の空shape 2件と対象外レコードは公開データに含めていません。",
+    ),
+  );
+  container.append(
+    para(
+      "この海岸線は、1884～1894年の地図を主資料として現代座標へ位置合わせし、伊能大図や地理院地図等も参照して作成された約20万分の1相当の推定表示です。時期、潮位、河道変化、地図の歪み等により実際の位置・形状と異なる可能性があります。測量、境界、所有権、浸水予測、津波・高潮等の災害判断には使用できません。",
+    ),
+  );
+  container.append(
+    linkList([
+      {
+        text: "『江戸末期海岸線／水域データセット』(CODH)",
+        href: "https://codh.rois.ac.jp/historical-gis/edo-coast/",
+      },
+      {
+        text: "データ作成方法(CODH、PDF)",
+        href: "https://codh.rois.ac.jp/historical-gis/edo-coast/edo-coast-method.pdf",
+      },
+      {
+        text: "CC BY 4.0 ライセンス",
+        href: "https://creativecommons.org/licenses/by/4.0/deed.ja",
+      },
+    ]),
+  );
+
   container.append(heading("歴史地名データ"));
   container.append(
     para(
@@ -115,7 +148,7 @@ export function renderAttribution(container: HTMLElement): void {
   container.append(heading("歴史背景について"));
   container.append(
     para(
-      "和紙風の歴史背景は本プロジェクト独自の装飾です。古地図原本や当時の道路・海岸線・河川・堀・町割りを再現した地図ではありません。史料と位置合わせに基づく推定情報は、江戸地名ポイントの位置と町家領域です。",
+      "和紙風の歴史背景は本プロジェクト独自の装飾です。古地図原本や当時の道路・河川・堀・町割りを再現した地図ではありません。史料と位置合わせに基づく推定情報は、江戸地名ポイント、町家領域、江戸末期海岸線です。",
     ),
   );
 

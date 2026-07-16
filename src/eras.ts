@@ -31,7 +31,7 @@ export const VISUAL_LAYER_IDS = {
 export const VISUAL_LAYER_ENABLED: Readonly<Record<string, boolean>> = {
   [VISUAL_LAYER_IDS.modernBase]: true,
   [VISUAL_LAYER_IDS.reconstructedBackground]: true,
-  [VISUAL_LAYER_IDS.historicalCoastline]: false,
+  [VISUAL_LAYER_IDS.historicalCoastline]: true,
   [VISUAL_LAYER_IDS.historicalWater]: false,
   [VISUAL_LAYER_IDS.historicalMoats]: false,
   [VISUAL_LAYER_IDS.historicalRoads]: false,
@@ -83,9 +83,13 @@ const ERA_DEFINITIONS: EraDefinition[] = [
       VISUAL_LAYER_IDS.historicalPoints,
     ],
     placeDatasetId: "codh-edo-maps-places",
-    attributionIds: ["codh-edo-maps-places", "codh-edo-machiya-areas"],
+    attributionIds: [
+      "codh-edo-maps-places",
+      "codh-edo-machiya-areas",
+      "codh-edo-coastline",
+    ],
     uncertaintyNote:
-      "江戸地名と町家領域は、江戸切絵図を現代地図へ位置合わせした推定データです。町家領域は当時の市街地分布を理解する参考情報であり、正確な地籍・人口・所有・境界を示すものではありません。和紙風背景は本プロジェクト独自の装飾です。",
+      "江戸地名と町家領域は江戸切絵図を現代地図へ位置合わせした推定データです。江戸末期海岸線は19世紀末の地図等を現代座標へ位置合わせした約20万分の1相当の推定表示です。時期、潮位、地図の歪み等により実際の位置・形状と異なる可能性があり、測量、境界、所有権、浸水・津波・高潮等の災害判断には使用できません。和紙風背景は本プロジェクト独自の装飾です。",
     enabled: true,
     localizedLabels: { ja: "江戸後期", en: "Late Edo" },
   },

@@ -16,6 +16,7 @@ describe("歴史基図統合の退行防止", () => {
     expect(Object.values(MAP_PANES)).toEqual([
       "modern-base-pane",
       "historical-raster-pane",
+      "historical-water-line-pane",
       "historical-area-pane",
       "historical-line-pane",
       "historical-points-pane",
@@ -44,6 +45,7 @@ describe("歴史基図統合の退行防止", () => {
     for (const name of [
       MAP_PANES.modernBase,
       MAP_PANES.historicalRaster,
+      MAP_PANES.historicalWaterLine,
       MAP_PANES.historicalArea,
       MAP_PANES.historicalLine,
       MAP_PANES.currentLocation,

@@ -10,6 +10,7 @@ import {
   GSI_TILE_URLS,
   CODH_ATTRIBUTION,
   MACHIYA_ATTRIBUTION,
+  COASTLINE_ATTRIBUTION,
   type BaseLayerKey,
 } from "./config";
 import { loadPlaces } from "./places";
@@ -21,6 +22,12 @@ import { readAllowedParams } from "./urlparams";
 import { handleHistoricalBackgroundClick } from "./map-click";
 import { loadMachiyaAreas } from "./machiya-areas";
 import { MachiyaAreaTransitionLayer } from "./machiya-layer";
+import { loadCoastlines } from "./coastlines";
+import { CoastlineTransitionLayer } from "./coastline-layer";
+import {
+  defaultCoastlineVisibilityForView,
+  shouldShowCoastline,
+} from "./coastline-visibility";
 import {
   defaultMachiyaVisibilityForView,
   shouldShowMachiyaArea,
@@ -118,12 +125,18 @@ function main(): void {
   const machiyaOpacitySlider = byId<HTMLInputElement>(
     "machiya-opacity-slider",
   );
+  const coastlineVisible = byId<HTMLInputElement>("coastline-visible");
+  const coastlineOpacitySlider = byId<HTMLInputElement>(
+    "coastline-opacity-slider",
+  );
   const infoCard = byId<HTMLElement>("info-card");
   let historical: HistoricalLayer | null = null;
   let historicalPointsLayer: TransitionLayer | null = null;
   let machiyaLayer: MachiyaAreaTransitionLayer | null = null;
+  let coastlineLayer: CoastlineTransitionLayer | null = null;
   let pointsAttributionVisible = false;
   let machiyaAttributionVisible = false;
+  let coastlineAttributionVisible = false;
 
   const reconstructedLayer = createReconstructedBackground();
   const reconstructedTransition = new LeafletTransitionLayer(
@@ -150,7 +163,11 @@ function main(): void {
     return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
   }
 
-  function syncAttributions(showPoints: boolean, showMachiya: boolean): void {
+  function syncAttributions(
+    showPoints: boolean,
+    showMachiya: boolean,
+    showCoastline: boolean,
+  ): void {
     if (showPoints !== pointsAttributionVisible) {
       if (showPoints) map.attributionControl.addAttribution(CODH_ATTRIBUTION);
       else map.attributionControl.removeAttribution(CODH_ATTRIBUTION);
@@ -161,6 +178,12 @@ function main(): void {
         map.attributionControl.addAttribution(MACHIYA_ATTRIBUTION);
       else map.attributionControl.removeAttribution(MACHIYA_ATTRIBUTION);
       machiyaAttributionVisible = showMachiya;
+    }
+    if (showCoastline !== coastlineAttributionVisible) {
+      if (showCoastline)
+        map.attributionControl.addAttribution(COASTLINE_ATTRIBUTION);
+      else map.attributionControl.removeAttribution(COASTLINE_ATTRIBUTION);
+      coastlineAttributionVisible = showCoastline;
     }
   }
 
@@ -175,6 +198,9 @@ function main(): void {
     machiyaVisible.disabled = !isHistorical || machiyaLayer === null;
     machiyaOpacitySlider.disabled =
       !isHistorical || machiyaLayer === null || !machiyaVisible.checked;
+    coastlineVisible.disabled = !isHistorical || coastlineLayer === null;
+    coastlineOpacitySlider.disabled =
+      !isHistorical || coastlineLayer === null || !coastlineVisible.checked;
     baseOpacitySlider.disabled = !isHistorical || view !== "compare";
     eraCaution.hidden = !isHistorical;
     eraCaution.textContent = era.uncertaintyNote;
@@ -199,6 +225,19 @@ function main(): void {
         });
       } else if (view === "points") {
         targets.push({ layer: modernBase, opacity: 1 });
+      }
+      if (
+        coastlineLayer &&
+        shouldShowCoastline({
+          isHistorical,
+          layerAvailable: true,
+          registryEnabled:
+            era.visualLayers.includes(VISUAL_LAYER_IDS.historicalCoastline) &&
+            isVisualLayerEnabled(VISUAL_LAYER_IDS.historicalCoastline),
+          selected: coastlineVisible.checked,
+        })
+      ) {
+        targets.push({ layer: coastlineLayer, opacity: 1 });
       }
       if (
         machiyaLayer &&
@@ -238,6 +277,10 @@ function main(): void {
         machiyaLayer !== null &&
         machiyaVisible.checked &&
         era.attributionIds.includes("codh-edo-machiya-areas"),
+      isHistorical &&
+        coastlineLayer !== null &&
+        coastlineVisible.checked &&
+        era.attributionIds.includes("codh-edo-coastline"),
     );
   }
 
@@ -260,6 +303,16 @@ function main(): void {
       `${value}パーセント`,
     );
     machiyaLayer?.setUserOpacity(value / 100);
+    applyEra(false);
+  }
+
+  function applyCoastlineOpacity(): void {
+    const value = percentage(coastlineOpacitySlider);
+    coastlineOpacitySlider.setAttribute(
+      "aria-valuetext",
+      `${value}パーセント`,
+    );
+    coastlineLayer?.setUserOpacity(value / 100);
     applyEra(false);
   }
 
@@ -305,9 +358,33 @@ function main(): void {
       );
     });
 
+  loadCoastlines()
+    .then((coastlines) => {
+      coastlineLayer = new CoastlineTransitionLayer(
+        map,
+        coastlines,
+        panes.get(MAP_PANES.historicalWaterLine) as HTMLElement,
+      );
+      coastlineLayer.setUserOpacity(
+        percentage(coastlineOpacitySlider) / 100,
+      );
+      applyEra(false);
+    })
+    .catch(() => {
+      coastlineVisible.disabled = true;
+      coastlineOpacitySlider.disabled = true;
+      showStatus(
+        "江戸末期海岸線データを読み込めませんでした。現代地図・江戸地名・町家領域・現在地など、その他の機能は引き続き利用できます。",
+        map.getContainer(),
+      );
+    });
+
   eraSelect.addEventListener("change", () => applyEra(true));
   historyViewSelect.addEventListener("change", () => {
     machiyaVisible.checked = defaultMachiyaVisibilityForView(
+      historyViewSelect.value as HistoricalViewMode,
+    );
+    coastlineVisible.checked = defaultCoastlineVisibilityForView(
       historyViewSelect.value as HistoricalViewMode,
     );
     applyEra(true);
@@ -316,9 +393,12 @@ function main(): void {
   baseOpacitySlider.addEventListener("input", applyBaseOpacity);
   machiyaVisible.addEventListener("change", () => applyEra(true));
   machiyaOpacitySlider.addEventListener("input", applyMachiyaOpacity);
+  coastlineVisible.addEventListener("change", () => applyEra(true));
+  coastlineOpacitySlider.addEventListener("input", applyCoastlineOpacity);
   applyHistoricalOpacity();
   applyBaseOpacity();
   applyMachiyaOpacity();
+  applyCoastlineOpacity();
 
   // 何もない場所のクリック: データなし表示(マーカークリックはイベントが止まる)
   map.on("click", () => {

@@ -153,6 +153,7 @@ const SELF = "scripts/prepublish-audit.mjs";
 const APPROVED_DATA = new Set([
   "public/data/edo-places.geojson",
   "public/data/edo-machiya-areas.geojson",
+  "public/data/edo-coastlines.geojson",
 ]);
 
 // ---- 1. ファイル単位の検査 --------------------------------------------------
@@ -367,18 +368,25 @@ if (!existsSync(dsPath)) {
           "license",
           "license_url",
           "attribution",
-          "doi",
           "modification",
           "accessed_at",
           "downloaded_at",
           "source_crs",
           "output_crs",
+          "historical_period",
+          "geographic_bounds",
           "reviewer_note",
         ];
         for (const field of requiredTextFields) {
           if (!P(`^\\s+${field}:\\s*(?!null\\s*$).+`, "m").test(entry)) {
             addFinding("error", "歴史ベクターメタデータ", "DATA_SOURCES.yml", 0, `${id}: ${field} がありません`);
           }
+        }
+        const doiRequired = P("^\\s+doi_required:\\s*true\\s*$", "m").test(entry);
+        const doiPresent = P("^\\s+doi:\\s*(?!null\\s*$).+", "m").test(entry);
+        const doiExplicitlyAbsent = P("^\\s+doi:\\s*null\\s*$", "m").test(entry);
+        if (!doiPresent && !(doiExplicitlyAbsent && !doiRequired)) {
+          addFinding("error", "歴史ベクターDOI", "DATA_SOURCES.yml", 0, `${id}: DOI必須指定に対する値、または公式にDOIがないことを示すnullがありません`);
         }
         if (!P("^\\s+redistribution_allowed:\\s*true\\s*$", "m").test(entry)) {
           addFinding("error", "歴史ベクター権利条件", "DATA_SOURCES.yml", 0, `${id}: redistribution_allowed=true の確認がありません`);
@@ -413,20 +421,31 @@ if (!existsSync(dsPath)) {
             }
             try {
               const geojson = JSON.parse(buffer.toString("utf8"));
+              const declaredGeometryTypes = entry.match(
+                P("^\\s+geometry_types:\\s*\\[([^\\]]+)\\]\\s*$", "m"),
+              )?.[1]?.split(",").map((value) => value.trim()).filter(Boolean) ?? [];
+              const actualGeometryTypes = new Set(
+                Array.isArray(geojson?.features)
+                  ? geojson.features.map((feature) => feature?.geometry?.type)
+                  : [],
+              );
               if (
                 geojson?.type !== "FeatureCollection" ||
                 !Array.isArray(geojson.features) ||
                 geojson.features.length === 0 ||
                 geojson.features.some(
                   (feature) =>
-                    !["Polygon", "MultiPolygon"].includes(feature?.geometry?.type) ||
+                    !["Polygon", "MultiPolygon", "LineString", "MultiLineString"].includes(feature?.geometry?.type) ||
                     feature?.properties?.sourceId !== id,
-                )
+                ) ||
+                declaredGeometryTypes.length === 0 ||
+                [...actualGeometryTypes].some((type) => !declaredGeometryTypes.includes(type)) ||
+                declaredGeometryTypes.some((type) => !actualGeometryTypes.has(type))
               ) {
                 throw new Error();
               }
             } catch {
-              addFinding("error", "歴史ベクター形式", file, 0, "Polygon/MultiPolygon FeatureCollectionまたはsourceIdが不正です");
+              addFinding("error", "歴史ベクター形式", file, 0, "geometry_types・FeatureCollection・sourceIdのいずれかが不正です");
             }
           }
         }
@@ -457,6 +476,8 @@ const attrChecks = [
   ["src/attribution.ts", "10.20676/00000446"],
   ["src/attribution.ts", "CC BY 4.0"],
   ["THIRD_PARTY_NOTICES.md", "町家領域データセット"],
+  ["src/attribution.ts", "10.20676/00000453"],
+  ["THIRD_PARTY_NOTICES.md", "江戸末期海岸線／水域データセット"],
 ];
 for (const [file, needle] of attrChecks) {
   const p = join(ROOT, file);
@@ -511,7 +532,10 @@ if (existsSync(distDir)) {
       if (!approvedFiles.has(sourcePath)) {
         addFinding("error", "未承認歴史データの公開", rel, 0, "approved台帳登録がありません");
       }
-      if (sourcePath.includes("machiya") && !approvedVectorFiles.has(sourcePath)) {
+      if (
+        sourcePath !== "public/data/edo-places.geojson" &&
+        !approvedVectorFiles.has(sourcePath)
+      ) {
         addFinding("error", "未承認歴史ベクターの公開", rel, 0, "historical-vectorのapproved条件を満たしていません");
       }
     }
