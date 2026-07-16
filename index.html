@@ -164,6 +164,16 @@
         </div>
       </div>
 
+      <div id="place-search-control">
+        <button
+          id="place-search-open"
+          type="button"
+          aria-controls="place-search-panel"
+          aria-expanded="false"
+        >
+          江戸地名を検索
+        </button>
+      </div>
       <button type="button" id="locate-button">現在地を表示</button>
       <button type="button" id="attribution-button">出典・ライセンス</button>
       <button type="button" id="privacy-button">プライバシー</button>
@@ -178,16 +188,58 @@
       この古地図原本には、当時の社会的背景を反映し、現在では不適切な名称・区分・表現が含まれる場合があります。
     </p>
 
-    <div
-      id="map"
-      tabindex="-1"
-      role="region"
-      aria-label="地図。矢印キーで移動、+と-キーでズームできます。"
-      aria-describedby="map-help"
-    ></div>
+    <div class="map-workspace">
+      <section
+        id="place-search-panel"
+        class="place-search-panel"
+        aria-labelledby="place-search-heading"
+        hidden
+      >
+        <h2 id="place-search-heading">江戸地名・地点一覧</h2>
+        <form id="place-search-form" role="search">
+          <label id="place-search-input-label" for="place-search-input">江戸地名</label>
+          <input
+            id="place-search-input"
+            type="search"
+            maxlength="100"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </form>
+        <label for="place-category-filter">分類</label>
+        <select id="place-category-filter">
+          <option value="">すべての分類</option>
+        </select>
+        <p
+          id="place-search-status"
+          class="place-search-status"
+          aria-live="polite"
+          aria-atomic="true"
+        ></p>
+        <h3 id="place-search-results-heading" tabindex="-1">検索結果</h3>
+        <ol
+          id="place-search-results"
+          aria-labelledby="place-search-results-heading"
+        ></ol>
+        <nav id="place-search-pagination" aria-label="検索結果のページ" hidden>
+          <button id="place-search-previous" type="button">前へ</button>
+          <span id="place-search-page-status" aria-live="polite"></span>
+          <button id="place-search-next" type="button">次へ</button>
+        </nav>
+        <button id="place-search-close" type="button">検索を閉じる</button>
+      </section>
+
+      <div
+        id="map"
+        tabindex="-1"
+        role="region"
+        aria-label="地図。矢印キーで移動、+と-キーでズームできます。"
+        aria-describedby="map-help"
+      ></div>
+    </div>
 
     <p id="map-help" class="visually-hidden">
-      地図はキーボードでも移動とズームができます。地図を直接操作しにくい場合も、上の年代・基図・不透明度の各コントロールはキーボードで操作できます。地点情報の検索・一覧による代替操作は今後の課題です。
+      地図はキーボードでも移動とズームができます。地図を直接操作しにくい場合やCanvas上の地点を直接選びにくい場合は、「江戸地名を検索」または「幕末史跡を検索」から通常のHTMLボタンによる地点一覧を利用できます。
     </p>
 
     <noscript>

@@ -50,19 +50,33 @@ function hasDuplicates(values: readonly string[]): boolean {
 }
 
 function validateRegionMetadata(region: Readonly<RegionDefinition>): void {
-  const values = [region.pageTitle, region.metaDescription, region.tagline];
-  const hasAny = values.some((value) => value !== undefined);
-  if (region.id === "kyoto" && !values.every((value) => value !== undefined)) {
-    throw new Error("京都地域メタデータがありません");
-  }
+  const presentationKeys = [
+    "pageTitle",
+    "metaDescription",
+    "tagline",
+    "pointOpacityLabel",
+    "historicalViewLabel",
+    "footerCaution",
+    "pointLegendLabel",
+    "noDataMessage",
+    "searchButtonLabel",
+    "searchHeading",
+    "searchInputLabel",
+    "searchEmptyMessage",
+    "searchResultNoun",
+  ] as const;
+  const presentationValues = presentationKeys.map(
+    (key) => region.presentation?.[key],
+  );
   if (
-    hasAny &&
-    (!values.every((value) => typeof value === "string") ||
-      !values.every((value) =>
-        validFixedText(value as string, MAX_REGION_METADATA_LENGTH),
-      ))
+    Object.keys(region.presentation ?? {}).length !== presentationKeys.length ||
+    presentationValues.some(
+      (value) =>
+        typeof value !== "string" ||
+        !validFixedText(value, MAX_REGION_METADATA_LENGTH),
+    )
   ) {
-    throw new Error("地域メタデータが不正です");
+    throw new Error("地域表示メタデータが不正です");
   }
 }
 
@@ -161,6 +175,7 @@ function clonePack(pack: RegionPack): Readonly<RegionPack> {
     center: Object.freeze([...region.center]) as readonly [number, number],
     bounds: Object.freeze({ ...region.bounds }),
     enabledEraIds: Object.freeze([...region.enabledEraIds]),
+    presentation: Object.freeze({ ...region.presentation }),
   };
   if (localizedLabels) clonedRegion.localizedLabels = localizedLabels;
   return Object.freeze({
