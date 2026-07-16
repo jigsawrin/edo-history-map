@@ -89,7 +89,10 @@ describe("地域パック統合の退行防止", () => {
     expect(presentation).toContain("document.title");
     expect(presentation).toContain("metaDescription");
     expect(presentation).toContain("regionTagline.textContent");
-    expect(presentation).toContain("幕末地点不透明度");
+    expect(presentation).toContain("presentation.pointOpacityLabel");
+    expect(readFileSync(join(ROOT, "src/regions/kyoto-pack.json"), "utf8")).toContain(
+      "幕末地点不透明度",
+    );
     expect(presentation).toContain("kyotoLegend.hidden");
     expect(source).toContain("applyRegionPresentation(pack)");
   });

@@ -24,6 +24,21 @@ function fixture(id: string, enabled = true): RegionPack {
       defaultEraId: "modern",
       enabledEraIds: ["modern"],
       enabled,
+      presentation: {
+        pageTitle: "テスト",
+        metaDescription: "テスト説明",
+        tagline: "テスト地域",
+        pointOpacityLabel: "地点不透明度",
+        historicalViewLabel: "歴史表示",
+        footerCaution: "テスト注意",
+        pointLegendLabel: "地点",
+        noDataMessage: "データなし",
+        searchButtonLabel: "地点を検索",
+        searchHeading: "地点一覧",
+        searchInputLabel: "地点名",
+        searchEmptyMessage: "一致なし",
+        searchResultNoun: "地点",
+      },
     },
     eras: [
       {

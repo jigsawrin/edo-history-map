@@ -79,6 +79,48 @@ describe("アクセシビリティ(静的マークアップ)", () => {
     expect(card?.getAttribute("aria-atomic")).toBe("true");
   });
 
+  it("地点検索パネルが標準フォームと見出しに関連付いている", () => {
+    const open = doc.getElementById("place-search-open");
+    const panel = doc.getElementById("place-search-panel");
+    expect(open?.getAttribute("aria-controls")).toBe("place-search-panel");
+    expect(open?.getAttribute("aria-expanded")).toBe("false");
+    expect(panel?.getAttribute("aria-labelledby")).toBe("place-search-heading");
+    expect(doc.getElementById("place-search-form")?.getAttribute("role")).toBe("search");
+  });
+
+  it("地点検索入力はラベル、search型、100文字上限を持つ", () => {
+    const input = doc.getElementById("place-search-input");
+    expect(input?.getAttribute("type")).toBe("search");
+    expect(input?.getAttribute("maxlength")).toBe("100");
+    expect(doc.getElementById("place-search-input-label")?.getAttribute("for")).toBe(
+      "place-search-input",
+    );
+  });
+
+  it("地点分類selectは表示ラベルと関連付いている", () => {
+    const select = doc.getElementById("place-category-filter");
+    const label = doc.querySelector('label[for="place-category-filter"]');
+    expect(select?.tagName).toBe("SELECT");
+    expect(label?.textContent).toBe("分類");
+  });
+
+  it("地点検索結果はol、専用aria-live、通常buttonのページ操作を持つ", () => {
+    expect(doc.getElementById("place-search-results")?.tagName).toBe("OL");
+    expect(doc.getElementById("place-search-status")?.getAttribute("aria-live")).toBe(
+      "polite",
+    );
+    expect(doc.getElementById("place-search-previous")?.tagName).toBe("BUTTON");
+    expect(doc.getElementById("place-search-next")?.tagName).toBe("BUTTON");
+    expect(doc.getElementById("place-search-close")?.tagName).toBe("BUTTON");
+  });
+
+  it("地図の代替操作説明が地域別検索一覧を案内する", () => {
+    const help = doc.getElementById("map-help")?.textContent ?? "";
+    expect(help).toContain("HTMLボタン");
+    expect(help).toContain("江戸地名を検索");
+    expect(help).toContain("幕末史跡を検索");
+  });
+
   it("各ダイアログに見出しが関連付けられている", () => {
     for (const dialog of Array.from(doc.querySelectorAll("dialog"))) {
       const labelledBy = dialog.getAttribute("aria-labelledby");

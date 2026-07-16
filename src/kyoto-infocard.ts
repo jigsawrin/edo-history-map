@@ -111,12 +111,12 @@ export function renderKyotoPlaceCard(
 export function renderKyotoNoData(
   container: HTMLElement,
   returnFocus?: HTMLElement,
+  text = "この地点には登録された京都・幕末史跡データがありません。",
 ): void {
   container.replaceChildren();
   container.hidden = false;
   const message = document.createElement("p");
-  message.textContent =
-    "この地点には登録された京都・幕末史跡データがありません。";
+  message.textContent = text;
   container.append(message);
   const close = document.createElement("button");
   close.type = "button";

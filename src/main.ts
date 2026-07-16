@@ -35,6 +35,13 @@ import { ATTRIBUTION_REGISTRY } from "./attribution-registry";
 import { datasetRegistry, type ApprovedDatasetId } from "./datasets";
 import { regionRegistry } from "./regions/registry";
 import type { RegionPack } from "./regions/types";
+import { PlaceSearchController } from "./place-search/controller";
+import { placeSearchModelCache } from "./place-search/model-cache";
+import type {
+  HistoricalPlaceSource,
+  SearchableHistoricalPlace,
+  SearchablePlaceDatasetId,
+} from "./place-search/types";
 import {
   activeRegionFromParam,
   announceRegionChange,
@@ -155,6 +162,21 @@ function main(): void {
   const pointsOpacityControl = byId<HTMLElement>("points-opacity-control");
   const baseOpacityControl = byId<HTMLElement>("base-opacity-control");
   const infoCard = byId<HTMLElement>("info-card");
+  const placeSearchContainer = byId<HTMLElement>("place-search-control");
+  const placeSearchOpen = byId<HTMLButtonElement>("place-search-open");
+  const placeSearchPanel = byId<HTMLElement>("place-search-panel");
+  const placeSearchHeading = byId<HTMLElement>("place-search-heading");
+  const placeSearchForm = byId<HTMLFormElement>("place-search-form");
+  const placeSearchInputLabel = byId<HTMLElement>("place-search-input-label");
+  const placeSearchInput = byId<HTMLInputElement>("place-search-input");
+  const placeCategoryFilter = byId<HTMLSelectElement>("place-category-filter");
+  const placeSearchStatus = byId<HTMLElement>("place-search-status");
+  const placeSearchResults = byId<HTMLOListElement>("place-search-results");
+  const placeSearchPagination = byId<HTMLElement>("place-search-pagination");
+  const placeSearchPrevious = byId<HTMLButtonElement>("place-search-previous");
+  const placeSearchPageStatus = byId<HTMLElement>("place-search-page-status");
+  const placeSearchNext = byId<HTMLButtonElement>("place-search-next");
+  const placeSearchClose = byId<HTMLButtonElement>("place-search-close");
   let historicalPointsLayer: TransitionLayer | null = null;
   let machiyaLayer: MachiyaAreaTransitionLayer | null = null;
   let coastlineLayer: CoastlineTransitionLayer | null = null;
@@ -176,45 +198,106 @@ function main(): void {
   );
   const transitions = new LayerTransitionController();
 
-  const edoPresentation = Object.freeze({
-    pageTitle: "いま・むかし地図 | 東京23区・江戸後期",
-    metaDescription:
-      "現在の地図と江戸後期の江戸地名・町家領域・推定海岸線を重ねて表示する無料のWebアプリ。位置情報はボタン操作時のみ取得し、保存しません。",
-    tagline: "東京23区 × 江戸後期(嘉永・文久期)",
-    opacityLabel: "歴史地点不透明度",
-    footer:
-      "江戸地名・町家領域・江戸末期海岸線は現代地図上への推定です。海岸線は約20万分の1相当で、時期・潮位・河道変化・地図の歪み等により実際と異なる可能性があります。現代の浸水・津波・高潮リスク、正確な地籍・所有・境界を示しません。和紙風の歴史背景は装飾です。測量・防災・権利関係の証拠には使用しないでください。",
-  });
-
   function applyRegionPresentation(pack: Readonly<RegionPack>): void {
+    const presentation = pack.region.presentation;
     const isKyoto = pack.region.id === "kyoto";
-    document.title = pack.region.pageTitle ?? edoPresentation.pageTitle;
+    document.title = presentation.pageTitle;
     const description = document.querySelector<HTMLMetaElement>(
       'meta[name="description"]',
     );
     if (description) {
-      description.content =
-        pack.region.metaDescription ?? edoPresentation.metaDescription;
+      description.content = presentation.metaDescription;
     }
-    regionTagline.textContent = pack.region.tagline ?? edoPresentation.tagline;
-    opacityLabel.textContent = isKyoto
-      ? "幕末地点不透明度"
-      : edoPresentation.opacityLabel;
+    regionTagline.textContent = presentation.tagline;
+    opacityLabel.textContent = presentation.pointOpacityLabel;
     historyViewSelect.setAttribute(
       "aria-label",
-      isKyoto ? "京都・幕末の表示方法" : "江戸後期の表示方法",
+      presentation.historicalViewLabel,
     );
     edoLegend.hidden = isKyoto;
     kyotoLegend.hidden = !isKyoto;
-    footerCaution.textContent = isKyoto
-      ? "京都・幕末地点は公的・学術資料を基に独自編集した表示です。現在の碑・再建建物・顕彰地が幕末当時の現場や建物と一致しない場合があります。測量・境界・所有権の判断には使用しないでください。"
-      : edoPresentation.footer;
+    footerCaution.textContent = presentation.footerCaution;
   }
 
   function prefersReducedMotion(): boolean {
     return (
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
+  const placeSearchController = new PlaceSearchController({
+    elements: {
+      container: placeSearchContainer,
+      openButton: placeSearchOpen,
+      panel: placeSearchPanel,
+      heading: placeSearchHeading,
+      form: placeSearchForm,
+      inputLabel: placeSearchInputLabel,
+      input: placeSearchInput,
+      category: placeCategoryFilter,
+      status: placeSearchStatus,
+      results: placeSearchResults,
+      pagination: placeSearchPagination,
+      previous: placeSearchPrevious,
+      pageStatus: placeSearchPageStatus,
+      next: placeSearchNext,
+      closeButton: placeSearchClose,
+    },
+    onSelect: (place, trigger) =>
+      selectHistoricalPlace({
+        datasetId: place.datasetId,
+        record: place.sourceRecord,
+        searchable: place,
+        source: "search",
+        returnFocus: trigger,
+      }),
+    onVisibilityChange: (open) => {
+      window.requestAnimationFrame(() => {
+        if (open && window.matchMedia("(max-width: 600px)").matches) {
+          placeSearchPanel.scrollIntoView({ block: "start", behavior: "auto" });
+        }
+        map.invalidateSize({ pan: false });
+      });
+    },
+  });
+
+  function searchableDatasetId(
+    value: string | null,
+  ): SearchablePlaceDatasetId | null {
+    if (
+      value === "codh-edo-maps-places" ||
+      value === "project-kyoto-bakumatsu-places"
+    ) {
+      return value;
+    }
+    return null;
+  }
+
+  function syncPlaceSearch(
+    placeDatasetId: string | null,
+    focusFallback: HTMLElement = eraSelect,
+  ): void {
+    const datasetId = searchableDatasetId(placeDatasetId);
+    if (!datasetId) {
+      placeSearchController.setContext(null, focusFallback);
+      return;
+    }
+    const presentation = currentRegion.region.presentation;
+    placeSearchController.setContext(
+      {
+        datasetId,
+        regionId: datasetId === "codh-edo-maps-places" ? "edo" : "kyoto",
+        eraId: datasetId === "codh-edo-maps-places" ? "edo-late" : "bakumatsu",
+        copy: {
+          searchButtonLabel: presentation.searchButtonLabel,
+          searchHeading: presentation.searchHeading,
+          searchInputLabel: presentation.searchInputLabel,
+          searchEmptyMessage: presentation.searchEmptyMessage,
+          searchResultNoun: presentation.searchResultNoun,
+        },
+      },
+      focusFallback,
     );
   }
 
@@ -252,6 +335,7 @@ function main(): void {
       regionRegistry.getEraBinding(currentRegion.region.id, eraSelect.value) ??
       regionRegistry.getEraBinding(currentRegion.region.id, "modern");
     if (!era) return;
+    syncPlaceSearch(era.placeDatasetId);
     const targets: { layer: TransitionLayer; opacity: number }[] = [];
     const isHistorical = era.baseMode !== "modern";
     const supportsPoints = era.visualLayers.includes(
@@ -419,6 +503,7 @@ function main(): void {
     PointDatasetId,
     Promise<TransitionLayer>
   >();
+  let activeHistoricalPointsDatasetId: PointDatasetId | null = null;
   let machiyaLayerPromise: Promise<MachiyaAreaTransitionLayer> | null = null;
   let coastlineLayerPromise: Promise<CoastlineTransitionLayer> | null = null;
 
@@ -428,14 +513,35 @@ function main(): void {
     "codh-edo-maps-places": async () =>
       createHistoricalLayer(
         await datasetRegistry.load("codh-edo-maps-places"),
-        (place) => renderPlaceCard(infoCard, place, map.getContainer()),
+        (place) => {
+          void selectHistoricalPlace({
+            datasetId: "codh-edo-maps-places",
+            record: {
+              datasetId: "codh-edo-maps-places",
+              record: place,
+              sourceIndex: -1,
+            },
+            source: "map",
+            returnFocus: map.getContainer(),
+          });
+        },
         panes.get(MAP_PANES.historicalPoints) as HTMLElement,
       ),
     "project-kyoto-bakumatsu-places": async () =>
       createKyotoBakumatsuLayer(
         await datasetRegistry.load("project-kyoto-bakumatsu-places"),
-        (place) =>
-          renderKyotoPlaceCard(infoCard, place, map.getContainer()),
+        (place) => {
+          void selectHistoricalPlace({
+            datasetId: "project-kyoto-bakumatsu-places",
+            record: {
+              datasetId: "project-kyoto-bakumatsu-places",
+              record: place,
+              sourceIndex: -1,
+            },
+            source: "map",
+            returnFocus: map.getContainer(),
+          });
+        },
         panes.get(MAP_PANES.historicalPoints) as HTMLElement,
       ),
   });
@@ -457,6 +563,91 @@ function main(): void {
       });
     pointLayerPromises.set(id, promise);
     return promise;
+  }
+
+  interface HistoricalPlaceSelection {
+    readonly datasetId: PointDatasetId;
+    readonly record: HistoricalPlaceSource;
+    readonly searchable?: SearchableHistoricalPlace;
+    readonly source: "map" | "search";
+    readonly returnFocus: HTMLElement;
+  }
+
+  async function selectHistoricalPlace(
+    selection: HistoricalPlaceSelection,
+  ): Promise<void> {
+    const binding = regionRegistry.getEraBinding(
+      currentRegion.region.id,
+      eraSelect.value,
+    );
+    if (
+      binding?.placeDatasetId !== selection.datasetId ||
+      selection.record.datasetId !== selection.datasetId
+    ) {
+      return;
+    }
+    const token = regionToken;
+    if (selection.source === "search") {
+      const layer = await cachedPointsLayer(selection.datasetId);
+      const latestBinding = regionRegistry.getEraBinding(
+        currentRegion.region.id,
+        eraSelect.value,
+      );
+      if (
+        !loadCoordinator.isCurrent(token) ||
+        latestBinding?.placeDatasetId !== selection.datasetId
+      ) {
+        return;
+      }
+      historicalPointsLayer = layer;
+      activeHistoricalPointsDatasetId = selection.datasetId;
+      applyEra(false);
+      const latitude = selection.searchable?.latitude;
+      const longitude = selection.searchable?.longitude;
+      if (latitude === undefined || longitude === undefined) return;
+      map.panTo([latitude, longitude], {
+        animate: !prefersReducedMotion(),
+      });
+    } else if (
+      activeHistoricalPointsDatasetId !== null &&
+      activeHistoricalPointsDatasetId !== selection.datasetId
+    ) {
+      return;
+    }
+
+    if (selection.record.datasetId === "codh-edo-maps-places") {
+      renderPlaceCard(
+        infoCard,
+        selection.record.record,
+        selection.returnFocus,
+      );
+    } else {
+      renderKyotoPlaceCard(
+        infoCard,
+        selection.record.record,
+        selection.returnFocus,
+      );
+    }
+
+    const searchable =
+      selection.searchable ??
+      (await placeSearchModelCache
+        .load(selection.datasetId)
+        .then((records) =>
+          records.find(
+            (place) => place.sourceRecord.record === selection.record.record,
+          ),
+        )
+        .catch(() => undefined));
+    if (
+      searchable &&
+      loadCoordinator.isCurrent(token) &&
+      searchable.datasetId ===
+        regionRegistry.getEraBinding(currentRegion.region.id, eraSelect.value)
+          ?.placeDatasetId
+    ) {
+      placeSearchController.selectFromMap(searchable);
+    }
   }
 
   function cachedMachiyaLayer(): Promise<MachiyaAreaTransitionLayer> {
@@ -539,6 +730,7 @@ function main(): void {
         () => cachedPointsLayer(pointDatasetId),
         (layer) => {
           historicalPointsLayer = layer;
+          activeHistoricalPointsDatasetId = pointDatasetId;
         },
         pointDatasetId === "project-kyoto-bakumatsu-places"
           ? "京都・幕末地点を読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。"
@@ -569,6 +761,7 @@ function main(): void {
     currentRegion = pack;
     regionToken = loadCoordinator.begin(pack.region.id);
     historicalPointsLayer = null;
+    activeHistoricalPointsDatasetId = null;
     machiyaLayer = null;
     coastlineLayer = null;
     populateRegionEraSelect(eraSelect, pack);
@@ -627,9 +820,17 @@ function main(): void {
       Boolean(binding?.placeDatasetId),
       () => {
         if (currentRegion.region.id === "kyoto") {
-          renderKyotoNoData(infoCard, map.getContainer());
+          renderKyotoNoData(
+            infoCard,
+            map.getContainer(),
+            currentRegion.region.presentation.noDataMessage,
+          );
         } else {
-          renderNoData(infoCard, map.getContainer());
+          renderNoData(
+            infoCard,
+            map.getContainer(),
+            currentRegion.region.presentation.noDataMessage,
+          );
         }
       },
     );

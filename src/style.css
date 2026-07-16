@@ -272,7 +272,120 @@ a:focus-visible,
 
 #map {
   flex: 1;
+  min-width: 0;
   min-height: 55vh;
+}
+
+.map-workspace {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 55vh;
+  min-width: 0;
+}
+
+#place-search-control {
+  display: contents;
+}
+
+.place-search-panel {
+  display: flex;
+  flex: 0 0 min(22rem, 36vw);
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 18rem;
+  max-height: calc(100dvh - 1rem);
+  padding: 0.8rem;
+  padding-left: max(0.8rem, env(safe-area-inset-left));
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  background: #fffdf7;
+}
+
+.place-search-panel h2,
+.place-search-panel h3,
+.place-search-panel p {
+  margin: 0;
+}
+
+.place-search-panel h2 {
+  font-size: 1.1rem;
+}
+
+.place-search-panel h3 {
+  font-size: 0.95rem;
+}
+
+#place-search-form,
+.place-search-panel > label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+#place-search-input,
+#place-category-filter {
+  width: 100%;
+  min-height: 44px;
+  font: inherit;
+}
+
+.place-search-status {
+  min-height: 2.6em;
+  font-size: 0.8rem;
+}
+
+#place-search-results {
+  flex: 1;
+  min-height: 5rem;
+  margin: 0;
+  padding-left: 1.65rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#place-search-results > li {
+  margin-bottom: 0.35rem;
+}
+
+.place-search-result {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+}
+
+.place-search-result[aria-current="true"] {
+  border: 3px solid var(--accent);
+  background: #e3f2fd;
+}
+
+.place-search-result[aria-current="true"]::before {
+  content: "選択中";
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.place-search-result-name {
+  font-weight: 700;
+}
+
+.place-search-result-meta,
+.place-search-result-detail {
+  font-size: 0.75rem;
+  color: #444;
+}
+
+#place-search-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
 }
 
 .info-card {
@@ -286,6 +399,7 @@ a:focus-visible,
   border: 2px solid var(--accent);
   border-radius: 6px;
   padding: 0.75rem 1rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   z-index: 1100;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
@@ -363,6 +477,39 @@ dialog::backdrop {
     left: 1rem;
     right: 1rem;
     max-width: none;
+  }
+
+  .map-workspace {
+    flex-direction: column;
+  }
+
+  .place-search-panel {
+    position: absolute;
+    z-index: 1000;
+    top: 0;
+    right: 0;
+    left: 0;
+    flex: 0 1 auto;
+    width: 100%;
+    min-width: 0;
+    max-height: 42dvh;
+    padding-right: max(0.8rem, env(safe-area-inset-right));
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+
+  #place-search-results {
+    min-height: 4.5rem;
+  }
+
+  body:has(#info-card:not([hidden])) .place-search-panel:not([hidden]) {
+    max-height: 34dvh;
+  }
+
+  body:has(#place-search-panel:not([hidden])) .info-card:not([hidden]) {
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    max-height: 30dvh;
   }
 
   .machiya-controls {

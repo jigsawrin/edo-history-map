@@ -20,9 +20,23 @@ export interface RegionDefinition {
   defaultEraId: string;
   enabledEraIds: readonly string[];
   enabled: boolean;
-  pageTitle?: string;
-  metaDescription?: string;
-  tagline?: string;
+  presentation: RegionPresentation;
+}
+
+export interface RegionPresentation {
+  pageTitle: string;
+  metaDescription: string;
+  tagline: string;
+  pointOpacityLabel: string;
+  historicalViewLabel: string;
+  footerCaution: string;
+  pointLegendLabel: string;
+  noDataMessage: string;
+  searchButtonLabel: string;
+  searchHeading: string;
+  searchInputLabel: string;
+  searchEmptyMessage: string;
+  searchResultNoun: string;
 }
 
 export interface RegionEraDefinition {

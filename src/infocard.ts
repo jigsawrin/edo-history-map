@@ -70,12 +70,12 @@ export function renderPlaceCard(
 export function renderNoData(
   container: HTMLElement,
   returnFocus?: HTMLElement,
+  message = "この地点には登録された歴史地名データがありません。江戸切絵図の収録範囲(江戸市中)外の可能性があります。",
 ): void {
   container.replaceChildren();
   container.hidden = false;
   const p = document.createElement("p");
-  p.textContent =
-    "この地点には登録された歴史地名データがありません。江戸切絵図の収録範囲(江戸市中)外の可能性があります。";
+  p.textContent = message;
   container.append(p);
   const close = document.createElement("button");
   close.type = "button";

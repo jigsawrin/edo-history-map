@@ -14,9 +14,21 @@
     "defaultEraId": "bakumatsu",
     "enabledEraIds": ["modern", "bakumatsu"],
     "enabled": true,
-    "pageTitle": "いま・むかし地図 | 京都・幕末",
-    "metaDescription": "現在の京都地図上で、根拠確認済みの幕末史跡を確認できる無料のWebアプリ。位置情報は保存しません。",
-    "tagline": "京都 × 幕末"
+    "presentation": {
+      "pageTitle": "いま・むかし地図 | 京都・幕末",
+      "metaDescription": "現在の京都地図上で、根拠確認済みの幕末史跡を確認できる無料のWebアプリ。位置情報は保存しません。",
+      "tagline": "京都 × 幕末",
+      "pointOpacityLabel": "幕末地点不透明度",
+      "historicalViewLabel": "京都・幕末の表示方法",
+      "footerCaution": "京都・幕末地点は公的・学術資料を基に独自編集した表示です。現在の碑・再建建物・顕彰地が幕末当時の現場や建物と一致しない場合があります。測量・境界・所有権の判断には使用しないでください。",
+      "pointLegendLabel": "京都・幕末史跡",
+      "noDataMessage": "この場所には登録済みの京都・幕末史跡情報がありません。",
+      "searchButtonLabel": "幕末史跡を検索",
+      "searchHeading": "京都・幕末史跡一覧",
+      "searchInputLabel": "史跡名",
+      "searchEmptyMessage": "条件に一致する京都・幕末史跡がありません。",
+      "searchResultNoun": "京都・幕末史跡"
+    }
   },
   "eras": [
     {

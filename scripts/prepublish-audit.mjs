@@ -1221,6 +1221,85 @@ for (const file of allFiles) {
   }
 }
 
+// ---- 3.6 地域別地点検索の公開ゲート -----------------------------------------
+
+const searchIndexPath = join(ROOT, "index.html");
+const searchQueryPath = join(ROOT, "src/place-search/query.ts");
+const searchAdaptersPath = join(ROOT, "src/place-search/adapters.ts");
+const searchSourceFiles = allFiles.filter((file) =>
+  file.rel.startsWith("src/place-search/") && file.rel.endsWith(".ts"),
+);
+if (!existsSync(searchIndexPath)) {
+  addFinding("error", "地点検索UI", "index.html", 0, "検索UIを確認できません");
+} else {
+  const html = readFileSync(searchIndexPath, "utf8");
+  const requiredMarkup = [
+    ['id="place-search-open"', "検索を開くボタン"],
+    ['aria-controls="place-search-panel"', "aria-controls"],
+    ['id="place-search-panel"', "検索パネル"],
+    ['aria-labelledby="place-search-heading"', "パネル見出し"],
+    ['id="place-search-input"', "検索入力"],
+    ['maxlength="100"', "100文字上限"],
+    ['id="place-search-results"', "検索結果一覧"],
+    ['id="place-search-status"', "検索status"],
+    ['aria-live="polite"', "aria-live"],
+    ['id="place-search-previous"', "前ページボタン"],
+    ['id="place-search-next"', "次ページボタン"],
+  ];
+  for (const [needle, label] of requiredMarkup) {
+    if (!html.includes(needle)) {
+      addFinding("error", "地点検索UI", "index.html", 0, `${label}がありません`);
+    }
+  }
+}
+
+if (!existsSync(searchQueryPath) || !readFileSync(searchQueryPath, "utf8").includes("SEARCH_RESULTS_PER_PAGE = 50")) {
+  addFinding("error", "地点検索性能", "src/place-search/query.ts", 0, "DOM上限50件の固定値がありません");
+}
+
+if (!existsSync(searchAdaptersPath)) {
+  addFinding("error", "地点検索アダプター", "src/place-search/adapters.ts", 0, "固定アダプターがありません");
+} else {
+  const adapters = readFileSync(searchAdaptersPath, "utf8");
+  for (const datasetId of [
+    "codh-edo-maps-places",
+    "project-kyoto-bakumatsu-places",
+  ]) {
+    if (!adapters.includes(`"${datasetId}"`)) {
+      addFinding("error", "地点検索アダプター", "src/place-search/adapters.ts", 0, `${datasetId}の固定アダプターがありません`);
+    }
+  }
+  for (const forbiddenDatasetId of [
+    "codh-edo-machiya-areas",
+    "codh-edo-coastline",
+  ]) {
+    if (adapters.includes(`"${forbiddenDatasetId}"`)) {
+      addFinding("error", "地点検索対象", "src/place-search/adapters.ts", 0, `${forbiddenDatasetId}を地点検索へ含めています`);
+    }
+  }
+}
+
+const forbiddenSearchSource = [
+  ["inner" + "HTML", "HTML文字列挿入"],
+  ["insertAdjacent" + "HTML", "HTML文字列挿入"],
+  ["new " + "RegExp", "利用者入力由来RegExp"],
+  ["fetch" + "(", "検索語の外部送信"],
+  ["local" + "Storage", "検索状態の永続保存"],
+  ["session" + "Storage", "検索状態の永続保存"],
+  ["indexed" + "DB", "検索状態の永続保存"],
+  ["document." + "cookie", "検索状態のCookie保存"],
+  ["console." + "log", "検索語のログ出力"],
+];
+for (const file of searchSourceFiles) {
+  const source = readFileSync(join(ROOT, file.rel), "utf8");
+  for (const [needle, label] of forbiddenSearchSource) {
+    if (source.includes(needle)) {
+      addFinding("error", "地点検索セキュリティ", file.rel, 0, `${label}は禁止です`);
+    }
+  }
+}
+infos.push(`地域別地点検索: UI・50件上限・固定アダプター・保存/送信禁止を確認`);
+
 // ---- 4. 出典表示の確認 -------------------------------------------------------
 
 const attrChecks = [

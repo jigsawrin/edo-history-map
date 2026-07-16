@@ -13,7 +13,22 @@
     },
     "defaultEraId": "edo-late",
     "enabledEraIds": ["modern", "edo-late"],
-    "enabled": true
+    "enabled": true,
+    "presentation": {
+      "pageTitle": "いま・むかし地図 | 東京23区・江戸後期",
+      "metaDescription": "現在の地図と江戸後期の江戸地名・町家領域・推定海岸線を重ねて表示する無料のWebアプリ。位置情報はボタン操作時のみ取得し、保存しません。",
+      "tagline": "東京23区 × 江戸後期(嘉永・文久期)",
+      "pointOpacityLabel": "歴史地点不透明度",
+      "historicalViewLabel": "江戸後期の表示方法",
+      "footerCaution": "江戸地名・町家領域・江戸末期海岸線は現代地図上への推定です。海岸線は約20万分の1相当で、時期・潮位・河道変化・地図の歪み等により実際と異なる可能性があります。現代の浸水・津波・高潮リスク、正確な地籍・所有・境界を示しません。和紙風の歴史背景は装飾です。測量・防災・権利関係の証拠には使用しないでください。",
+      "pointLegendLabel": "江戸地名",
+      "noDataMessage": "この場所には登録済みの江戸地名情報がありません。",
+      "searchButtonLabel": "江戸地名を検索",
+      "searchHeading": "江戸地名・地点一覧",
+      "searchInputLabel": "江戸地名",
+      "searchEmptyMessage": "条件に一致する江戸地名がありません。",
+      "searchResultNoun": "江戸地名"
+    }
   },
   "eras": [
     {
