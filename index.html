@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <!--CSP-->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f4ead5'/%3E%3Ccircle cx='32' cy='32' r='20' fill='%23fffdf7' stroke='%235d4037' stroke-width='6'/%3E%3Cpath d='M32 13v38M13 32h38' stroke='%235d4037' stroke-width='4'/%3E%3C/svg%3E"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="no-referrer" />
     <meta
@@ -16,7 +20,7 @@
     <a href="#map" class="skip-link">地図へスキップ</a>
     <header class="app-header">
       <h1>いま・むかし地図</h1>
-      <p class="tagline">東京23区 × 江戸後期(嘉永・文久期)</p>
+      <p id="region-tagline" class="tagline">東京23区 × 江戸後期(嘉永・文久期)</p>
     </header>
 
     <div class="toolbar" role="group" aria-label="地図の操作">
@@ -139,13 +143,25 @@
               >
             </p>
           </div>
-          <div class="map-legend" aria-label="地図の凡例">
+          <div id="edo-legend" class="map-legend" aria-label="江戸後期の地図の凡例">
             <span><i class="legend-swatch legend-coastline" aria-hidden="true"></i>江戸末期海岸線（推定）</span>
             <span><i class="legend-swatch legend-machiya" aria-hidden="true"></i>町家領域（推定）</span>
             <span><i class="legend-swatch legend-place" aria-hidden="true"></i>江戸地名</span>
             <span><i class="legend-swatch legend-location" aria-hidden="true"></i>現在地</span>
           </div>
         </fieldset>
+        <div
+          id="kyoto-legend"
+          class="map-legend kyoto-legend"
+          aria-label="京都・幕末史跡の凡例"
+          hidden
+        >
+          <span><i class="legend-swatch legend-kyoto-politics" aria-hidden="true"></i>朝廷・幕府・諸藩</span>
+          <span><i class="legend-swatch legend-kyoto-people" aria-hidden="true"></i>新選組・寓居</span>
+          <span><i class="legend-swatch legend-kyoto-event" aria-hidden="true"></i>事件・戦闘</span>
+          <span><i class="legend-swatch legend-kyoto-memorial" aria-hidden="true"></i>墓所・顕彰地</span>
+          <span><i class="legend-swatch legend-location" aria-hidden="true"></i>現在地</span>
+        </div>
       </div>
 
       <button type="button" id="locate-button">現在地を表示</button>
@@ -224,7 +240,7 @@
     </dialog>
 
     <footer class="app-footer">
-      <p class="caution">
+      <p id="footer-caution" class="caution">
         江戸地名・町家領域・江戸末期海岸線は現代地図上への<strong>推定</strong>です。海岸線は約20万分の1相当で、時期・潮位・河道変化・地図の歪み等により実際と異なる可能性があります。現代の浸水・津波・高潮リスク、正確な地籍・所有・境界を示しません。和紙風の歴史背景は装飾です。測量・防災・権利関係の証拠には使用しないでください。
       </p>
     </footer>

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "いま・むかし地図 - 現代地図と江戸後期の歴史GISデータを重ねて表示する静的Webアプリ",
+  "description": "いま・むかし地図 - 東京・江戸と京都の歴史データを地域ごとに表示する静的Webアプリ",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
     "data:convert": "node scripts/convert-owariya.mjs",
     "data:convert:machiya": "node scripts/convert-machiya-areas.mjs",
     "data:convert:coastline": "node scripts/convert-historical-coastline.mjs",
+    "data:build:kyoto": "node scripts/build-kyoto-bakumatsu-places.mjs",
     "audit:prepublish": "node scripts/prepublish-audit.mjs"
   },
   "dependencies": {

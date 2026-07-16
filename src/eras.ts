@@ -1,6 +1,21 @@
 import catalogData from "./era-catalog.json";
 
-export type EraBaseMode = "modern" | "reconstructed" | "historical-image";
+export const ERA_BASE_MODES = [
+  "modern",
+  "reconstructed",
+  "historical-image",
+  "historical-points",
+] as const;
+
+export type EraBaseMode = (typeof ERA_BASE_MODES)[number];
+
+export const HISTORICAL_VIEW_MODES = [
+  "reconstructed",
+  "compare",
+  "points",
+] as const;
+
+export type HistoricalViewMode = (typeof HISTORICAL_VIEW_MODES)[number];
 
 /** 地域に依存しない年代カタログ。表示レイヤーと出典は地域パックが所有する。 */
 export interface EraDefinition {
@@ -41,6 +56,10 @@ export const VISUAL_LAYER_ENABLED: Readonly<Record<string, boolean>> = {
 
 export function isVisualLayerEnabled(id: string): boolean {
   return VISUAL_LAYER_ENABLED[id] === true;
+}
+
+export function isKnownVisualLayer(id: string): boolean {
+  return Object.values(VISUAL_LAYER_IDS).some((knownId) => knownId === id);
 }
 
 const ERA_DEFINITIONS = catalogData as readonly EraDefinition[];

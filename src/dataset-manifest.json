@@ -19,5 +19,12 @@
     "path": "data/edo-coastlines.geojson",
     "sourceId": "codh-edo-coastline",
     "publicSha256": "c67be67ed6213021a7333774300bc196a52195894130f7670ede45e9a2124a31"
+  },
+  {
+    "id": "project-kyoto-bakumatsu-places",
+    "kind": "places",
+    "path": "data/kyoto-bakumatsu-places.geojson",
+    "sourceId": "project-kyoto-bakumatsu-places",
+    "publicSha256": "d141eb046d34c2c16b49286d3a70de49ea06f79e59561ae20537cd934e06f4d6"
   }
 ]

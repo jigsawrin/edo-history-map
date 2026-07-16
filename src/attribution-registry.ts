@@ -9,7 +9,8 @@ export type AttributionId =
   | "gsi-tiles"
   | "codh-edo-maps-places"
   | "codh-edo-machiya-areas"
-  | "codh-edo-coastline";
+  | "codh-edo-coastline"
+  | "project-kyoto-bakumatsu-places";
 
 export const ATTRIBUTION_REGISTRY: Readonly<Record<AttributionId, string>> =
   Object.freeze({
@@ -17,6 +18,8 @@ export const ATTRIBUTION_REGISTRY: Readonly<Record<AttributionId, string>> =
     "codh-edo-maps-places": CODH_ATTRIBUTION,
     "codh-edo-machiya-areas": MACHIYA_ATTRIBUTION,
     "codh-edo-coastline": COASTLINE_ATTRIBUTION,
+    "project-kyoto-bakumatsu-places":
+      "京都・幕末史跡：本プロジェクト編集（各地点の出典は情報カードに表示）",
   });
 
 export function resolveAttributions(ids: readonly string[]): readonly string[] {

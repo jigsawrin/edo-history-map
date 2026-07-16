@@ -1,3 +1,5 @@
+import { KYOTO_SOURCE_REGISTRY } from "./kyoto-source-registry";
+
 /** 出典・ライセンス画面とプライバシー画面。DOMは安全なAPIだけで構築する。 */
 
 interface LinkSpec {
@@ -114,6 +116,19 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
       },
     ],
   },
+  {
+    id: "project-kyoto-bakumatsu-places",
+    title: "京都・幕末史跡データ",
+    paragraphs: [
+      "京都・幕末史跡データは、複数の公的・学術資料で歴史的事実と現在位置を確認し、本プロジェクトが地点単位で独自編集したものです。第三者のデータベース、説明原文、画像は転載していません。",
+      "説明文は確認した事実を基に本プロジェクトが独自に作成しました。座標は公式ページに明示された世界測地系座標、公式住所・公式地図、または公的な史跡碑位置を根拠とし、位置精度を高・中に分類しています。現在の碑、再建建物、顕彰地が幕末当時の現場や建物と一致しない場合があります。",
+      "本アプリでは京都の幕末史を扱う表示範囲として1853年から1868年を採用しています。幕末の始期・終期には複数の区分方法があります。調査日は2026年7月16日です。",
+    ],
+    links: Object.values(KYOTO_SOURCE_REGISTRY).map((source) => ({
+      text: `${source.publisher}「${source.title}」`,
+      href: source.url,
+    })),
+  },
 ];
 
 export function renderAttribution(
@@ -154,6 +169,15 @@ export function renderAttribution(
     container.append(
       para(
         "歴史データの位置・名称・分類には誤りや推定が含まれます。「確定」情報として扱わず、学術・防災・不動産・権利関係の判断には一次資料を確認してください。",
+      ),
+    );
+  }
+
+  if (attributionIds.includes("project-kyoto-bakumatsu-places")) {
+    container.append(heading("京都地点の利用上の注意"));
+    container.append(
+      para(
+        "京都地点は歴史的位置の測量成果ではありません。個別カードの位置関係・位置精度・注意事項を確認し、境界、所有権、工事、防災などの判断には使用しないでください。",
       ),
     );
   }

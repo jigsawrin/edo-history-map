@@ -5,17 +5,23 @@ import {
 } from "./machiya-areas";
 import { loadPlaces } from "./places";
 import type { PlaceFeature } from "./validate";
+import {
+  loadKyotoBakumatsuPlaces,
+  type KyotoBakumatsuPlace,
+} from "./kyoto-bakumatsu-places";
 import manifestData from "./dataset-manifest.json";
 
 export type ApprovedDatasetId =
   | "codh-edo-maps-places"
   | "codh-edo-machiya-areas"
-  | "codh-edo-coastline";
+  | "codh-edo-coastline"
+  | "project-kyoto-bakumatsu-places";
 
 export interface DatasetValueMap {
   "codh-edo-maps-places": PlaceFeature[];
   "codh-edo-machiya-areas": MachiyaAreaCollection;
   "codh-edo-coastline": CoastlineCollection;
+  "project-kyoto-bakumatsu-places": readonly KyotoBakumatsuPlace[];
 }
 
 export interface DatasetDefinition<Id extends ApprovedDatasetId = ApprovedDatasetId> {
@@ -33,6 +39,7 @@ const LOADERS: Readonly<
   "codh-edo-maps-places": loadPlaces,
   "codh-edo-machiya-areas": loadMachiyaAreas,
   "codh-edo-coastline": loadCoastlines,
+  "project-kyoto-bakumatsu-places": loadKyotoBakumatsuPlaces,
 });
 
 export const DATASET_DEFINITIONS: readonly DatasetDefinition[] = Object.freeze(
@@ -52,6 +59,7 @@ const APPROVED_DATASET_IDS = new Set<ApprovedDatasetId>([
   "codh-edo-maps-places",
   "codh-edo-machiya-areas",
   "codh-edo-coastline",
+  "project-kyoto-bakumatsu-places",
 ]);
 
 function isSafeLocalDataPath(path: string): boolean {

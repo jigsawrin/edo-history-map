@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EraRegistry, eraRegistry } from "../src/eras";
 import { EDO_REGION_PACK } from "../src/regions/edo";
+import { KYOTO_REGION_PACK } from "../src/regions/kyoto";
 import { RegionRegistry } from "../src/regions/registry";
 import type { RegionPack } from "../src/regions/types";
 
@@ -43,11 +44,29 @@ function withEra(
 }
 
 describe("RegionRegistry", () => {
-  it("東京・江戸を唯一の本番有効地域として返す", () => {
+  it("東京・江戸と京都を本番有効地域として返す", () => {
     const registry = new RegionRegistry();
-    expect(registry.enabled().map((item) => item.region.id)).toEqual(["edo"]);
+    expect(registry.enabled().map((item) => item.region.id)).toEqual([
+      "edo",
+      "kyoto",
+    ]);
     expect(registry.get("edo")?.region.center).toEqual([35.6852, 139.7528]);
     expect(registry.getEraBinding("edo", "edo-late")?.datasetIds).toHaveLength(3);
+    expect(registry.get("kyoto")?.region.defaultEraId).toBe("bakumatsu");
+    expect(registry.get("kyoto")?.region.center).toEqual([
+      34.993708,
+      135.752445,
+    ]);
+    expect(registry.get("kyoto")?.region.defaultZoom).toBe(11);
+    expect(registry.get("kyoto")?.region.enabledEraIds).toEqual([
+      "modern",
+      "bakumatsu",
+    ]);
+    expect(
+      registry.getEraBinding("kyoto", "bakumatsu")?.datasetIds,
+    ).toEqual(["project-kyoto-bakumatsu-places"]);
+    expect(registry.getEraBinding("kyoto", "edo-late")).toBeNull();
+    expect(registry.getEraBinding("edo", "bakumatsu")).toBeNull();
   });
 
   it("重複地域IDを拒否する", () => {
@@ -119,6 +138,94 @@ describe("RegionRegistry", () => {
     expect(() => new RegionRegistry([badAttr], eraRegistry, "fixture")).toThrow(
       "未登録",
     );
+  });
+
+  it("EDOと京都の専用データ相互混入を拒否する", () => {
+    const badEdo: RegionPack = {
+      ...EDO_REGION_PACK,
+      eras: EDO_REGION_PACK.eras.map((binding) =>
+        binding.eraId === "edo-late"
+          ? {
+              ...binding,
+              datasetIds: ["project-kyoto-bakumatsu-places"],
+              placeDatasetId: null,
+            }
+          : binding,
+      ),
+    };
+    expect(() => new RegionRegistry([badEdo], eraRegistry, "edo")).toThrow(
+      "京都専用",
+    );
+
+    const badKyoto: RegionPack = {
+      ...KYOTO_REGION_PACK,
+      eras: KYOTO_REGION_PACK.eras.map((binding) =>
+        binding.eraId === "bakumatsu"
+          ? {
+              ...binding,
+              datasetIds: ["codh-edo-maps-places"],
+              placeDatasetId: null,
+            }
+          : binding,
+      ),
+    };
+    expect(() =>
+      new RegionRegistry([badKyoto], eraRegistry, "kyoto"),
+    ).toThrow("EDO専用");
+  });
+
+  it("基図・表示レイヤー・重複ID・注意文・表示モードを検証する", () => {
+    expect(() =>
+      new RegionRegistry(
+        [withEra(pack(), { baseMode: "unknown" as never })],
+        eraRegistry,
+        "fixture",
+      ),
+    ).toThrow("基図モード");
+    expect(() =>
+      new RegionRegistry(
+        [withEra(pack(), { visualLayers: ["unknown"] })],
+        eraRegistry,
+        "fixture",
+      ),
+    ).toThrow("表示レイヤー");
+    expect(() =>
+      new RegionRegistry(
+        [withEra(pack(), { attributionIds: ["gsi-tiles", "gsi-tiles"] })],
+        eraRegistry,
+        "fixture",
+      ),
+    ).toThrow("出典IDが重複");
+    expect(() =>
+      new RegionRegistry(
+        [
+          withEra(pack(), {
+            datasetIds: ["codh-edo-maps-places", "codh-edo-maps-places"],
+          }),
+        ],
+        eraRegistry,
+        "fixture",
+      ),
+    ).toThrow("データセットIDが重複");
+    expect(() =>
+      new RegionRegistry(
+        [withEra(pack(), { uncertaintyNote: "注".repeat(1001) })],
+        eraRegistry,
+        "fixture",
+      ),
+    ).toThrow("注意文");
+    expect(() =>
+      new RegionRegistry(
+        [
+          withEra(pack(), {
+            allowedHistoricalViewModes: ["points"],
+            defaultHistoricalViewMode: "compare",
+          }),
+        ],
+        eraRegistry,
+        "fixture",
+      ),
+    ).toThrow("歴史表示モード");
   });
 
   it("無効地域を一覧・get・resolve候補へ出さない", () => {

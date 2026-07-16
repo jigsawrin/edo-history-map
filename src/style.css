@@ -134,6 +134,14 @@ body {
   gap: 0.25rem;
 }
 
+.kyoto-legend {
+  max-width: 34rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #806f59;
+  border-radius: 0.3rem;
+  background: #fffdf7;
+}
+
 .legend-swatch {
   display: inline-block;
   width: 0.9rem;
@@ -150,6 +158,40 @@ body {
 .legend-place,
 .legend-location {
   border-radius: 50%;
+}
+
+.legend-kyoto-politics,
+.legend-kyoto-people,
+.legend-kyoto-event,
+.legend-kyoto-memorial {
+  border-radius: 50%;
+  border-width: 3px;
+}
+
+.legend-kyoto-politics {
+  border-color: #3f1d70;
+  background: #d7c5f2;
+}
+
+.legend-kyoto-people {
+  border-color: #14505b;
+  border-style: dashed;
+  background: #9fd9df;
+}
+
+.legend-kyoto-event {
+  width: 1rem;
+  height: 1rem;
+  border-color: #7a1d2b;
+  background: #f1aeb8;
+}
+
+.legend-kyoto-memorial {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-color: #4c4c4c;
+  border-style: dotted;
+  background: #dedede;
 }
 
 .legend-place {
@@ -272,6 +314,13 @@ a:focus-visible,
   color: #555;
 }
 
+.card-warning {
+  padding: 0.35rem;
+  border-left: 0.25rem solid #8a5a00;
+  background: #fff4d6;
+  color: #2b1b00;
+}
+
 dialog {
   max-width: min(34rem, calc(100vw - 2rem));
   border: 2px solid var(--border);
@@ -366,6 +415,14 @@ dialog::backdrop {
   .legend-machiya {
     border-color: #000;
     background: rgba(255, 181, 71, 0.5);
+  }
+
+  .legend-kyoto-politics,
+  .legend-kyoto-people,
+  .legend-kyoto-event,
+  .legend-kyoto-memorial {
+    border-color: #000;
+    background: #fff;
   }
 }
 

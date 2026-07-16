@@ -20,6 +20,7 @@ import {
 import { join, relative, extname } from "node:path";
 import { createHash } from "node:crypto";
 import { URL } from "node:url";
+import { buildKyotoGeoJson } from "./build-kyoto-bakumatsu-places.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -132,6 +133,26 @@ const ALLOWED_HOSTS = new Set([
   "jigsawrin.github.io",
   "registry.npmjs.org",
   "docs.github.com",
+  "www2.city.kyoto.lg.jp",
+  "www.city.kyoto.lg.jp",
+  "ja.kyoto.travel",
+  "kyoto-museums.city.kyoto.lg.jp",
+  "www.pref.kyoto.jp",
+  "www.kyoto-arc.or.jp",
+  "www.doshisha.ac.jp",
+  "kurodani.jp",
+  "bunka.nii.ac.jp",
+  "shimogyo.city.kyoto.lg.jp",
+  "myomanji.jp",
+  "www.env.go.jp",
+  "policies.env.go.jp",
+  "nijo-jocastle.city.kyoto.lg.jp",
+  "www.kunaicho.go.jp",
+  "rmda.kulib.kyoto-u.ac.jp",
+  "www.ndl.go.jp",
+  "www.archives.go.jp",
+  "ryozen-museum.or.jp",
+  "iwakura-tomomi.jp",
 ]);
 
 const DANGEROUS_EXT = new Set([
@@ -155,6 +176,44 @@ const APPROVED_DATA = new Set([
   "public/data/edo-places.geojson",
   "public/data/edo-machiya-areas.geojson",
   "public/data/edo-coastlines.geojson",
+  "public/data/kyoto-bakumatsu-places.geojson",
+]);
+
+const KYOTO_DATASET_ID = "project-kyoto-bakumatsu-places";
+const KYOTO_CURATION_FILE = "data-curation/kyoto-bakumatsu-places.json";
+const KYOTO_PUBLIC_FILE = "public/data/kyoto-bakumatsu-places.geojson";
+const KYOTO_SOURCE_REGISTRY_FILE = "src/kyoto-source-registry.json";
+const KYOTO_SOURCE_REGISTRY_CODE = "src/kyoto-source-registry.ts";
+const KYOTO_PACK_FILE = "src/regions/kyoto-pack.json";
+const EDO_PACK_FILE = "src/regions/edo-pack.json";
+const KYOTO_BOUNDS = Object.freeze({
+  minLat: 34.85,
+  maxLat: 35.12,
+  minLon: 135.65,
+  maxLon: 135.85,
+});
+const KYOTO_SOURCE_ALLOWED_ORIGINS = new Set([
+  "https://www2.city.kyoto.lg.jp",
+  "https://www.city.kyoto.lg.jp",
+  "https://ja.kyoto.travel",
+  "https://kyoto-museums.city.kyoto.lg.jp",
+  "https://www.pref.kyoto.jp",
+  "https://www.kyoto-arc.or.jp",
+  "https://www.doshisha.ac.jp",
+  "https://kurodani.jp",
+  "https://bunka.nii.ac.jp",
+  "https://shimogyo.city.kyoto.lg.jp",
+  "https://myomanji.jp",
+  "https://www.env.go.jp",
+  "https://policies.env.go.jp",
+  "https://nijo-jocastle.city.kyoto.lg.jp",
+  "https://www.kunaicho.go.jp",
+  "https://rmda.kulib.kyoto-u.ac.jp",
+  "https://www.ndl.go.jp",
+  "https://dl.ndl.go.jp",
+  "https://www.archives.go.jp",
+  "https://ryozen-museum.or.jp",
+  "https://iwakura-tomomi.jp",
 ]);
 
 // ---- 1. ファイル単位の検査 --------------------------------------------------
@@ -368,7 +427,7 @@ if (!existsSync(dsPath)) {
         const requiredTextFields = [
           "title",
           "provider",
-          "official_source",
+          ...(id === KYOTO_DATASET_ID ? ["source_manifest"] : ["official_source"]),
           "original_item",
           "data_version",
           "license",
@@ -435,13 +494,17 @@ if (!existsSync(dsPath)) {
                   ? geojson.features.map((feature) => feature?.geometry?.type)
                   : [],
               );
+              const allowedGeometryTypes =
+                id === KYOTO_DATASET_ID
+                  ? ["Point"]
+                  : ["Polygon", "MultiPolygon", "LineString", "MultiLineString"];
               if (
                 geojson?.type !== "FeatureCollection" ||
                 !Array.isArray(geojson.features) ||
                 geojson.features.length === 0 ||
                 geojson.features.some(
                   (feature) =>
-                    !["Polygon", "MultiPolygon", "LineString", "MultiLineString"].includes(feature?.geometry?.type) ||
+                    !allowedGeometryTypes.includes(feature?.geometry?.type) ||
                     feature?.properties?.sourceId !== id,
                 ) ||
                 declaredGeometryTypes.length === 0 ||
@@ -481,18 +544,20 @@ const regionManifestFiles = allFiles
   .filter((rel) => P("^src/regions/[a-z0-9-]+-pack\\.json$").test(rel));
 
 let eraIds = new Set();
+let eraCatalog = [];
 let datasetManifest = [];
 if (!existsSync(eraCatalogPath)) {
   addFinding("error", "地域パック", "src/era-catalog.json", 0, "年代カタログがありません");
 } else {
   try {
-    const catalog = JSON.parse(readFileSync(eraCatalogPath, "utf8"));
-    if (!Array.isArray(catalog) || catalog.length === 0) throw new Error();
-    eraIds = new Set(catalog.map((era) => era?.id));
-    if (eraIds.size !== catalog.length || [...eraIds].some((id) => !P("^[a-z0-9]+(?:-[a-z0-9]+)*$").test(String(id)))) {
+    eraCatalog = JSON.parse(readFileSync(eraCatalogPath, "utf8"));
+    if (!Array.isArray(eraCatalog) || eraCatalog.length === 0) throw new Error();
+    eraIds = new Set(eraCatalog.map((era) => era?.id));
+    if (eraIds.size !== eraCatalog.length || [...eraIds].some((id) => !P("^[a-z0-9]+(?:-[a-z0-9]+)*$").test(String(id)))) {
       throw new Error();
     }
   } catch {
+    eraCatalog = [];
     addFinding("error", "地域パック", "src/era-catalog.json", 0, "年代カタログが不正です");
   }
 }
@@ -544,7 +609,11 @@ if (!existsSync(datasetManifestPath)) {
           !Array.isArray(geojson.features) ||
           geojson.features.length === 0;
         const invalidSource =
-          dataset.kind === "places"
+          dataset.id === KYOTO_DATASET_ID
+            ? geojson.features.some(
+                (feature) => feature?.properties?.sourceId !== KYOTO_DATASET_ID,
+              )
+            : dataset.kind === "places"
             ? geojson.features.some(
                 (feature) =>
                   typeof feature?.properties?.source !== "string" ||
@@ -608,6 +677,484 @@ if (regionManifestFiles.length === 0) {
     addFinding("error", "地域パック", "src/regions/", 0, "有効地域がありません");
   }
   infos.push(`地域パック: ${regionManifestFiles.length} 件、有効 ${enabledRegionCount} 件`);
+}
+
+// ---- 3.5 京都・幕末パック専用の公開ゲート -----------------------------------
+
+function readKyotoJson(rel, category) {
+  const full = join(ROOT, rel);
+  if (!existsSync(full)) {
+    addFinding("error", category, rel, 0, "必要なファイルがありません");
+    return null;
+  }
+  try {
+    return JSON.parse(readFileSync(full, "utf8"));
+  } catch {
+    addFinding("error", category, rel, 0, "JSONとして解析できません");
+    return null;
+  }
+}
+
+function hasControlCharacters(value) {
+  return [...String(value)].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 0x1f || code === 0x7f;
+  });
+}
+
+function hasUnsafeHistoricalText(value) {
+  return (
+    typeof value !== "string" ||
+    hasControlCharacters(value) ||
+    /<\/?[a-z][^>]*>/i.test(value) ||
+    /\[[^\]]+\]\([^)]+\)/.test(value)
+  );
+}
+
+function inKyotoBounds(longitude, latitude) {
+  return (
+    Number.isFinite(longitude) &&
+    Number.isFinite(latitude) &&
+    latitude >= KYOTO_BOUNDS.minLat &&
+    latitude <= KYOTO_BOUNDS.maxLat &&
+    longitude >= KYOTO_BOUNDS.minLon &&
+    longitude <= KYOTO_BOUNDS.maxLon
+  );
+}
+
+const bakumatsuDefinition = eraCatalog.find((era) => era?.id === "bakumatsu");
+if (
+  !bakumatsuDefinition ||
+  bakumatsuDefinition.startYear !== 1853 ||
+  bakumatsuDefinition.endYear !== 1868
+) {
+  addFinding(
+    "error",
+    "京都年代",
+    "src/era-catalog.json",
+    0,
+    "bakumatsu 1853-1868 の固定年代定義がありません",
+  );
+}
+
+const kyotoPack = readKyotoJson(KYOTO_PACK_FILE, "京都地域パック");
+const edoPack = readKyotoJson(EDO_PACK_FILE, "EDO地域パック");
+if (kyotoPack) {
+  const region = kyotoPack.region;
+  const bakumatsu = Array.isArray(kyotoPack.eras)
+    ? kyotoPack.eras.find((binding) => binding?.eraId === "bakumatsu")
+    : null;
+  if (
+    region?.id !== "kyoto" ||
+    region.enabled !== true ||
+    region.defaultEraId !== "bakumatsu" ||
+    !Array.isArray(region.enabledEraIds) ||
+    !region.enabledEraIds.includes("modern") ||
+    !region.enabledEraIds.includes("bakumatsu") ||
+    !bakumatsu ||
+    bakumatsu.enabled !== true ||
+    !Array.isArray(bakumatsu.datasetIds) ||
+    bakumatsu.datasetIds.length !== 1 ||
+    bakumatsu.datasetIds[0] !== KYOTO_DATASET_ID ||
+    bakumatsu.placeDatasetId !== KYOTO_DATASET_ID
+  ) {
+    addFinding(
+      "error",
+      "京都地域パック",
+      KYOTO_PACK_FILE,
+      0,
+      "有効地域・初期年代・幕末データセット参照が固定仕様と一致しません",
+    );
+  }
+  if (JSON.stringify(kyotoPack).includes("codh-edo-")) {
+    addFinding(
+      "error",
+      "地域データ混入",
+      KYOTO_PACK_FILE,
+      0,
+      "京都パックがEDO専用データを参照しています",
+    );
+  }
+}
+if (edoPack && JSON.stringify(edoPack).includes(KYOTO_DATASET_ID)) {
+  addFinding(
+    "error",
+    "地域データ混入",
+    EDO_PACK_FILE,
+    0,
+    "EDOパックが京都専用データを参照しています",
+  );
+}
+
+const kyotoManifest = datasetManifest.find(
+  (dataset) => dataset?.id === KYOTO_DATASET_ID,
+);
+if (
+  !kyotoManifest ||
+  kyotoManifest.kind !== "places" ||
+  kyotoManifest.path !== "data/kyoto-bakumatsu-places.geojson" ||
+  kyotoManifest.sourceId !== KYOTO_DATASET_ID ||
+  !P("^[0-9a-f]{64}$").test(String(kyotoManifest.publicSha256))
+) {
+  addFinding(
+    "error",
+    "京都データセット",
+    "src/dataset-manifest.json",
+    0,
+    "京都データセットの固定ID・パス・sourceId・SHAが不正です",
+  );
+}
+const kyotoLedger = dataSourceEntries.get(KYOTO_DATASET_ID);
+if (
+  !kyotoLedger ||
+  kyotoLedger.status !== "approved" ||
+  kyotoLedger.files.length !== 1 ||
+  kyotoLedger.files[0] !== KYOTO_PUBLIC_FILE ||
+  !P(
+    "^\\s+source_manifest:\\s*src/kyoto-source-registry\\.json\\s*$",
+    "m",
+  ).test(kyotoLedger.entry)
+) {
+  addFinding(
+    "error",
+    "京都ライセンス台帳",
+    "DATA_SOURCES.yml",
+    0,
+    "京都データセットのapproved登録・source_manifest・local_filesが不正です",
+  );
+}
+
+const sourceData = readKyotoJson(
+  KYOTO_SOURCE_REGISTRY_FILE,
+  "京都出典レジストリ",
+);
+const sourceIds = new Set();
+if (!Array.isArray(sourceData) || sourceData.length === 0) {
+  addFinding(
+    "error",
+    "京都出典レジストリ",
+    KYOTO_SOURCE_REGISTRY_FILE,
+    0,
+    "固定出典が登録されていません",
+  );
+} else {
+  for (const source of sourceData) {
+    const id = source?.id;
+    if (
+      typeof id !== "string" ||
+      !P("^[a-z0-9]+(?:-[a-z0-9]+)*$").test(id) ||
+      sourceIds.has(id)
+    ) {
+      addFinding(
+        "error",
+        "京都出典レジストリ",
+        KYOTO_SOURCE_REGISTRY_FILE,
+        0,
+        "出典IDが不正または重複しています",
+      );
+      continue;
+    }
+    sourceIds.add(id);
+    try {
+      const url = new URL(source.url);
+      if (
+        url.protocol !== "https:" ||
+        url.username !== "" ||
+        url.password !== "" ||
+        !KYOTO_SOURCE_ALLOWED_ORIGINS.has(url.origin)
+      ) {
+        throw new Error();
+      }
+    } catch {
+      addFinding(
+        "error",
+        "京都出典URL",
+        KYOTO_SOURCE_REGISTRY_FILE,
+        0,
+        `${id}: HTTPS固定origin許可リスト外です`,
+      );
+    }
+    for (const field of ["title", "publisher", "url"]) {
+      if (hasUnsafeHistoricalText(source?.[field])) {
+        addFinding(
+          "error",
+          "京都出典文字列",
+          KYOTO_SOURCE_REGISTRY_FILE,
+          0,
+          `${id}: ${field} に不正な文字列があります`,
+        );
+      }
+    }
+  }
+}
+
+const sourceRegistryCodePath = join(ROOT, KYOTO_SOURCE_REGISTRY_CODE);
+if (!existsSync(sourceRegistryCodePath)) {
+  addFinding(
+    "error",
+    "京都出典レジストリ",
+    KYOTO_SOURCE_REGISTRY_CODE,
+    0,
+    "安全な出典URL解決コードがありません",
+  );
+} else {
+  const sourceCode = readFileSync(sourceRegistryCodePath, "utf8");
+  for (const token of [
+    'from "./kyoto-source-registry.json"',
+    "new URL(url)",
+    'parsedUrl.protocol !== "https:"',
+    "ALLOWED_ORIGINS.has(parsedUrl.origin)",
+  ]) {
+    if (!sourceCode.includes(token)) {
+      addFinding(
+        "error",
+        "京都出典レジストリ",
+        KYOTO_SOURCE_REGISTRY_CODE,
+        0,
+        `安全要件「${token}」が維持されていません`,
+      );
+    }
+  }
+}
+
+const curationData = readKyotoJson(KYOTO_CURATION_FILE, "京都キュレーション");
+const publicData = readKyotoJson(KYOTO_PUBLIC_FILE, "京都公開GeoJSON");
+const curatedIds = new Set();
+const curatedCoordinates = new Set();
+if (!Array.isArray(curationData) || curationData.length < 30 || curationData.length > 50) {
+  addFinding(
+    "error",
+    "京都キュレーション",
+    KYOTO_CURATION_FILE,
+    0,
+    "採用地点数が30-50件ではありません",
+  );
+} else {
+  for (const place of curationData) {
+    const id = place?.id;
+    const longitude = place?.longitude;
+    const latitude = place?.latitude;
+    const coordinateKey = `${Number(longitude).toFixed(6)},${Number(latitude).toFixed(6)}`;
+    if (
+      typeof id !== "string" ||
+      !P("^[a-z0-9]+(?:-[a-z0-9]+)*$").test(id) ||
+      curatedIds.has(id)
+    ) {
+      addFinding("error", "京都地点ID", KYOTO_CURATION_FILE, 0, "IDが不正または重複しています");
+    } else {
+      curatedIds.add(id);
+    }
+    if (!inKyotoBounds(longitude, latitude)) {
+      addFinding("error", "京都地点bounds", KYOTO_CURATION_FILE, 0, `${id}: 京都bounds外です`);
+    }
+    if (curatedCoordinates.has(coordinateKey)) {
+      addFinding("error", "京都地点座標", KYOTO_CURATION_FILE, 0, `${id}: 座標が重複しています`);
+    }
+    curatedCoordinates.add(coordinateKey);
+    if (place?.eraId !== "bakumatsu") {
+      addFinding("error", "京都地点年代", KYOTO_CURATION_FILE, 0, `${id}: eraIdが不正です`);
+    }
+    if (place?.coordinateConfidence === "low") {
+      addFinding("error", "京都地点精度", KYOTO_CURATION_FILE, 0, `${id}: low confidenceは公開できません`);
+    }
+    if (
+      !Array.isArray(place?.sourceIds) ||
+      place.sourceIds.length === 0 ||
+      place.sourceIds.some((sourceId) => !sourceIds.has(sourceId))
+    ) {
+      addFinding("error", "京都地点出典", KYOTO_CURATION_FILE, 0, `${id}: sourceIdsが未登録または空です`);
+    }
+    for (const [key, value] of Object.entries(place ?? {})) {
+      if (typeof value === "string" && hasUnsafeHistoricalText(value)) {
+        addFinding("error", "京都地点文字列", KYOTO_CURATION_FILE, 0, `${id}: ${key} にHTML・Markdownリンク・制御文字があります`);
+      }
+    }
+  }
+}
+
+const publicIds = new Set();
+const publicCoordinates = new Set();
+if (
+  publicData?.type !== "FeatureCollection" ||
+  !Array.isArray(publicData.features) ||
+  publicData.features.length < 30 ||
+  publicData.features.length > 50
+) {
+  addFinding(
+    "error",
+    "京都公開GeoJSON",
+    KYOTO_PUBLIC_FILE,
+    0,
+    "FeatureCollectionまたはFeature数30-50件の条件を満たしません",
+  );
+} else {
+  if (Array.isArray(curationData) && publicData.features.length !== curationData.length) {
+    addFinding("error", "京都公開GeoJSON", KYOTO_PUBLIC_FILE, 0, "キュレーションと公開件数が一致しません");
+  }
+  for (const feature of publicData.features) {
+    const properties = feature?.properties;
+    const coordinates = feature?.geometry?.coordinates;
+    const id = properties?.id;
+    const longitude = Array.isArray(coordinates) ? coordinates[0] : Number.NaN;
+    const latitude = Array.isArray(coordinates) ? coordinates[1] : Number.NaN;
+    const coordinateKey = `${Number(longitude).toFixed(6)},${Number(latitude).toFixed(6)}`;
+    if (
+      feature?.type !== "Feature" ||
+      feature?.geometry?.type !== "Point" ||
+      !Array.isArray(coordinates) ||
+      coordinates.length !== 2 ||
+      !inKyotoBounds(longitude, latitude)
+    ) {
+      addFinding("error", "京都公開GeoJSON", KYOTO_PUBLIC_FILE, 0, `${id}: Pointまたはboundsが不正です`);
+    }
+    if (typeof id !== "string" || publicIds.has(id)) {
+      addFinding("error", "京都公開GeoJSON", KYOTO_PUBLIC_FILE, 0, "Feature IDが不正または重複しています");
+    } else {
+      publicIds.add(id);
+    }
+    if (publicCoordinates.has(coordinateKey)) {
+      addFinding("error", "京都公開GeoJSON", KYOTO_PUBLIC_FILE, 0, `${id}: 座標が重複しています`);
+    }
+    publicCoordinates.add(coordinateKey);
+    if (
+      properties?.sourceId !== KYOTO_DATASET_ID ||
+      properties?.eraId !== "bakumatsu" ||
+      properties?.coordinateConfidence === "low" ||
+      !Array.isArray(properties?.sourceIds) ||
+      properties.sourceIds.length === 0 ||
+      properties.sourceIds.some((sourceId) => !sourceIds.has(sourceId))
+    ) {
+      addFinding("error", "京都公開GeoJSON", KYOTO_PUBLIC_FILE, 0, `${id}: 固定ID・年代・精度・出典が不正です`);
+    }
+    for (const [key, value] of Object.entries(properties ?? {})) {
+      if (typeof value === "string" && hasUnsafeHistoricalText(value)) {
+        addFinding("error", "京都公開文字列", KYOTO_PUBLIC_FILE, 0, `${id}: ${key} にHTML・Markdownリンク・制御文字があります`);
+      }
+    }
+  }
+}
+
+if (
+  existsSync(join(ROOT, KYOTO_CURATION_FILE)) &&
+  existsSync(join(ROOT, KYOTO_PUBLIC_FILE))
+) {
+  try {
+    // direct-run分岐は通らないため、公開ファイルを書かずメモリ上だけで再現する。
+    const rebuilt = buildKyotoGeoJson();
+    const publicBuffer = readFileSync(join(ROOT, KYOTO_PUBLIC_FILE));
+    const publicText = publicBuffer.toString("utf8");
+    const publicSha = createHash("sha256").update(publicBuffer).digest("hex");
+    if (rebuilt.output !== publicText || rebuilt.featureCount !== publicData?.features?.length) {
+      addFinding(
+        "error",
+        "京都再現可能性",
+        KYOTO_PUBLIC_FILE,
+        0,
+        "キュレーションからの読み取り専用再生成内容または件数が一致しません",
+      );
+    }
+    if (rebuilt.sha256 !== publicSha || kyotoManifest?.publicSha256 !== publicSha) {
+      addFinding(
+        "error",
+        "京都再現可能性",
+        KYOTO_PUBLIC_FILE,
+        0,
+        "再現SHA・公開SHA・dataset manifest SHAが一致しません",
+      );
+    }
+    if (kyotoLedger) {
+      const curationBuffer = readFileSync(join(ROOT, KYOTO_CURATION_FILE));
+      const curationSha = createHash("sha256").update(curationBuffer).digest("hex");
+      const ledgerOriginalSha = kyotoLedger.entry.match(
+        P("^\\s+original_sha256:\\s*([0-9a-f]{64})\\s*$", "m"),
+      )?.[1];
+      const ledgerConvertedSha = kyotoLedger.entry.match(
+        P("^\\s+converted_sha256:\\s*([0-9a-f]{64})\\s*$", "m"),
+      )?.[1];
+      if (ledgerOriginalSha !== curationSha || ledgerConvertedSha !== publicSha) {
+        addFinding(
+          "error",
+          "京都再現可能性",
+          "DATA_SOURCES.yml",
+          0,
+          "キュレーションSHAまたは公開GeoJSON SHAが台帳と一致しません",
+        );
+      }
+    }
+    infos.push(`京都・幕末: ${rebuilt.featureCount} 地点、SHA ${publicSha.slice(0, 12)}…`);
+  } catch (error) {
+    addFinding(
+      "error",
+      "京都再現可能性",
+      KYOTO_CURATION_FILE,
+      0,
+      `キュレーションの検証または読み取り専用再生成に失敗しました: ${
+        error instanceof Error ? error.message : "原因不明"
+      }`,
+    );
+  }
+}
+
+const allowedRuntimeFetches = new Map([
+  ["src/places.ts", "fetch(baseUrl + PLACES_DATA_PATH"],
+  ["src/machiya-areas.ts", "fetch(baseUrl + MACHIYA_DATA_PATH"],
+  ["src/coastlines.ts", "fetch(`${baseUrl}${COASTLINE_DATA_PATH}`"],
+  ["src/kyoto-bakumatsu-places.ts", "fetch(baseUrl + KYOTO_BAKUMATSU_DATA_PATH"],
+]);
+for (const file of allFiles) {
+  if (!file.rel.startsWith("src/") || extname(file.rel).toLowerCase() !== ".ts") continue;
+  const content = readFileSync(join(ROOT, file.rel), "utf8");
+  if (!/\bfetch\s*\(/.test(content)) continue;
+  const expected = allowedRuntimeFetches.get(file.rel);
+  if (!expected || !content.includes(expected) || /fetch\s*\(\s*["']https?:/i.test(content)) {
+    addFinding(
+      "error",
+      "外部fetch",
+      file.rel,
+      0,
+      "固定同一オリジンGeoJSON以外のfetchが追加されています",
+    );
+  }
+}
+
+const forbiddenKyotoAssetExtensions = new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".pdf",
+  ".html",
+  ".htm",
+]);
+for (const file of allFiles) {
+  const lower = file.rel.toLowerCase();
+  const extension = extname(lower);
+  if (lower.endsWith(".map")) {
+    addFinding("error", "ソースマップ露出", file.rel, 0, "source mapは公開・追跡禁止です");
+  }
+  if (lower.startsWith("data-curation/") && file.rel !== KYOTO_CURATION_FILE) {
+    addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
+  }
+  if (
+    (lower.includes("kyoto") || lower.startsWith("data-curation/")) &&
+    forbiddenKyotoAssetExtensions.has(extension)
+  ) {
+    addFinding("error", "京都原画像", file.rel, 0, "京都の原画像・PDF・HTMLコピーは公開禁止です");
+  }
+  if (
+    lower.startsWith("src/kyoto") &&
+    [".txt", ".md"].includes(extension)
+  ) {
+    addFinding("error", "京都原資料", file.rel, 0, "京都の原文・ページコピーはソースへ同梱できません");
+  }
+  if (
+    lower.startsWith("public/data/kyoto") &&
+    file.rel !== KYOTO_PUBLIC_FILE
+  ) {
+    addFinding("error", "京都公開データ", file.rel, 0, "承認済み京都GeoJSON以外の公開データがあります");
+  }
 }
 
 // CSP・Service Workerの公開禁止を明示的に検査
