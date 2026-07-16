@@ -75,7 +75,8 @@ describe("地域パック公開ゲート", () => {
       "local_files",
       "publicSha256",
       "sourceId",
-      "connect-src 'self'",
+      "viteConnectSources",
+      "cspDirectives",
       "Service Worker",
       "未承認歴史画像の公開",
     ]) {

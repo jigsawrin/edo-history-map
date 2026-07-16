@@ -19,6 +19,7 @@ import {
 } from "node:fs";
 import { join, relative, extname } from "node:path";
 import { createHash } from "node:crypto";
+import { URL } from "node:url";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -610,10 +611,50 @@ if (regionManifestFiles.length === 0) {
 }
 
 // CSP・Service Workerの公開禁止を明示的に検査
+const EXPECTED_TILE_ORIGIN = new URL(
+  "https://cyberjapandata.gsi.go.jp",
+).origin;
+
+function cspDirectives(value) {
+  const directives = new Map();
+  for (const part of String(value).split(";")) {
+    const tokens = part.trim().split(/\s+/).filter(Boolean);
+    const name = tokens.shift();
+    if (name) directives.set(name, tokens);
+  }
+  return directives;
+}
+
+function isExactOriginSource(source, expectedOrigin) {
+  try {
+    const url = new URL(source);
+    return (
+      url.origin === expectedOrigin &&
+      url.pathname === "/" &&
+      url.search === "" &&
+      url.hash === ""
+    );
+  } catch {
+    return false;
+  }
+}
+
 const viteConfig = existsSync(join(ROOT, "vite.config.ts"))
   ? readFileSync(join(ROOT, "vite.config.ts"), "utf8")
   : "";
-if (!viteConfig.includes("connect-src 'self'") || !viteConfig.includes("https://cyberjapandata.gsi.go.jp")) {
+const viteImgSources = viteConfig.match(/"img-src\s+([^"\r\n]+)"/)?.[1]
+  ?.split(/\s+/)
+  .filter(Boolean) ?? [];
+const viteConnectSources = viteConfig.match(/"connect-src\s+([^"\r\n]+)"/)?.[1]
+  ?.split(/\s+/)
+  .filter(Boolean) ?? [];
+if (
+  viteConnectSources.length !== 1 ||
+  viteConnectSources[0] !== "'self'" ||
+  !viteImgSources.some((source) =>
+    isExactOriginSource(source, EXPECTED_TILE_ORIGIN),
+  )
+) {
   addFinding("error", "CSP", "vite.config.ts", 0, "既存CSPの通信先制限が維持されていません");
 }
 for (const file of allFiles) {
@@ -689,11 +730,26 @@ if (existsSync(distDir)) {
     addFinding("error", "CSP", "dist/index.html", 0, "公開HTMLがありません");
   } else {
     const html = readFileSync(distIndex, "utf8");
+    const csp = html.match(
+      /<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"/i,
+    )?.[1];
+    const directives = cspDirectives(csp ?? "");
+    const connectSources = directives.get("connect-src") ?? [];
+    const imgSources = directives.get("img-src") ?? [];
     if (
-      !html.includes("Content-Security-Policy") ||
-      !html.includes("connect-src 'self'") ||
-      !html.includes("https://cyberjapandata.gsi.go.jp") ||
-      P("http://", "i").test(html)
+      !csp ||
+      connectSources.length !== 1 ||
+      connectSources[0] !== "'self'" ||
+      !imgSources.some((source) =>
+        isExactOriginSource(source, EXPECTED_TILE_ORIGIN),
+      ) ||
+      [...directives.values()].flat().some((source) => {
+        try {
+          return new URL(source).protocol === "http:";
+        } catch {
+          return false;
+        }
+      })
     ) {
       addFinding("error", "CSP", "dist/index.html", 0, "CSP欠落、許可先変更、またはmixed contentがあります");
     }
