@@ -7,7 +7,7 @@
     <meta name="referrer" content="no-referrer" />
     <meta
       name="description"
-      content="現在の地図と江戸後期の歴史GIS地名データを重ねて表示する無料のWebアプリ。位置情報はボタン操作時のみ取得し、保存しません。"
+      content="現在の地図と江戸後期の江戸地名・町家領域を重ねて表示する無料のWebアプリ。位置情報はボタン操作時のみ取得し、保存しません。"
     />
     <title>いま・むかし地図 | 東京23区・江戸後期</title>
     <script type="module" src="/src/main.ts"></script>
@@ -73,6 +73,42 @@
             aria-valuetext="85パーセント"
           />
         </label>
+
+        <fieldset id="machiya-controls" class="machiya-controls">
+          <legend>歴史要素</legend>
+          <label class="control">
+            <input type="checkbox" id="machiya-visible" checked disabled />
+            <span>町家領域（推定）</span>
+          </label>
+          <label class="control">
+            <span id="machiya-opacity-label">町家領域不透明度</span>
+            <input
+              type="range"
+              id="machiya-opacity-slider"
+              min="0"
+              max="100"
+              value="35"
+              step="5"
+              disabled
+              aria-labelledby="machiya-opacity-label"
+              aria-valuetext="35パーセント"
+            />
+          </label>
+          <p class="machiya-description">
+            江戸切絵図から抽出し、現代地図へ位置合わせした町家の分布領域です。正確な地籍・人口境界ではありません。
+            <a
+              href="https://codh.rois.ac.jp/edo-maps/rekichizu/index.html.ja"
+              target="_blank"
+              rel="noopener noreferrer"
+              >出典（CODH）</a
+            >
+          </p>
+          <div class="map-legend" aria-label="地図の凡例">
+            <span><i class="legend-swatch legend-machiya" aria-hidden="true"></i>町家領域（推定）</span>
+            <span><i class="legend-swatch legend-place" aria-hidden="true"></i>江戸地名</span>
+            <span><i class="legend-swatch legend-location" aria-hidden="true"></i>現在地</span>
+          </div>
+        </fieldset>
       </div>
 
       <button type="button" id="locate-button">現在地を表示</button>
@@ -81,7 +117,7 @@
     </div>
 
     <p id="era-caution" class="era-caution" role="note">
-      江戸地名の位置は、古地図を現代地図へ位置合わせしたデータに基づく推定です。現在の歴史背景は、古地図原本や当時の道路・海岸線・敷地境界を再現したものではありません。測量・境界・権利確認には使用できません。
+      江戸地名と町家領域は、江戸切絵図を現代地図へ位置合わせした推定データです。町家領域は当時の市街地分布を理解する参考情報であり、正確な地籍・人口・所有・境界を示すものではありません。和紙風背景は本プロジェクト独自の装飾です。
     </p>
     <p id="historical-original-note" class="era-caution" role="note" hidden>
       この古地図原本には、当時の社会的背景を反映し、現在では不適切な名称・区分・表現が含まれる場合があります。
@@ -150,7 +186,7 @@
 
     <footer class="app-footer">
       <p class="caution">
-        江戸地名の位置は現代地図上への<strong>推定</strong>であり、数十メートル以上の誤差を含み得ます。和紙風の歴史背景は装飾であり、当時の地形・道路・境界の復元ではありません。測量図や権利関係の証拠として使用しないでください。
+        江戸地名と町家領域は現代地図上への<strong>推定</strong>です。町家領域は正確な地籍・人口・所有・境界を示しません。和紙風の歴史背景は装飾であり、当時の地形・道路・境界の復元ではありません。測量図や権利関係の証拠として使用しないでください。
       </p>
     </footer>
   </body>

@@ -82,6 +82,72 @@ body {
   display: contents;
 }
 
+.machiya-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.7rem;
+  min-width: min(100%, 28rem);
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.machiya-controls legend {
+  padding: 0 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.machiya-description {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.72rem;
+  color: #444;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
+  font-size: 0.72rem;
+}
+
+.map-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid #333;
+}
+
+.legend-machiya {
+  border-style: dashed;
+  border-color: #7b4527;
+  background: rgba(196, 123, 74, 0.35);
+}
+
+.legend-place,
+.legend-location {
+  border-radius: 50%;
+}
+
+.legend-place {
+  border-color: #5d4037;
+  background: rgba(93, 64, 55, 0.5);
+}
+
+.legend-location {
+  border-color: #0d47a1;
+  background: #2196f3;
+}
+
 .era-caution {
   margin: 0;
   padding: 0.45rem 1rem;
@@ -235,6 +301,14 @@ dialog::backdrop {
     right: 1rem;
     max-width: none;
   }
+
+  .machiya-controls {
+    flex-basis: 100%;
+  }
+
+  .machiya-description {
+    display: none;
+  }
 }
 
 @media (prefers-contrast: more) {
@@ -254,6 +328,15 @@ dialog::backdrop {
     border-color: currentColor;
     background-color: #fff4d6;
     color: #000;
+  }
+
+  .leaflet-historical-area-pane-pane {
+    filter: contrast(1.45);
+  }
+
+  .legend-machiya {
+    border-color: #000;
+    background: rgba(255, 181, 71, 0.5);
   }
 }
 

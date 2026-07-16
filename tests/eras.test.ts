@@ -21,9 +21,18 @@ describe("EraRegistry", () => {
     expect(edo?.baseMode).toBe("reconstructed");
     expect(edo?.placeDatasetId).toBe("codh-edo-maps-places");
     expect(eraRegistry.get("modern")?.attributionIds).toEqual(["gsi-tiles"]);
-    expect(edo?.attributionIds).toEqual(["codh-edo-maps-places"]);
+    expect(edo?.attributionIds).toEqual([
+      "codh-edo-maps-places",
+      "codh-edo-machiya-areas",
+    ]);
     expect(edo?.visualLayers).toContain(VISUAL_LAYER_IDS.historicalPoints);
+    expect(edo?.visualLayers).toContain(
+      VISUAL_LAYER_IDS.historicalCommonerAreas,
+    );
     expect(VISUAL_LAYER_ENABLED[VISUAL_LAYER_IDS.historicalPoints]).toBe(true);
+    expect(
+      VISUAL_LAYER_ENABLED[VISUAL_LAYER_IDS.historicalCommonerAreas],
+    ).toBe(true);
     expect(VISUAL_LAYER_ENABLED[VISUAL_LAYER_IDS.historicalRoads]).toBe(false);
     expect(edo && formatEraLabel(edo)).toBe("江戸後期 1849–1862");
     expect(edo && formatEraLabel(edo, "en")).toBe("Late Edo 1849–1862");

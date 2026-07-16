@@ -82,3 +82,39 @@ sources:
       MVP では画像レイヤーを実装せず(historical.ts の
       addHistoricalImageLayer は常に無効)、権利確認完了後に
       本台帳へ approved で登録した場合のみ追加可能とする。
+
+  - id: codh-edo-machiya-areas
+    asset_type: historical-vector
+    title: 「江戸切絵図」町家領域データセット
+    provider: ROIS-DS人文学オープンデータ共同利用センター(CODH)
+    official_source: https://codh.rois.ac.jp/edo-maps/rekichizu/index.html.ja
+    original_item: shape.zip（完成版、machiya_all_241022 Shapefile一式）
+    data_version: "完成版 2024-10-22（全29図）"
+    license: CC BY 4.0
+    license_url: https://creativecommons.org/licenses/by/4.0/deed.ja
+    attribution: >-
+      「江戸切絵図」町家領域データセット
+      （ROIS-DS人文学オープンデータ共同利用センター作成）
+      doi:10.20676/00000446
+    doi: 10.20676/00000446
+    modification: >-
+      完成版Shapefile（WGS 84）をGeoJSONへ変換し、fidと切絵図名を
+      必要最小限の属性へ写像、座標を小数6桁へ丸め、外周・穴の向きを
+      GeoJSON向けに正規化した。形状簡略化なし。丸め後に縮退したring
+      1件（record 24 part 13）のみ除外。変換スクリプト:
+      scripts/convert-machiya-areas.mjs
+    redistribution_allowed: true
+    accessed_at: "2026-07-16"
+    downloaded_at: "2026-07-16"
+    original_sha256: f8479c420f8d7b9f1f6c87b0ecd7f1aef596a7225da88c75c70203c718e963ca
+    converted_sha256: 516fead3b082499ab1fb9d3c50060fc88812531530e9f86f63bcffff81a70bd6
+    source_crs: "EPSG:4326 (WGS 84、同梱.prjで確認)"
+    output_crs: "RFC 7946 WGS 84（経度・緯度順）"
+    local_files:
+      - public/data/edo-machiya-areas.geojson
+    review_status: approved
+    reviewer_note: >-
+      データセット個別公式ページで名称、完成版、ShapefileとGeoPackageの
+      内容同一、CC BY 4.0、指定出典、DOIを確認した。CC BY 4.0に基づき
+      出典と加工内容を明示して変換後GeoJSONのみ再配布する。原ZIPと
+      Shapefile一式はdata-raw/へ保持し、Git・公開物には含めない。

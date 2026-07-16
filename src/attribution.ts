@@ -54,6 +54,35 @@ export function renderAttribution(container: HTMLElement): void {
     ]),
   );
 
+  container.append(heading("町家領域データ"));
+  container.append(
+    para(
+      "『江戸切絵図』町家領域データセット(ROIS-DS人文学オープンデータ共同利用センター(CODH)作成、doi:10.20676/00000446)を使用しています。ライセンスはCC BY 4.0です。",
+    ),
+  );
+  container.append(
+    para(
+      "本アプリでの加工内容: 完成版ShapefileのWGS 84座標をGeoJSONへ変換し、必要属性だけを保持、座標を小数6桁へ丸め、外周と穴の向きをGeoJSON向けに正規化しました。形状の簡略化は行っていません。丸め後に縮退したring 1件のみ除外しています。",
+    ),
+  );
+  container.append(
+    para(
+      "町家領域は江戸切絵図を現代地図へ位置合わせした推定ポリゴンです。正確な地籍、人口、所有権、境界、現代の用途地域を示すものではありません。",
+    ),
+  );
+  container.append(
+    linkList([
+      {
+        text: "『江戸切絵図』町家領域データセット(CODH)",
+        href: "https://codh.rois.ac.jp/edo-maps/rekichizu/index.html.ja",
+      },
+      {
+        text: "CC BY 4.0 ライセンス",
+        href: "https://creativecommons.org/licenses/by/4.0/deed.ja",
+      },
+    ]),
+  );
+
   container.append(heading("歴史地名データ"));
   container.append(
     para(
@@ -86,7 +115,7 @@ export function renderAttribution(container: HTMLElement): void {
   container.append(heading("歴史背景について"));
   container.append(
     para(
-      "和紙風の歴史背景は本プロジェクト独自の装飾です。古地図原本や当時の道路・海岸線・河川・堀・町割り・土地利用を再現した地図ではありません。史料と位置合わせに基づく推定情報は、江戸地名ポイントの位置です。",
+      "和紙風の歴史背景は本プロジェクト独自の装飾です。古地図原本や当時の道路・海岸線・河川・堀・町割りを再現した地図ではありません。史料と位置合わせに基づく推定情報は、江戸地名ポイントの位置と町家領域です。",
     ),
   );
 
