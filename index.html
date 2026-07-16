@@ -20,6 +20,11 @@
     </header>
 
     <div class="toolbar" role="group" aria-label="地図の操作">
+      <label id="region-control" class="control" hidden>
+        <span id="region-select-label">地域</span>
+        <select id="region-select" aria-labelledby="region-select-label"></select>
+      </label>
+
       <label class="control">
         <span>年代</span>
         <select id="era-select" aria-label="表示する歴史データの年代">
@@ -37,7 +42,7 @@
       </label>
 
       <div id="history-controls" class="history-controls">
-        <label class="control">
+        <label id="history-view-control" class="control">
           <span>歴史表示</span>
           <select id="history-view-select" aria-label="江戸後期の表示方法">
             <option value="reconstructed" selected>歴史背景＋江戸地名</option>
@@ -46,7 +51,7 @@
           </select>
         </label>
 
-        <label class="control">
+        <label id="base-opacity-control" class="control">
           <span id="base-opacity-label">比較用の現代基図不透明度</span>
           <input
             type="range"
@@ -60,7 +65,7 @@
           />
         </label>
 
-        <label class="control">
+        <label id="points-opacity-control" class="control">
           <span id="opacity-label">歴史地点不透明度</span>
           <input
             type="range"
@@ -76,60 +81,64 @@
 
         <fieldset id="machiya-controls" class="machiya-controls">
           <legend>歴史要素</legend>
-          <label class="control">
-            <input type="checkbox" id="coastline-visible" checked disabled />
-            <span>江戸末期海岸線（推定）</span>
-          </label>
-          <label class="control">
-            <span id="coastline-opacity-label">海岸線不透明度</span>
-            <input
-              type="range"
-              id="coastline-opacity-slider"
-              min="0"
-              max="100"
-              value="80"
-              step="5"
-              disabled
-              aria-labelledby="coastline-opacity-label"
-              aria-valuetext="80パーセント"
-            />
-          </label>
-          <p class="coastline-description">
-            19世紀末の地図等を現代座標へ位置合わせした、約20万分の1相当の推定海岸線です。現代の浸水・津波・高潮リスクは示しません。
-            <a
-              href="https://codh.rois.ac.jp/historical-gis/edo-coast/"
-              target="_blank"
-              rel="noopener noreferrer"
-              >出典（CODH）</a
-            >
-          </p>
-          <label class="control">
-            <input type="checkbox" id="machiya-visible" checked disabled />
-            <span>町家領域（推定）</span>
-          </label>
-          <label class="control">
-            <span id="machiya-opacity-label">町家領域不透明度</span>
-            <input
-              type="range"
-              id="machiya-opacity-slider"
-              min="0"
-              max="100"
-              value="35"
-              step="5"
-              disabled
-              aria-labelledby="machiya-opacity-label"
-              aria-valuetext="35パーセント"
-            />
-          </label>
-          <p class="machiya-description">
-            江戸切絵図から抽出し、現代地図へ位置合わせした町家の分布領域です。正確な地籍・人口境界ではありません。
-            <a
-              href="https://codh.rois.ac.jp/edo-maps/rekichizu/index.html.ja"
-              target="_blank"
-              rel="noopener noreferrer"
-              >出典（CODH）</a
-            >
-          </p>
+          <div id="coastline-controls">
+            <label class="control">
+              <input type="checkbox" id="coastline-visible" checked disabled />
+              <span>江戸末期海岸線（推定）</span>
+            </label>
+            <label class="control">
+              <span id="coastline-opacity-label">海岸線不透明度</span>
+              <input
+                type="range"
+                id="coastline-opacity-slider"
+                min="0"
+                max="100"
+                value="80"
+                step="5"
+                disabled
+                aria-labelledby="coastline-opacity-label"
+                aria-valuetext="80パーセント"
+              />
+            </label>
+            <p class="coastline-description">
+              19世紀末の地図等を現代座標へ位置合わせした、約20万分の1相当の推定海岸線です。現代の浸水・津波・高潮リスクは示しません。
+              <a
+                href="https://codh.rois.ac.jp/historical-gis/edo-coast/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >出典（CODH）</a
+              >
+            </p>
+          </div>
+          <div id="machiya-area-controls">
+            <label class="control">
+              <input type="checkbox" id="machiya-visible" checked disabled />
+              <span>町家領域（推定）</span>
+            </label>
+            <label class="control">
+              <span id="machiya-opacity-label">町家領域不透明度</span>
+              <input
+                type="range"
+                id="machiya-opacity-slider"
+                min="0"
+                max="100"
+                value="35"
+                step="5"
+                disabled
+                aria-labelledby="machiya-opacity-label"
+                aria-valuetext="35パーセント"
+              />
+            </label>
+            <p class="machiya-description">
+              江戸切絵図から抽出し、現代地図へ位置合わせした町家の分布領域です。正確な地籍・人口境界ではありません。
+              <a
+                href="https://codh.rois.ac.jp/edo-maps/rekichizu/index.html.ja"
+                target="_blank"
+                rel="noopener noreferrer"
+                >出典（CODH）</a
+              >
+            </p>
+          </div>
           <div class="map-legend" aria-label="地図の凡例">
             <span><i class="legend-swatch legend-coastline" aria-hidden="true"></i>江戸末期海岸線（推定）</span>
             <span><i class="legend-swatch legend-machiya" aria-hidden="true"></i>町家領域（推定）</span>
@@ -143,6 +152,8 @@
       <button type="button" id="attribution-button">出典・ライセンス</button>
       <button type="button" id="privacy-button">プライバシー</button>
     </div>
+
+    <p id="region-status" class="visually-hidden" aria-live="polite" aria-atomic="true"></p>
 
     <p id="era-caution" class="era-caution" role="note">
       江戸地名と町家領域は江戸切絵図を現代地図へ位置合わせした推定データです。江戸末期海岸線は19世紀末の地図等を現代座標へ位置合わせした約20万分の1相当の推定表示です。時期、潮位、地図の歪み等により実際の位置・形状と異なる可能性があり、測量、境界、所有権、浸水・津波・高潮等の災害判断には使用できません。和紙風背景は本プロジェクト独自の装飾です。

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "modern",
+    "label": "現代",
+    "localizedLabels": { "ja": "現代", "en": "Modern" },
+    "startYear": null,
+    "endYear": null
+  },
+  {
+    "id": "edo-late",
+    "label": "江戸後期",
+    "localizedLabels": { "ja": "江戸後期", "en": "Late Edo" },
+    "startYear": 1849,
+    "endYear": 1862
+  },
+  {
+    "id": "edo-early",
+    "label": "江戸前期",
+    "localizedLabels": { "ja": "江戸前期", "en": "Early Edo" },
+    "startYear": null,
+    "endYear": null
+  }
+]

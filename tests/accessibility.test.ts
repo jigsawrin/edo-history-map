@@ -57,6 +57,22 @@ describe("アクセシビリティ(静的マークアップ)", () => {
     ).toBeTruthy();
   });
 
+  it("地域selectがラベルと関連付き、1地域時は静的に非表示である", () => {
+    const control = doc.getElementById("region-control");
+    const select = doc.getElementById("region-select");
+    expect(control?.hasAttribute("hidden")).toBe(true);
+    expect(select?.getAttribute("aria-labelledby")).toBe(
+      "region-select-label",
+    );
+    expect(doc.getElementById("region-select-label")?.textContent).toBe("地域");
+  });
+
+  it("地域変更通知用のaria-live領域がある", () => {
+    const status = doc.getElementById("region-status");
+    expect(status?.getAttribute("aria-live")).toBe("polite");
+    expect(status?.getAttribute("aria-atomic")).toBe("true");
+  });
+
   it("情報カードが aria-live リージョンである", () => {
     const card = doc.getElementById("info-card");
     expect(card?.getAttribute("aria-live")).toBe("polite");

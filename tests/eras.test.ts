@@ -8,62 +8,48 @@ import {
   VISUAL_LAYER_IDS,
   type EraDefinition,
 } from "../src/eras";
+import { EDO_REGION_PACK } from "../src/regions/edo";
 
 beforeEach(() => document.body.replaceChildren());
 
-describe("EraRegistry", () => {
-  it("現代と江戸後期を一元管理し、UIラベルを年代付きで生成する", () => {
-    expect(eraRegistry.enabled().map((era) => era.id)).toEqual([
+describe("年代カタログと地域・年代バインディング", () => {
+  it("年代カタログは地域固有のレイヤーや出典を持たない", () => {
+    expect(eraRegistry.all().map((era) => era.id)).toEqual([
       "modern",
       "edo-late",
+      "edo-early",
     ]);
     const edo = eraRegistry.get("edo-late");
-    expect(edo?.baseMode).toBe("reconstructed");
-    expect(edo?.placeDatasetId).toBe("codh-edo-maps-places");
-    expect(eraRegistry.get("modern")?.attributionIds).toEqual(["gsi-tiles"]);
-    expect(edo?.attributionIds).toEqual([
+    expect(edo && formatEraLabel(edo)).toBe("江戸後期 1849–1862");
+    expect(edo && formatEraLabel(edo, "en")).toBe("Late Edo 1849–1862");
+    expect(edo).not.toHaveProperty("visualLayers");
+    expect(edo).not.toHaveProperty("attributionIds");
+  });
+
+  it("東京・江戸パックが既存レイヤー・データ・出典を所有する", () => {
+    const edoLate = EDO_REGION_PACK.eras.find(
+      (binding) => binding.eraId === "edo-late",
+    );
+    expect(edoLate?.baseMode).toBe("reconstructed");
+    expect(edoLate?.placeDatasetId).toBe("codh-edo-maps-places");
+    expect(edoLate?.datasetIds).toEqual([
       "codh-edo-maps-places",
       "codh-edo-machiya-areas",
       "codh-edo-coastline",
     ]);
-    expect(edo?.visualLayers).toContain(VISUAL_LAYER_IDS.historicalPoints);
-    expect(edo?.visualLayers).toContain(
+    expect(edoLate?.visualLayers).toContain(VISUAL_LAYER_IDS.historicalPoints);
+    expect(edoLate?.visualLayers).toContain(
       VISUAL_LAYER_IDS.historicalCommonerAreas,
     );
     expect(VISUAL_LAYER_ENABLED[VISUAL_LAYER_IDS.historicalPoints]).toBe(true);
-    expect(
-      VISUAL_LAYER_ENABLED[VISUAL_LAYER_IDS.historicalCommonerAreas],
-    ).toBe(true);
     expect(VISUAL_LAYER_ENABLED[VISUAL_LAYER_IDS.historicalRoads]).toBe(false);
-    expect(edo && formatEraLabel(edo)).toBe("江戸後期 1849–1862");
-    expect(edo && formatEraLabel(edo, "en")).toBe("Late Edo 1849–1862");
+    expect(EDO_REGION_PACK.eras.find((era) => era.eraId === "edo-early")?.enabled).toBe(false);
   });
 
-  it("enabled=false の年代を実行時UIへ登録しない", () => {
-    const disabled: EraDefinition = {
-      id: "meiji",
-      label: "明治",
-      startYear: 1868,
-      endYear: 1912,
-      baseMode: "reconstructed",
-      visualLayers: [],
-      placeDatasetId: null,
-      attributionIds: [],
-      uncertaintyNote: "未導入",
-      enabled: false,
-    };
-    const registry = new EraRegistry([disabled]);
-    expect(registry.get("meiji")).toBeNull();
-    expect(registry.enabled()).toHaveLength(0);
-  });
-
-  it("selectの選択値を保ったままレジストリからoptionを構築する", () => {
+  it("地域の有効年代だけでselectを構築し選択値を保つ", () => {
     const select = document.createElement("select");
-    const old = document.createElement("option");
-    old.value = "edo-late";
-    old.selected = true;
-    select.append(old);
-    populateEraSelect(select);
+    select.append(new Option("旧", "edo-late", true, true));
+    populateEraSelect(select, EDO_REGION_PACK.region.enabledEraIds);
     expect(select.value).toBe("edo-late");
     expect([...select.options].map((option) => option.text)).toEqual([
       "現代",
@@ -71,8 +57,19 @@ describe("EraRegistry", () => {
     ]);
   });
 
-  it("年代IDの重複を拒否する", () => {
+  it("年代IDの重複を拒否し定義を凍結する", () => {
     const modern = eraRegistry.get("modern") as EraDefinition;
     expect(() => new EraRegistry([modern, modern])).toThrow("重複");
+    const source: EraDefinition = {
+      id: "test",
+      label: "テスト",
+      startYear: null,
+      endYear: null,
+      localizedLabels: { ja: "テスト" },
+    };
+    const registry = new EraRegistry([source]);
+    source.label = "変更";
+    expect(registry.get("test")?.label).toBe("テスト");
+    expect(Object.isFrozen(registry.get("test"))).toBe(true);
   });
 });

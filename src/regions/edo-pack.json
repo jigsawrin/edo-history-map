@@ -1,0 +1,70 @@
+{
+  "region": {
+    "id": "edo",
+    "label": "東京・江戸",
+    "localizedLabels": { "ja": "東京・江戸", "en": "Tokyo / Edo" },
+    "center": [35.6852, 139.7528],
+    "defaultZoom": 14,
+    "bounds": {
+      "minLat": 35.4,
+      "maxLat": 35.95,
+      "minLon": 139.4,
+      "maxLon": 140.05
+    },
+    "defaultEraId": "edo-late",
+    "enabledEraIds": ["modern", "edo-late"],
+    "enabled": true
+  },
+  "eras": [
+    {
+      "eraId": "modern",
+      "enabled": true,
+      "baseMode": "modern",
+      "visualLayers": ["modern-base"],
+      "datasetIds": [],
+      "placeDatasetId": null,
+      "attributionIds": ["gsi-tiles"],
+      "uncertaintyNote": ""
+    },
+    {
+      "eraId": "edo-late",
+      "enabled": true,
+      "baseMode": "reconstructed",
+      "visualLayers": [
+        "reconstructed-background",
+        "historical-coastline",
+        "historical-water",
+        "historical-moats",
+        "historical-roads",
+        "historical-commoner-areas",
+        "historical-samurai-areas",
+        "historical-temple-areas",
+        "historical-castle",
+        "historical-points"
+      ],
+      "datasetIds": [
+        "codh-edo-maps-places",
+        "codh-edo-machiya-areas",
+        "codh-edo-coastline"
+      ],
+      "placeDatasetId": "codh-edo-maps-places",
+      "attributionIds": [
+        "gsi-tiles",
+        "codh-edo-maps-places",
+        "codh-edo-machiya-areas",
+        "codh-edo-coastline"
+      ],
+      "uncertaintyNote": "江戸地名と町家領域は江戸切絵図を現代地図へ位置合わせした推定データです。江戸末期海岸線は19世紀末の地図等を現代座標へ位置合わせした約20万分の1相当の推定表示です。時期、潮位、地図の歪み等により実際の位置・形状と異なる可能性があり、測量、境界、所有権、浸水・津波・高潮等の災害判断には使用できません。和紙風背景は本プロジェクト独自の装飾です。"
+    },
+    {
+      "eraId": "edo-early",
+      "enabled": false,
+      "baseMode": "historical-image",
+      "visualLayers": [],
+      "datasetIds": [],
+      "placeDatasetId": null,
+      "attributionIds": [],
+      "uncertaintyNote": "権利・位置合わせ確認済みの画像は未導入です。"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "codh-edo-maps-places",
+    "kind": "places",
+    "path": "data/edo-places.geojson",
+    "sourceId": "codh-edo-maps-places",
+    "publicSha256": "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4"
+  },
+  {
+    "id": "codh-edo-machiya-areas",
+    "kind": "polygon",
+    "path": "data/edo-machiya-areas.geojson",
+    "sourceId": "codh-edo-machiya-areas",
+    "publicSha256": "516fead3b082499ab1fb9d3c50060fc88812531530e9f86f63bcffff81a70bd6"
+  },
+  {
+    "id": "codh-edo-coastline",
+    "kind": "line",
+    "path": "data/edo-coastlines.geojson",
+    "sourceId": "codh-edo-coastline",
+    "publicSha256": "c67be67ed6213021a7333774300bc196a52195894130f7670ede45e9a2124a31"
+  }
+]

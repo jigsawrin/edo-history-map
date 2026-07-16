@@ -3,9 +3,10 @@ import { readAllowedParams } from "../src/urlparams";
 
 describe("readAllowedParams (許可リスト方式)", () => {
   it("許可されたキーと値のみ返す", () => {
-    expect(readAllowedParams("?era=edo-late&base=std")).toEqual({
+    expect(readAllowedParams("?region=edo&era=edo-late&base=std")).toEqual({
       era: "edo-late",
       base: "std",
+      region: "edo",
     });
   });
 
@@ -31,5 +32,25 @@ describe("readAllowedParams (許可リスト方式)", () => {
 
   it("空文字列を処理できる", () => {
     expect(readAllowedParams("")).toEqual({});
+  });
+
+  it.each([
+    ["?era=edo-late", { era: "edo-late" }],
+    ["?era=modern", { era: "modern" }],
+    ["?era=none", { era: "none" }],
+    ["?base=pale", { base: "pale" }],
+    ["?base=std", { base: "std" }],
+    ["?region=edo", { region: "edo" }],
+  ])("既存URLとregion URL %s を維持する", (search, expected) => {
+    expect(readAllowedParams(search)).toEqual(expected);
+  });
+
+  it.each([
+    "?region=unknown",
+    "?region=../edo",
+    "?region=https://evil.example",
+    "?region=C:%5Cdata",
+  ])("不明またはパス様の地域IDを無視する: %s", (search) => {
+    expect(readAllowedParams(search)).toEqual({});
   });
 });
