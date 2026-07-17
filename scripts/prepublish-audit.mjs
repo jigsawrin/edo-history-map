@@ -21,6 +21,7 @@ import { join, relative, extname } from "node:path";
 import { createHash } from "node:crypto";
 import { URL } from "node:url";
 import { buildKyotoGeoJson } from "./build-kyoto-bakumatsu-places.mjs";
+import { buildShigaGeoJson } from "./build-shiga-sengoku-places.mjs";
 import { auditStaticPlaceLinks } from "./audit-static-place-links.mjs";
 
 const ROOT = process.cwd();
@@ -154,6 +155,9 @@ const ALLOWED_HOSTS = new Set([
   "www.archives.go.jp",
   "ryozen-museum.or.jp",
   "iwakura-tomomi.jp",
+  "www.pref.shiga.lg.jp",
+  "msearch.gsi.go.jp",
+  "www.city.nagahama.lg.jp",
 ]);
 
 const DANGEROUS_EXT = new Set([
@@ -178,6 +182,7 @@ const APPROVED_DATA = new Set([
   "public/data/edo-machiya-areas.geojson",
   "public/data/edo-coastlines.geojson",
   "public/data/kyoto-bakumatsu-places.geojson",
+  "public/data/shiga-sengoku-places.geojson",
 ]);
 
 const KYOTO_DATASET_ID = "project-kyoto-bakumatsu-places";
@@ -187,6 +192,9 @@ const KYOTO_SOURCE_REGISTRY_FILE = "src/kyoto-source-registry.json";
 const KYOTO_SOURCE_REGISTRY_CODE = "src/kyoto-source-registry.ts";
 const KYOTO_PACK_FILE = "src/regions/kyoto-pack.json";
 const EDO_PACK_FILE = "src/regions/edo-pack.json";
+const SHIGA_DATASET_ID = "project-shiga-sengoku-places";
+const SHIGA_CURATION_FILE = "data-curation/shiga-sengoku-places.json";
+const SHIGA_PUBLIC_FILE = "public/data/shiga-sengoku-places.geojson";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -428,7 +436,7 @@ if (!existsSync(dsPath)) {
         const requiredTextFields = [
           "title",
           "provider",
-          ...(id === KYOTO_DATASET_ID ? ["source_manifest"] : ["official_source"]),
+          ...(id.startsWith("project-") ? ["source_manifest"] : ["official_source"]),
           "original_item",
           "data_version",
           "license",
@@ -496,7 +504,7 @@ if (!existsSync(dsPath)) {
                   : [],
               );
               const allowedGeometryTypes =
-                id === KYOTO_DATASET_ID
+                id.startsWith("project-")
                   ? ["Point"]
                   : ["Polygon", "MultiPolygon", "LineString", "MultiLineString"];
               if (
@@ -610,9 +618,9 @@ if (!existsSync(datasetManifestPath)) {
           !Array.isArray(geojson.features) ||
           geojson.features.length === 0;
         const invalidSource =
-          dataset.id === KYOTO_DATASET_ID
+          dataset.id.startsWith("project-")
             ? geojson.features.some(
-                (feature) => feature?.properties?.sourceId !== KYOTO_DATASET_ID,
+                (feature) => feature?.properties?.sourceId !== dataset.id,
               )
             : dataset.kind === "places"
             ? geojson.features.some(
@@ -1096,11 +1104,31 @@ if (
   }
 }
 
+if (existsSync(join(ROOT, SHIGA_CURATION_FILE)) && existsSync(join(ROOT, SHIGA_PUBLIC_FILE))) {
+  try {
+    const rebuilt = buildShigaGeoJson();
+    const publicBuffer = readFileSync(join(ROOT, SHIGA_PUBLIC_FILE));
+    const publicSha = createHash("sha256").update(publicBuffer).digest("hex");
+    const manifest = datasetManifest.find((item) => item?.id === SHIGA_DATASET_ID);
+    const ledger = dataSourceEntries.get(SHIGA_DATASET_ID);
+    const curationSha = createHash("sha256").update(readFileSync(join(ROOT, SHIGA_CURATION_FILE))).digest("hex");
+    const ledgerOriginalSha = ledger?.entry.match(P("^\\s+original_sha256:\\s*([0-9a-f]{64})\\s*$", "m"))?.[1];
+    const ledgerConvertedSha = ledger?.entry.match(P("^\\s+converted_sha256:\\s*([0-9a-f]{64})\\s*$", "m"))?.[1];
+    if (rebuilt.output !== publicBuffer.toString("utf8") || rebuilt.featureCount !== 36 || rebuilt.sourceCount !== 17 || rebuilt.sha256 !== publicSha || manifest?.publicSha256 !== publicSha || ledgerOriginalSha !== curationSha || ledgerConvertedSha !== publicSha) {
+      addFinding("error", "滋賀再現可能性", SHIGA_PUBLIC_FILE, 0, "生成内容・件数・出典数・SHA・台帳が一致しません");
+    }
+    infos.push(`滋賀・戦国: ${rebuilt.featureCount} 地点、出典 ${rebuilt.sourceCount}件、SHA ${publicSha.slice(0, 12)}…`);
+  } catch (error) {
+    addFinding("error", "滋賀再現可能性", SHIGA_CURATION_FILE, 0, `読み取り専用再生成に失敗しました: ${error instanceof Error ? error.message : "原因不明"}`);
+  }
+}
+
 const allowedRuntimeFetches = new Map([
   ["src/places.ts", "fetch(baseUrl + PLACES_DATA_PATH"],
   ["src/machiya-areas.ts", "fetch(baseUrl + MACHIYA_DATA_PATH"],
   ["src/coastlines.ts", "fetch(`${baseUrl}${COASTLINE_DATA_PATH}`"],
   ["src/kyoto-bakumatsu-places.ts", "fetch(baseUrl + KYOTO_BAKUMATSU_DATA_PATH"],
+  ["src/shiga-sengoku-places.ts", "fetch(`${baseUrl}${SHIGA_SENGOKU_DATA_PATH}`"],
 ]);
 for (const file of allFiles) {
   if (!file.rel.startsWith("src/") || extname(file.rel).toLowerCase() !== ".ts") continue;
@@ -1131,6 +1159,7 @@ const forbiddenKyotoAssetExtensions = new Set([
 ]);
 const generatedKyotoStaticPages = new Set([
   "dist/places/kyoto/index.html",
+  "dist/places/shiga/index.html",
 ]);
 for (const file of allFiles) {
   const lower = file.rel.toLowerCase();
@@ -1138,11 +1167,11 @@ for (const file of allFiles) {
   if (lower.endsWith(".map")) {
     addFinding("error", "ソースマップ露出", file.rel, 0, "source mapは公開・追跡禁止です");
   }
-  if (lower.startsWith("data-curation/") && file.rel !== KYOTO_CURATION_FILE) {
+  if (lower.startsWith("data-curation/") && ![KYOTO_CURATION_FILE, SHIGA_CURATION_FILE].includes(file.rel)) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
   }
   if (
-    (lower.includes("kyoto") || lower.startsWith("data-curation/")) &&
+    (lower.includes("kyoto") || lower.includes("shiga") || lower.startsWith("data-curation/")) &&
     forbiddenKyotoAssetExtensions.has(extension) &&
     !generatedKyotoStaticPages.has(file.rel)
   ) {
@@ -1159,6 +1188,9 @@ for (const file of allFiles) {
     file.rel !== KYOTO_PUBLIC_FILE
   ) {
     addFinding("error", "京都公開データ", file.rel, 0, "承認済み京都GeoJSON以外の公開データがあります");
+  }
+  if (lower.startsWith("public/data/shiga") && file.rel !== SHIGA_PUBLIC_FILE) {
+    addFinding("error", "滋賀公開データ", file.rel, 0, "承認済み滋賀GeoJSON以外の公開データがあります");
   }
 }
 
@@ -1269,6 +1301,7 @@ if (!existsSync(searchAdaptersPath)) {
   for (const datasetId of [
     "codh-edo-maps-places",
     "project-kyoto-bakumatsu-places",
+    "project-shiga-sengoku-places",
   ]) {
     if (!adapters.includes(`"${datasetId}"`)) {
       addFinding("error", "地点検索アダプター", "src/place-search/adapters.ts", 0, `${datasetId}の固定アダプターがありません`);
@@ -1412,7 +1445,7 @@ if (existsSync(distDir)) {
   try {
     const staticAudit = auditStaticPlaceLinks(ROOT, distDir);
     infos.push(
-      `静的地点一覧: HTML ${staticAudit.htmlFileCount}、EDO ${staticAudit.edoCount}件、京都 ${staticAudit.kyotoCount}件、manifest SHA ${staticAudit.manifestSha256.slice(0, 12)}…`,
+      `静的地点一覧: HTML ${staticAudit.htmlFileCount}、EDO ${staticAudit.edoCount}件、京都 ${staticAudit.kyotoCount}件、滋賀 ${staticAudit.shigaCount}件、manifest SHA ${staticAudit.manifestSha256.slice(0, 12)}…`,
     );
   } catch (error) {
     addFinding(
@@ -1471,7 +1504,7 @@ if (historyNames !== null) {
 
 // 追跡ファイルと .gitignore の整合(追跡中の除外対象がないか)
 for (const t of tracked) {
-  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || t.startsWith("audit/")) {
+  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && t !== "audit/shiga-sengoku-place-review.md")) {
     addFinding("error", "追跡対象違反", t, 0, "公開対象外ファイルが Git 追跡されています");
   }
 }

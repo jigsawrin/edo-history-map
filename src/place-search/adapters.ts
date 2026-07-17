@@ -5,6 +5,8 @@ import type {
 } from "../kyoto-bakumatsu-places";
 import type { PlaceFeature } from "../validate";
 import presentation from "../kyoto-place-presentation.json";
+import shigaPresentation from "../shiga-place-presentation.json";
+import type { ShigaPlaceCategory, ShigaSengokuPlace } from "../shiga-sengoku-places";
 import { normalizeSearchText } from "./normalize";
 import type {
   SearchableHistoricalPlace,
@@ -13,6 +15,8 @@ import type {
 
 export const KYOTO_CATEGORY_LABELS: Readonly<Record<KyotoPlaceCategory, string>> =
   presentation.categoryLabels;
+export const SHIGA_CATEGORY_LABELS: Readonly<Record<ShigaPlaceCategory, string>> =
+  shigaPresentation.categoryLabels;
 
 function combinedNormalizedText(parts: readonly string[]): string {
   return normalizeSearchText(parts.filter(Boolean).join(" "));
@@ -114,6 +118,35 @@ export function createKyotoSearchRecords(
   );
 }
 
+export function createShigaSearchRecords(
+  places: readonly ShigaSengokuPlace[],
+): readonly SearchableHistoricalPlace[] {
+  return Object.freeze(places.map((record, sourceIndex) => {
+    const categoryLabel = SHIGA_CATEGORY_LABELS[record.category];
+    const normalizedName = normalizeSearchText(record.nameJa);
+    const normalizedAlternateName = normalizeSearchText(record.nameEn ?? "");
+    const normalizedCategory = normalizeSearchText(categoryLabel);
+    const normalizedSecondary = normalizeSearchText(`${record.municipalityJa} ${record.dateDisplayJa}`);
+    const normalizedDescription = normalizeSearchText(record.summaryJa);
+    return Object.freeze({
+      key: `shiga:${record.id}`,
+      datasetId: "project-shiga-sengoku-places" as const,
+      regionId: "shiga" as const,
+      eraId: "sengoku" as const,
+      name: record.nameJa,
+      secondaryText: `${categoryLabel}／${record.municipalityJa}／${record.dateDisplayJa}`,
+      detailText: `位置精度：${shigaPresentation.coordinateConfidenceLabels[record.coordinateConfidence]}`,
+      categoryId: record.category,
+      categoryLabel,
+      latitude: record.latitude,
+      longitude: record.longitude,
+      normalizedName, normalizedAlternateName, normalizedCategory, normalizedSecondary, normalizedDescription,
+      normalizedSearchText: combinedNormalizedText([record.nameJa, record.nameEn ?? "", categoryLabel, record.municipalityJa, record.dateDisplayJa, record.summaryJa]),
+      sourceRecord: Object.freeze({ datasetId: "project-shiga-sengoku-places" as const, record, sourceIndex }),
+    });
+  }));
+}
+
 export const SEARCH_ADAPTERS: Readonly<{
   [Id in SearchablePlaceDatasetId]: (
     value: DatasetValueMap[Id],
@@ -121,4 +154,5 @@ export const SEARCH_ADAPTERS: Readonly<{
 }> = Object.freeze({
   "codh-edo-maps-places": createEdoSearchRecords,
   "project-kyoto-bakumatsu-places": createKyotoSearchRecords,
+  "project-shiga-sengoku-places": createShigaSearchRecords,
 });

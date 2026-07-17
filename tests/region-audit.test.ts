@@ -7,9 +7,10 @@ const ROOT = join(__dirname, "..");
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
 
 describe("地域パック公開ゲート", () => {
-  it("本番地域manifestは東京・江戸と京都の2件である", () => {
+  it("本番地域manifestは東京・江戸、京都、滋賀の3件である", () => {
     const edo = JSON.parse(read("src/regions/edo-pack.json"));
     const kyoto = JSON.parse(read("src/regions/kyoto-pack.json"));
+    const shiga = JSON.parse(read("src/regions/shiga-pack.json"));
     expect(edo.region.id).toBe("edo");
     expect(edo.region.enabled).toBe(true);
     expect(edo.region.enabledEraIds).toEqual(["modern", "edo-late"]);
@@ -21,17 +22,20 @@ describe("地域パック公開ゲート", () => {
     const kyotoText = JSON.stringify(kyoto);
     expect(edoText).not.toContain("project-kyoto-bakumatsu-places");
     expect(kyotoText).not.toContain("codh-edo-");
-    expect(`${edoText}${kyotoText}`).not.toContain("shiga");
-    expect(`${edoText}${kyotoText}`).not.toContain("osaka");
+    expect(shiga.region.id).toBe("shiga");
+    expect(shiga.region.enabledEraIds).toEqual(["modern", "sengoku"]);
+    expect(JSON.stringify(shiga)).not.toContain("codh-edo-");
+    expect(`${edoText}${kyotoText}${JSON.stringify(shiga)}`).not.toContain("osaka");
   });
 
-  it("承認済み4データだけを固定manifestへ登録する", () => {
+  it("承認済み5データだけを固定manifestへ登録する", () => {
     const manifest = JSON.parse(read("src/dataset-manifest.json"));
     expect(manifest.map((item: { id: string }) => item.id)).toEqual([
       "codh-edo-maps-places",
       "codh-edo-machiya-areas",
       "codh-edo-coastline",
       "project-kyoto-bakumatsu-places",
+      "project-shiga-sengoku-places",
     ]);
     for (const item of manifest) {
       expect(item.path).toMatch(/^data\/[a-z0-9.-]+\.geojson$/);

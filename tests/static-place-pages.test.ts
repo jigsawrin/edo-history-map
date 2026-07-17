@@ -35,10 +35,13 @@ beforeAll(() => {
     presentation: JSON.parse(
       readFileSync(join(ROOT, "src/kyoto-place-presentation.json"), "utf8"),
     ) as Record<string, unknown>,
+    shigaRaw: readFileSync(join(ROOT, "public/data/shiga-sengoku-places.geojson"), "utf8"),
+    shigaSourceData: JSON.parse(readFileSync(join(ROOT, "src/shiga-source-registry.json"), "utf8")),
+    shigaPresentation: JSON.parse(readFileSync(join(ROOT, "src/shiga-place-presentation.json"), "utf8")) as Record<string, unknown>,
     css: readFileSync(join(ROOT, "src/static-places.css"), "utf8"),
     inputSha256: EXPECTED_DATA_SHA256,
   });
-});
+}, 30_000);
 
 afterAll(() => {
   if (temporaryDist) rmSync(dirname(temporaryDist), { recursive: true, force: true });
@@ -100,11 +103,13 @@ describe("静的地点一覧生成", () => {
       finalPageCount: 88,
     });
     expect(generated.manifest.kyoto).toEqual({ placeCount: 36, pageCount: 1 });
+    expect(generated.manifest.shiga).toEqual({ placeCount: 36, pageCount: 1 });
     expect(generated.files.has("index.html")).toBe(true);
     expect(generated.files.has("edo/index.html")).toBe(true);
     expect(generated.files.has("edo/page-44.html")).toBe(true);
     expect(generated.files.has("edo/page-88.html")).toBe(true);
     expect(generated.files.has("kyoto/index.html")).toBe(true);
+    expect(generated.files.has("shiga/index.html")).toBe(true);
   });
 
   it("各EDO地点を1回だけ出力し、ページ境界と前後リンクを保つ", () => {
@@ -161,14 +166,22 @@ describe("静的地点一覧生成", () => {
     expect(html).toContain('target="_blank" rel="noopener noreferrer"');
   });
 
-  it("地点アンカーが安全かつ全8,824件で一意である", () => {
+  it("滋賀は市町・代表位置・山城注意・固定出典を36件表示する", () => {
+    const html = generated.files.get("shiga/index.html") ?? "";
+    expect(html.match(/data-place-region="shiga"/gu)).toHaveLength(36);
+    for (const text of ["市町", "現在地と歴史位置", "位置精度", "登山口", "出典", "地図で滋賀・戦国を開く"]) {
+      expect(html).toContain(text);
+    }
+  });
+
+  it("地点アンカーが安全かつ全8,860件で一意である", () => {
     const anchors = [...generated.files.values()].flatMap((html) =>
-      [...html.matchAll(/<article id="(place-(?:edo|kyoto)-[a-z0-9-]+)"/gu)].map(
+      [...html.matchAll(/<article id="(place-(?:edo|kyoto|shiga)-[a-z0-9-]+)"/gu)].map(
         (match) => match[1],
       ),
     );
-    expect(anchors).toHaveLength(8824);
-    expect(new Set(anchors).size).toBe(8824);
+    expect(anchors).toHaveLength(8860);
+    expect(new Set(anchors).size).toBe(8860);
   });
 
   it("静的ページにJavaScript・form・外部画像・外部フォントを含めない", () => {
@@ -188,13 +201,17 @@ describe("静的地点一覧生成", () => {
       kyotoRaw: readFileSync(join(ROOT, "public/data/kyoto-bakumatsu-places.geojson"), "utf8"),
       sourceData: JSON.parse(readFileSync(join(ROOT, "src/kyoto-source-registry.json"), "utf8")),
       presentation: JSON.parse(readFileSync(join(ROOT, "src/kyoto-place-presentation.json"), "utf8")) as Record<string, unknown>,
+      shigaRaw: readFileSync(join(ROOT, "public/data/shiga-sengoku-places.geojson"), "utf8"),
+      shigaSourceData: JSON.parse(readFileSync(join(ROOT, "src/shiga-source-registry.json"), "utf8")),
+      shigaPresentation: JSON.parse(readFileSync(join(ROOT, "src/shiga-place-presentation.json"), "utf8")) as Record<string, unknown>,
       css: readFileSync(join(ROOT, "src/static-places.css"), "utf8"),
       inputSha256: EXPECTED_DATA_SHA256,
     });
     expect(second.files.get("manifest.json")).toBe(generated.files.get("manifest.json"));
     expect(second.files.get("edo/page-44.html")).toBe(generated.files.get("edo/page-44.html"));
     expect(second.files.get("kyoto/index.html")).toBe(generated.files.get("kyoto/index.html"));
-  });
+    expect(second.files.get("shiga/index.html")).toBe(generated.files.get("shiga/index.html"));
+  }, 30_000);
 
   it("生成物の内部リンク・アンカー・manifest SHAを監査する", () => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), "edo-static-places-"));
@@ -208,9 +225,10 @@ describe("静的地点一覧生成", () => {
     }
     const result = auditStaticPlaceLinks(ROOT, temporaryDist);
     expect(result).toMatchObject({
-      htmlFileCount: 90,
+      htmlFileCount: 91,
       edoCount: 8788,
       kyotoCount: 36,
+      shigaCount: 36,
     });
     expect(result.manifestSha256).toMatch(/^[a-f0-9]{64}$/u);
   }, 60_000);

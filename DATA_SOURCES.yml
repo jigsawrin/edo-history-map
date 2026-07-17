@@ -216,3 +216,46 @@ sources:
       sourceIdsを2件以上持つ。現在の碑・建物・記念地と幕末当時の現場の関係を
       LocationBasisとHistoricalSiteStatusで明示する。選定、配列、独自説明文、
       変換後データは本リポジトリのMIT Licenseで再配布する。
+
+  - id: project-shiga-sengoku-places
+    asset_type: historical-vector
+    title: 滋賀・戦国史跡データ
+    provider: いま・むかし地図プロジェクト
+    source_manifest: src/shiga-source-registry.json
+    original_item: data-curation/shiga-sengoku-places.json（独自キュレーション36地点）
+    data_version: "2026-07-17 初版"
+    license: MIT License（NII地名座標の出典部分はCC BY 4.0）
+    license_url: https://github.com/jigsawrin/edo-history-map/blob/main/LICENSE
+    attribution: >-
+      滋賀県「近江の城郭」関連公式資料、国立情報学研究所／CODH
+      歴史的行政区域データセットβ版、国土地理院住所検索等を参照し、
+      いま・むかし地図プロジェクトが独自に選定・執筆・編集。
+      地点別参照先はアプリ内情報カードと出典画面に表示。
+    modification: >-
+      公的・学術資料で名称、時期、出来事、現在位置を確認し、説明文を独自執筆した。
+      公的住所、現存史跡、地名座標を小数6桁のPointへ整理し、広域の城域・戦場・
+      寺域は代表位置であることを明記した。固定スキーマ検証、ID順の安定ソートを
+      経てGeoJSONを再生成。参照先の説明原文、画像、HTML、PDFは転載していない。
+    doi: null
+    doi_required: false
+    redistribution_allowed: true
+    accessed_at: "2026-07-17"
+    downloaded_at: "該当なし（外部配布物を同梱せず、公開資料を事実確認に参照）"
+    original_sha256: f3229a5f12402dbd644a3a4ca5b6fb8f0429e3bf1dd3e61588cb765556eb48e1
+    converted_sha256: 0467e166fdd7ff58bcc9ada8366068fe6e877edfc6af508df65ac7b355c26fb9
+    source_crs: "WGS 84相当（公的住所・地名座標・現存史跡の代表位置）"
+    output_crs: "RFC 7946 WGS 84（経度・緯度順）"
+    geometry_types: [Point]
+    historical_period: "戦国期（本アプリ上のカタログ範囲は1467-1615年）"
+    geographic_bounds: >-
+      採用36地点の範囲 lon 135.840960-136.412139,
+      lat 35.011417-35.598409（滋賀県内）。
+    local_files:
+      - public/data/shiga-sengoku-places.geojson
+    review_status: approved
+    reviewer_note: >-
+      候補を地点単位で調査し、歴史的根拠と現在位置を確認できた36件を採用した。
+      confidenceはhigh 9件、medium 27件、low 0件。山城・古戦場・寺域は代表位置とし、
+      登山口、安全な進入経路、遺跡境界を示さない。選定、分類、注意書き、独自説明文、
+      生成データは本リポジトリのMIT Licenseで再配布し、NII由来の地名座標には
+      CC BY 4.0の出典表示を継承する。

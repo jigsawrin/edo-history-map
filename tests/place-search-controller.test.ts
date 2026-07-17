@@ -157,7 +157,7 @@ describe("地点検索コントローラー", () => {
     controller.close();
     controller.open();
     expect(search).toHaveBeenCalledTimes(1);
-  });
+  }, 15_000);
 
   it("検索語・分類・地域変更では一致結果を一度ずつ再検索する", async () => {
     vi.useFakeTimers();

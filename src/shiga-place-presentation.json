@@ -1,0 +1,37 @@
+{
+  "categoryLabels": {
+    "castle": "城郭・陣城",
+    "battle": "合戦・軍事",
+    "politics": "政治・統治",
+    "temple-shrine": "寺社・宗教",
+    "residence": "館・居館",
+    "transport": "交通・湖上拠点",
+    "memorial": "顕彰・伝承"
+  },
+  "locationBasisLabels": {
+    "official-marker": "公的な現地標識",
+    "existing-remains": "現存遺構",
+    "official-address": "現在の公式所在地",
+    "historical-area": "歴史的範囲の代表位置",
+    "memorial-site": "顕彰地",
+    "reconstructed-site": "復元施設の所在地",
+    "archaeological-site": "発掘・史跡範囲の代表位置"
+  },
+  "historicalSiteStatusLabels": {
+    "extant": "現存",
+    "ruins": "遺構・城跡",
+    "destroyed": "消滅",
+    "marker-only": "標識・碑のみ",
+    "rebuilt": "再建・復元",
+    "relocated": "移転",
+    "approximate-area": "概略範囲",
+    "memorial": "顕彰地",
+    "archaeological-remains": "考古遺跡"
+  },
+  "coordinateConfidenceLabels": {
+    "high": "高（現在地を公的資料で確認）",
+    "medium": "中（広域遺跡・歴史範囲の代表位置）"
+  },
+  "mediumConfidenceWarning": "この座標は広い城域・戦場・歴史的範囲の代表位置です。現場の一点や境界を確定するものではありません。",
+  "accessWarning": "山城・古戦場では、表示地点が登山口や安全な進入経路とは限りません。立入規制、私有地、天候、現地案内を確認してください。"
+}

@@ -7,6 +7,7 @@ import {
 } from "../eras";
 import { EDO_REGION_ID, EDO_REGION_PACK } from "./edo";
 import { KYOTO_REGION_PACK } from "./kyoto";
+import { SHIGA_REGION_PACK } from "./shiga";
 import { datasetRegistry, type DatasetRegistry } from "../datasets";
 import { ATTRIBUTION_REGISTRY } from "../attribution-registry";
 import type {
@@ -21,6 +22,7 @@ const MAX_REGION_ZOOM = 18;
 const MAX_REGION_METADATA_LENGTH = 300;
 const MAX_UNCERTAINTY_NOTE_LENGTH = 1000;
 const KYOTO_DATASET_ID = "project-kyoto-bakumatsu-places";
+const SHIGA_DATASET_ID = "project-shiga-sengoku-places";
 const EDO_DATASET_PREFIX = "codh-edo-";
 const ERA_BASE_MODE_IDS = new Set<string>(ERA_BASE_MODES);
 const HISTORICAL_VIEW_MODE_IDS = new Set<string>(HISTORICAL_VIEW_MODES);
@@ -86,6 +88,18 @@ function validateDatasetOwnership(regionId: string, datasetIds: readonly string[
   }
   if (regionId === EDO_REGION_ID && datasetIds.includes(KYOTO_DATASET_ID)) {
     throw new Error("EDO地域は京都専用データを参照できません");
+  }
+  const regionDatasets: Readonly<Record<string, string>> = {
+    kyoto: KYOTO_DATASET_ID,
+    shiga: SHIGA_DATASET_ID,
+  };
+  for (const [owner, datasetId] of Object.entries(regionDatasets)) {
+    if (regionId !== owner && datasetIds.includes(datasetId)) {
+      throw new Error(`${regionId}地域は${owner}専用データを参照できません`);
+    }
+  }
+  if (regionId === "shiga" && datasetIds.some((id) => id.startsWith(EDO_DATASET_PREFIX))) {
+    throw new Error("滋賀地域はEDO専用データを参照できません");
   }
 }
 
@@ -189,7 +203,7 @@ export class RegionRegistry {
   readonly defaultRegionId: string;
 
   constructor(
-    packs: readonly RegionPack[] = [EDO_REGION_PACK, KYOTO_REGION_PACK],
+    packs: readonly RegionPack[] = [EDO_REGION_PACK, KYOTO_REGION_PACK, SHIGA_REGION_PACK],
     eras: EraRegistry = eraRegistry,
     defaultRegionId = EDO_REGION_ID,
     datasets: DatasetRegistry = datasetRegistry,
@@ -271,6 +285,13 @@ export class RegionRegistry {
           kyotoBakumatsu.datasetIds[0] !== KYOTO_DATASET_ID)
       ) {
         throw new Error("京都・幕末データセット参照が不正です");
+      }
+      const shigaSengoku = bindings.get("sengoku");
+      if (
+        region.id === "shiga" &&
+        (!shigaSengoku || shigaSengoku.datasetIds.length !== 1 || shigaSengoku.datasetIds[0] !== SHIGA_DATASET_ID)
+      ) {
+        throw new Error("滋賀・戦国データセット参照が不正です");
       }
       for (const eraId of region.enabledEraIds) {
         if (!bindings.get(eraId)?.enabled) {

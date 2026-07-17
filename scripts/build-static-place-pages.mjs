@@ -8,6 +8,7 @@ import {
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import { validateSources } from "./build-kyoto-bakumatsu-places.mjs";
+import { validateSources as validateShigaSources } from "./build-shiga-sengoku-places.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUTPUT_ROOT = join(ROOT, "dist", "places");
@@ -24,6 +25,8 @@ export const EXPECTED_DATA_SHA256 = Object.freeze({
     "c67be67ed6213021a7333774300bc196a52195894130f7670ede45e9a2124a31",
   "public/data/kyoto-bakumatsu-places.geojson":
     "d141eb046d34c2c16b49286d3a70de49ea06f79e59561ae20537cd934e06f4d6",
+  "public/data/shiga-sengoku-places.geojson":
+    "0467e166fdd7ff58bcc9ada8366068fe6e877edfc6af508df65ac7b355c26fb9",
 });
 
 const EDO_BOUNDS = Object.freeze({
@@ -281,6 +284,32 @@ export function parseStaticKyotoPlaces(raw, sourceRegistry, presentation) {
   return Object.freeze(places);
 }
 
+const SHIGA_BOUNDS = Object.freeze({ minLat: 34.8, maxLat: 35.75, minLon: 135.7, maxLon: 136.55 });
+const SHIGA_PROPERTIES = Object.freeze([
+  "id", "nameJa", "nameEn", "category", "municipalityJa", "eraId", "dateDisplayJa",
+  "summaryJa", "locationBasis", "historicalSiteStatus", "coordinateConfidence",
+  "locationNoteJa", "sourceIds", "sourceId",
+]);
+
+export function parseStaticShigaPlaces(raw, sourceRegistry, presentation) {
+  const features = collectionFeatures(raw, 36, "滋賀 GeoJSON");
+  const places = features.map((feature, sourceIndex) => {
+    pointCoordinates(feature, SHIGA_BOUNDS, `滋賀地点${sourceIndex + 1}`);
+    const keys = Object.keys(feature.properties);
+    if (keys.some((key) => !SHIGA_PROPERTIES.includes(key)) || SHIGA_PROPERTIES.filter((key) => key !== "nameEn").some((key) => !Object.hasOwn(feature.properties, key))) fail("滋賀地点プロパティが不正です");
+    const place = feature.properties;
+    const id = text(place.id, "滋賀 id", 64);
+    if (!SAFE_ID.test(id)) fail("滋賀 idが不正です");
+    const sourceIds = Array.isArray(place.sourceIds) ? place.sourceIds.map((sourceId) => text(sourceId, "滋賀 sourceId", 64)) : fail("滋賀 sourceIdsが不正です");
+    if (sourceIds.length === 0 || sourceIds.some((sourceId) => !sourceRegistry.has(sourceId))) fail("滋賀 sourceIdが未登録です");
+    if (place.eraId !== "sengoku" || place.sourceId !== "project-shiga-sengoku-places" || !Object.hasOwn(presentation.categoryLabels, place.category) || !Object.hasOwn(presentation.locationBasisLabels, place.locationBasis) || !Object.hasOwn(presentation.historicalSiteStatusLabels, place.historicalSiteStatus) || !Object.hasOwn(presentation.coordinateConfidenceLabels, place.coordinateConfidence)) fail("滋賀地点の固定値が不正です");
+    return Object.freeze({ id, anchor: `place-shiga-${id}`, nameJa: text(place.nameJa, "滋賀 nameJa", 80), nameEn: place.nameEn === undefined ? "" : text(place.nameEn, "滋賀 nameEn", 120), category: place.category, municipalityJa: text(place.municipalityJa, "滋賀 municipalityJa", 30), dateDisplayJa: text(place.dateDisplayJa, "滋賀 dateDisplayJa", 80), summaryJa: text(place.summaryJa, "滋賀 summaryJa", 240), locationBasis: place.locationBasis, historicalSiteStatus: place.historicalSiteStatus, coordinateConfidence: place.coordinateConfidence, locationNoteJa: text(place.locationNoteJa, "滋賀 locationNoteJa", 240), sourceIds: Object.freeze(sourceIds), sourceIndex });
+  });
+  places.sort((a, b) => a.id.localeCompare(b.id, "en") || a.sourceIndex - b.sourceIndex);
+  assertUniqueAnchors(places);
+  return Object.freeze(places);
+}
+
 function assertUniqueAnchors(places) {
   const anchors = new Set();
   for (const place of places) {
@@ -346,10 +375,11 @@ function topPage() {
     <div class="region-grid">
       <article class="region-card"><h3><a href="./edo/">東京・江戸</a></h3><p>江戸地名 8,788件。100件単位、全88ページです。</p></article>
       <article class="region-card"><h3><a href="./kyoto/">京都・幕末</a></h3><p>幕末史跡 36件、全1ページです。</p></article>
+      <article class="region-card"><h3><a href="./shiga/">滋賀・戦国</a></h3><p>戦国史跡 36件、全1ページです。</p></article>
     </div>
   </section>
   <section id="sources"><h2>出典・ライセンス</h2>
-    <p class="source-note">東京・江戸はROIS-DS人文学オープンデータ共同利用センター（CODH）の「江戸マップ地名データセット」（CC BY 4.0、DOI: 10.20676/00000445）の改変版です。京都・幕末は複数の公的・学術資料を参照して本プロジェクトが独自編集し、説明文を独自に作成しています。京都の各地点には個別出典を掲載しています。</p>
+    <p class="source-note">東京・江戸はROIS-DS人文学オープンデータ共同利用センター（CODH）の「江戸マップ地名データセット」（CC BY 4.0、DOI: 10.20676/00000445）の改変版です。京都・幕末と滋賀・戦国は公的・学術資料を参照して本プロジェクトが独自編集し、各地点に個別出典を掲載しています。</p>
     <p>${externalLink("https://codh.rois.ac.jp/edo-maps/", "江戸マップ地名データセットを確認")}</p>
   </section>
   <section id="privacy"><h2>プライバシー</h2>
@@ -359,7 +389,7 @@ function topPage() {
 ${footer()}`;
   return pageDocument({
     title: "歴史地点一覧 | いま・むかし地図",
-    description: "東京・江戸と京都・幕末の歴史地点をJavaScriptなしで確認できる静的HTML一覧です。",
+    description: "東京・江戸、京都・幕末、滋賀・戦国の歴史地点をJavaScriptなしで確認できる静的HTML一覧です。",
     canonical: PUBLIC_BASE,
     cssHref: "./static-places.css",
     body,
@@ -479,14 +509,26 @@ ${footer()}`;
   });
 }
 
-function validatePresentation(value) {
+function shigaPage(places, sourceRegistry, presentation) {
+  const articles = places.map((place) => {
+    const sources = place.sourceIds.map((id) => { const source = sourceRegistry.get(id); return `<li>${externalLink(source.url, `${source.providerJa}「${source.titleJa}」`)}</li>`; }).join("");
+    const warning = place.coordinateConfidence === "medium" ? `<p class="notice">${escapeHtml(presentation.mediumConfidenceWarning)}</p>` : "";
+    const access = place.category === "castle" || place.category === "battle" ? `<p class="notice">${escapeHtml(presentation.accessWarning)}</p>` : "";
+    return `<li><article id="${place.anchor}" class="place-card" data-place-region="shiga"><h3>${escapeHtml(place.nameJa)}</h3><dl><dt>分類</dt><dd>${escapeHtml(presentation.categoryLabels[place.category])}</dd><dt>市町</dt><dd>${escapeHtml(place.municipalityJa)}</dd><dt>時期</dt><dd>${escapeHtml(place.dateDisplayJa)}</dd><dt>現在地と歴史位置</dt><dd>${escapeHtml(presentation.locationBasisLabels[place.locationBasis])}</dd><dt>史跡の状態</dt><dd>${escapeHtml(presentation.historicalSiteStatusLabels[place.historicalSiteStatus])}</dd><dt>位置精度</dt><dd>${escapeHtml(presentation.coordinateConfidenceLabels[place.coordinateConfidence])}</dd></dl><p>${escapeHtml(place.summaryJa)}</p><p>位置について：${escapeHtml(place.locationNoteJa)}</p>${warning}${access}<h4>出典</h4><ul>${sources}</ul><p class="place-links"><a href="../../?region=shiga&amp;era=sengoku">地図で滋賀・戦国を開く</a><a href="#${place.anchor}">この地点へのリンク</a></p></article></li>`;
+  }).join("\n");
+  const body = `${header({ topHref: "../", regionHref: "./", mapHref: "../../?region=shiga&era=sengoku", sourcesHref: "../#sources", privacyHref: "../#privacy" })}<main id="main-content"><h1>滋賀・戦国の史跡一覧</h1><section aria-labelledby="about-heading"><h2 id="about-heading">この一覧について</h2><p>公的・学術資料で根拠を確認した戦国史跡36件を掲載します。説明文は本プロジェクトが独自に作成しました。</p></section><section aria-labelledby="places-heading"><h2 id="places-heading">地点一覧</h2><nav class="page-nav" aria-label="滋賀地点一覧のページ"><span class="page-status" aria-current="page">1 / 1ページ</span></nav><ol class="place-list">${articles}</ol></section><section aria-labelledby="caution-heading"><h2 id="caution-heading">注意事項</h2><p class="notice">広い城域・戦場・寺域の代表位置を含みます。登山口、安全な進入経路、遺跡境界、所有権、防災の判断には使用しないでください。</p></section></main>${footer()}`;
+  return pageDocument({ title: "滋賀・戦国の史跡一覧 | いま・むかし地図", description: "滋賀・戦国の史跡36件について、説明、位置注意、史跡状態、個別出典を確認できる静的HTML一覧です。", canonical: `${PUBLIC_BASE}shiga/`, cssHref: "../static-places.css", body });
+}
+
+function validatePresentation(value, label = "京都", extraKeys = []) {
   exactKeys(value, [
     "categoryLabels",
     "locationBasisLabels",
     "historicalSiteStatusLabels",
     "coordinateConfidenceLabels",
     "mediumConfidenceWarning",
-  ], "京都表示メタデータ");
+    ...extraKeys,
+  ], `${label}表示メタデータ`);
   for (const key of [
     "categoryLabels",
     "locationBasisLabels",
@@ -499,10 +541,11 @@ function validatePresentation(value) {
     for (const label of Object.values(value[key])) text(label, "京都表示ラベル", 220);
   }
   text(value.mediumConfidenceWarning, "位置精度注意", 300);
+  for (const key of extraKeys) text(value[key], `${label}表示注意`, 300);
   return value;
 }
 
-export function generateStaticPlaceFiles({ edoRaw, kyotoRaw, sourceData, presentation, css, inputSha256 }) {
+export function generateStaticPlaceFiles({ edoRaw, kyotoRaw, sourceData, presentation, shigaRaw, shigaSourceData, shigaPresentation, css, inputSha256 }) {
   const sourceRegistry = validateSources(sourceData);
   for (const source of sourceRegistry.values()) {
     validateExternalSourceUrl(source.url, new Set([new URL(source.url).origin]));
@@ -510,6 +553,9 @@ export function generateStaticPlaceFiles({ edoRaw, kyotoRaw, sourceData, present
   const checkedPresentation = validatePresentation(presentation);
   const edoPlaces = parseStaticEdoPlaces(edoRaw);
   const kyotoPlaces = parseStaticKyotoPlaces(kyotoRaw, sourceRegistry, checkedPresentation);
+  const shigaSources = validateShigaSources(shigaSourceData);
+  const checkedShigaPresentation = validatePresentation(shigaPresentation, "滋賀", ["accessWarning"]);
+  const shigaPlaces = parseStaticShigaPlaces(shigaRaw, shigaSources, checkedShigaPresentation);
   const edoPages = Array.from(
     { length: Math.ceil(edoPlaces.length / STATIC_EDO_PER_PAGE) },
     (_, index) => edoPlaces.slice(
@@ -524,6 +570,7 @@ export function generateStaticPlaceFiles({ edoRaw, kyotoRaw, sourceData, present
     files.set(`edo/${pageFileName(page)}`, edoPage(items, page, edoPages));
   });
   files.set("kyoto/index.html", kyotoPage(kyotoPlaces, sourceRegistry, checkedPresentation));
+  files.set("shiga/index.html", shigaPage(shigaPlaces, shigaSources, checkedShigaPresentation));
   files.set("static-places.css", css.endsWith("\n") ? css : `${css}\n`);
 
   const manifest = {
@@ -537,12 +584,13 @@ export function generateStaticPlaceFiles({ edoRaw, kyotoRaw, sourceData, present
       finalPageCount: edoPages.at(-1).length,
     },
     kyoto: { placeCount: kyotoPlaces.length, pageCount: 1 },
+    shiga: { placeCount: shigaPlaces.length, pageCount: 1 },
     files: Object.fromEntries(
       [...files].map(([path, content]) => [path, sha256(content)]),
     ),
   };
   files.set("manifest.json", `${JSON.stringify(manifest, null, 2)}\n`);
-  return Object.freeze({ files, manifest, edoPlaces, kyotoPlaces });
+  return Object.freeze({ files, manifest, edoPlaces, kyotoPlaces, shigaPlaces });
 }
 
 function readUtf8(path) {
@@ -563,6 +611,9 @@ export function buildStaticPlacePages(root = ROOT, outputRoot = OUTPUT_ROOT) {
     kyotoRaw: readUtf8(join(root, "public/data/kyoto-bakumatsu-places.geojson")),
     sourceData: JSON.parse(readUtf8(join(root, "src/kyoto-source-registry.json"))),
     presentation: JSON.parse(readUtf8(join(root, "src/kyoto-place-presentation.json"))),
+    shigaRaw: readUtf8(join(root, "public/data/shiga-sengoku-places.geojson")),
+    shigaSourceData: JSON.parse(readUtf8(join(root, "src/shiga-source-registry.json"))),
+    shigaPresentation: JSON.parse(readUtf8(join(root, "src/shiga-place-presentation.json"))),
     css: readUtf8(join(root, "src/static-places.css")),
     inputSha256,
   });
@@ -579,7 +630,7 @@ const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === proces
 if (isDirectRun) {
   const generated = buildStaticPlacePages();
   const htmlFiles = [...generated.files.keys()].filter((path) => path.endsWith(".html"));
-  console.log(`静的地点一覧: EDO ${generated.manifest.edo.placeCount}件/${generated.manifest.edo.pageCount}ページ、京都 ${generated.manifest.kyoto.placeCount}件/${generated.manifest.kyoto.pageCount}ページ`);
+  console.log(`静的地点一覧: EDO ${generated.manifest.edo.placeCount}件/${generated.manifest.edo.pageCount}ページ、京都 ${generated.manifest.kyoto.placeCount}件/${generated.manifest.kyoto.pageCount}ページ、滋賀 ${generated.manifest.shiga.placeCount}件/${generated.manifest.shiga.pageCount}ページ`);
   console.log(`生成HTML: ${htmlFiles.length}ファイル`);
   console.log(`manifest SHA-256: ${sha256(generated.files.get("manifest.json"))}`);
 }

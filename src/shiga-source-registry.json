@@ -1,0 +1,19 @@
+[
+  {"id":"shiga-pref-ashikaga-guide","titleJa":"近江戦国探訪ガイドブック1 足利将軍と近江","providerJa":"滋賀県教育委員会","url":"https://www.pref.shiga.lg.jp/file/attachment/5161508.pdf","accessedAt":"2026-07-17","noteJa":"足利将軍、六角氏、甲賀・坂本などの戦国期関係を確認。"},
+  {"id":"shiga-pref-nobunaga-guide","titleJa":"近江戦国探訪ガイドブック2 信長の城と戦国近江","providerJa":"滋賀県教育委員会","url":"https://www.pref.shiga.lg.jp/file/attachment/5161509.pdf","accessedAt":"2026-07-17","noteJa":"信長期の城郭、寺社、湖上交通、北近江の争乱を確認。"},
+  {"id":"shiga-pref-temples-map","titleJa":"県内文化財探訪モデルコースマップ2 戦国近江と寺院","providerJa":"滋賀県文化スポーツ部文化財保護課","url":"https://www.pref.shiga.lg.jp/file/attachment/5205566.pdf","accessedAt":"2026-07-17","noteJa":"百済寺、敏満寺、金森寺内町などの戦国期関係を確認。"},
+  {"id":"shiga-pref-castles-map","titleJa":"県内文化財探訪モデルコースマップ3 豊臣の城・徳川の城","providerJa":"滋賀県文化スポーツ部文化財保護課","url":"https://www.pref.shiga.lg.jp/file/attachment/5273451.pdf","accessedAt":"2026-07-17","noteJa":"豊臣政権期と関ヶ原前後の城郭関係を確認。"},
+  {"id":"shiga-pref-rokkaku-map","titleJa":"県内文化財探訪モデルコースマップ4 戦国近江と六角氏の城","providerJa":"滋賀県文化スポーツ部文化財保護課","url":"https://www.pref.shiga.lg.jp/file/attachment/5333956.pdf","accessedAt":"2026-07-17","noteJa":"六角氏に関係する城郭と合戦を確認。"},
+  {"id":"shiga-pref-ieyasu-map","titleJa":"県内文化財探訪モデルコースマップ5 徳川家康と近江の城","providerJa":"滋賀県文化スポーツ部文化財保護課","url":"https://www.pref.shiga.lg.jp/file/attachment/5428510.pdf","accessedAt":"2026-07-17","noteJa":"関ヶ原期までの近江の城郭と徳川方の動向を確認。"},
+  {"id":"shiga-pref-north-omi-map-1","titleJa":"県内文化財探訪モデルコースマップ6 北近江の戦国史","providerJa":"滋賀県文化スポーツ部文化財保護課","url":"https://www.pref.shiga.lg.jp/file/attachment/5520527.pdf","accessedAt":"2026-07-17","noteJa":"北近江の城郭、浅井氏、織田軍の争乱を確認。"},
+  {"id":"shiga-pref-north-omi-map-2","titleJa":"県内文化財探訪モデルコースマップ7 北近江の戦国史2","providerJa":"滋賀県文化スポーツ部文化財保護課","url":"https://www.pref.shiga.lg.jp/file/attachment/5564961.pdf","accessedAt":"2026-07-17","noteJa":"朽木、長比城、虎御前山などの戦国期関係を確認。"},
+  {"id":"nii-shiga-place-index","titleJa":"滋賀県 施設・地点項目一覧","providerJa":"ROIS-DS人文学オープンデータ共同利用センター","url":"https://geoshape.ex.nii.ac.jp/nrct-poi/resource/25/index.html","accessedAt":"2026-07-17","noteJa":"日本歴史地名大系の地点データ。座標は代表位置として精度注意を付して使用。"},
+  {"id":"gsi-toragozen","titleJa":"国土地理院地名検索 虎御前山","providerJa":"国土地理院","url":"https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E8%99%8E%E5%BE%A1%E5%89%8D%E5%B1%B1","accessedAt":"2026-07-17","noteJa":"山城全体ではなく山の代表位置を確認。"},
+  {"id":"gsi-genbao","titleJa":"国土地理院地名検索 玄蕃尾城跡","providerJa":"国土地理院","url":"https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%8E%84%E8%95%83%E5%B0%BE%E5%9F%8E%E8%B7%A1","accessedAt":"2026-07-17","noteJa":"国指定史跡の代表位置を確認。"},
+  {"id":"gsi-shizugatake","titleJa":"国土地理院地名検索 賤ヶ岳","providerJa":"国土地理院","url":"https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E8%B3%A4%E3%83%B6%E5%B2%B3","accessedAt":"2026-07-17","noteJa":"戦場全体ではなく山頂の代表位置を確認。"},
+  {"id":"gsi-mitamura","titleJa":"国土地理院地名検索 北近江城館跡群三田村氏館跡","providerJa":"国土地理院","url":"https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E4%B8%89%E7%94%B0%E6%9D%91%E6%B0%8F%E9%A4%A8%E8%B7%A1","accessedAt":"2026-07-17","noteJa":"国指定史跡の代表位置を確認。"},
+  {"id":"gsi-shimosaka","titleJa":"国土地理院地名検索 北近江城館跡群下坂氏館跡","providerJa":"国土地理院","url":"https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E4%B8%8B%E5%9D%82%E6%B0%8F%E9%A4%A8%E8%B7%A1","accessedAt":"2026-07-17","noteJa":"国指定史跡の代表位置を確認。"},
+  {"id":"gsi-ashiura","titleJa":"国土地理院地名検索 芦浦観音寺跡","providerJa":"国土地理院","url":"https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E8%8A%A6%E6%B5%A6%E8%A6%B3%E9%9F%B3%E5%AF%BA","accessedAt":"2026-07-17","noteJa":"国指定史跡の代表位置を確認。"},
+  {"id":"nagahama-cultural-assets","titleJa":"長浜市文化財保存活用地域計画 資料編","providerJa":"長浜市","url":"https://www.city.nagahama.lg.jp/cmsfiles/contents/0000010/10951/siryou.pdf","accessedAt":"2026-07-17","noteJa":"小谷城、姉川古戦場、浅井氏関連史跡群の位置付けを確認。"},
+  {"id":"bunka-sakamoto","titleJa":"坂本城跡","providerJa":"文化庁 文化遺産オンライン","url":"https://bunka.nii.ac.jp/heritages/detail/612963","accessedAt":"2026-07-17","noteJa":"明智光秀の城としての文化財上の評価を確認。"}
+]

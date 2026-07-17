@@ -42,6 +42,7 @@ describe("readAllowedParams (許可リスト方式)", () => {
     ["?base=std", { base: "std" }],
     ["?region=edo", { region: "edo" }],
     ["?region=kyoto", { region: "kyoto" }],
+    ["?region=shiga", { region: "shiga" }],
     ["?era=bakumatsu", { era: "bakumatsu" }],
   ])("既存URLとregion URL %s を維持する", (search, expected) => {
     expect(readAllowedParams(search)).toEqual(expected);
@@ -55,7 +56,9 @@ describe("readAllowedParams (許可リスト方式)", () => {
     ["?region=kyoto&era=modern", { era: "modern", region: "kyoto" }],
     ["?region=edo&era=edo-late", { era: "edo-late", region: "edo" }],
     ["?region=edo&era=modern", { era: "modern", region: "edo" }],
-  ])("2地域の固定URLを許可する: %s", (search, expected) => {
+    ["?region=shiga&era=sengoku", { era: "sengoku", region: "shiga" }],
+    ["?region=shiga&era=modern", { era: "modern", region: "shiga" }],
+  ])("3地域の固定URLを許可する: %s", (search, expected) => {
     expect(readAllowedParams(search)).toEqual(expected);
   });
 

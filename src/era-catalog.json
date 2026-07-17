@@ -26,5 +26,12 @@
     "localizedLabels": { "ja": "江戸前期", "en": "Early Edo" },
     "startYear": null,
     "endYear": null
+  },
+  {
+    "id": "sengoku",
+    "label": "戦国",
+    "localizedLabels": { "ja": "戦国", "en": "Sengoku" },
+    "startYear": 1467,
+    "endYear": 1615
   }
 ]

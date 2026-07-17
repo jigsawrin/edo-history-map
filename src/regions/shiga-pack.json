@@ -1,0 +1,42 @@
+{
+  "region": {
+    "id": "shiga",
+    "label": "滋賀",
+    "localizedLabels": { "ja": "滋賀", "en": "Shiga" },
+    "center": [35.24, 136.13],
+    "defaultZoom": 9,
+    "bounds": { "minLat": 34.8, "maxLat": 35.75, "minLon": 135.7, "maxLon": 136.55 },
+    "defaultEraId": "sengoku",
+    "enabledEraIds": ["modern", "sengoku"],
+    "enabled": true,
+    "presentation": {
+      "pageTitle": "いま・むかし地図 | 滋賀・戦国",
+      "metaDescription": "現在の滋賀県地図上で、公的・学術資料を基に独自編集した戦国史跡36地点を確認できる無料のWebアプリ。位置情報は保存しません。",
+      "tagline": "滋賀 × 戦国",
+      "pointOpacityLabel": "戦国地点不透明度",
+      "historicalViewLabel": "滋賀・戦国の表示方法",
+      "footerCaution": "滋賀・戦国地点は公的・学術資料を基に独自編集した表示です。広い城域・戦場・寺域の代表位置を含みます。登山口、安全な進入経路、境界、所有権、防災の判断には使用しないでください。",
+      "pointLegendLabel": "滋賀・戦国史跡",
+      "noDataMessage": "この場所には登録済みの滋賀・戦国史跡情報がありません。",
+      "searchButtonLabel": "戦国史跡を検索",
+      "searchHeading": "滋賀・戦国史跡一覧",
+      "searchInputLabel": "史跡名・市町",
+      "searchEmptyMessage": "条件に一致する滋賀・戦国史跡がありません。",
+      "searchResultNoun": "滋賀・戦国史跡"
+    }
+  },
+  "eras": [
+    {
+      "eraId": "modern", "enabled": true, "baseMode": "modern", "visualLayers": ["modern-base"],
+      "datasetIds": [], "placeDatasetId": null, "attributionIds": ["gsi-tiles"], "uncertaintyNote": "",
+      "allowedHistoricalViewModes": ["points"], "defaultHistoricalViewMode": "points"
+    },
+    {
+      "eraId": "sengoku", "enabled": true, "baseMode": "historical-points", "visualLayers": ["historical-points"],
+      "datasetIds": ["project-shiga-sengoku-places"], "placeDatasetId": "project-shiga-sengoku-places",
+      "attributionIds": ["gsi-tiles", "project-shiga-sengoku-places"],
+      "uncertaintyNote": "本アプリの滋賀・戦国は、15世紀後半から17世紀初頭に近江で展開した政治・軍事・宗教・交通の史跡を扱います。各座標は現在の史跡・寺社・遺跡範囲の代表位置であり、当時の建物、戦闘地点、城域の中心を確定するものではありません。",
+      "allowedHistoricalViewModes": ["points"], "defaultHistoricalViewMode": "points"
+    }
+  ]
+}

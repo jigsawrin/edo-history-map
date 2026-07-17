@@ -1,9 +1,11 @@
 import type { KyotoBakumatsuPlace } from "../kyoto-bakumatsu-places";
 import type { PlaceFeature } from "../validate";
+import type { ShigaSengokuPlace } from "../shiga-sengoku-places";
 
 export const SEARCHABLE_PLACE_DATASET_IDS = Object.freeze([
   "codh-edo-maps-places",
   "project-kyoto-bakumatsu-places",
+  "project-shiga-sengoku-places",
 ] as const);
 
 export type SearchablePlaceDatasetId =
@@ -19,13 +21,18 @@ export type HistoricalPlaceSource =
       datasetId: "project-kyoto-bakumatsu-places";
       record: KyotoBakumatsuPlace;
       sourceIndex: number;
+    }>
+  | Readonly<{
+      datasetId: "project-shiga-sengoku-places";
+      record: ShigaSengokuPlace;
+      sourceIndex: number;
     }>;
 
 export interface SearchableHistoricalPlace {
   readonly key: string;
   readonly datasetId: SearchablePlaceDatasetId;
-  readonly regionId: "edo" | "kyoto";
-  readonly eraId: "edo-late" | "bakumatsu";
+  readonly regionId: "edo" | "kyoto" | "shiga";
+  readonly eraId: "edo-late" | "bakumatsu" | "sengoku";
   readonly name: string;
   readonly secondaryText: string;
   readonly detailText: string;

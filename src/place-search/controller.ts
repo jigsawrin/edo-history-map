@@ -33,8 +33,8 @@ export interface PlaceSearchElements {
 
 export interface PlaceSearchContext {
   readonly datasetId: SearchablePlaceDatasetId;
-  readonly regionId: "edo" | "kyoto";
-  readonly eraId: "edo-late" | "bakumatsu";
+  readonly regionId: "edo" | "kyoto" | "shiga";
+  readonly eraId: "edo-late" | "bakumatsu" | "sengoku";
   readonly copy: PlaceSearchCopy;
 }
 

@@ -1,4 +1,5 @@
 import { KYOTO_SOURCE_REGISTRY } from "./kyoto-source-registry";
+import { SHIGA_SOURCE_DEFINITIONS } from "./shiga-source-registry";
 
 /** 出典・ライセンス画面とプライバシー画面。DOMは安全なAPIだけで構築する。 */
 
@@ -129,6 +130,19 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
       href: source.url,
     })),
   },
+  {
+    id: "project-shiga-sengoku-places",
+    title: "滋賀・戦国史跡データ",
+    paragraphs: [
+      "滋賀・戦国史跡データは、滋賀県などの公的資料と国立情報学研究所の地名情報を照合し、本プロジェクトが36地点を独自に選定・編集したものです。第三者の説明原文、画像、データベース一式は転載していません。",
+      "説明文は確認した歴史的事実を基に独自作成しました。座標は公的な住所検索、現存史跡、遺跡・城域の代表位置を根拠とし、位置精度を高・中に分類しています。特に山城、古戦場、寺域は広い範囲を一点で表しています。",
+      "国立情報学研究所／CODHの歴史的行政区域データセットβ版に含まれる地名座標はCC BY 4.0に基づき、出典を明示して利用しています。調査日は2026年7月17日です。",
+    ],
+    links: SHIGA_SOURCE_DEFINITIONS.map((source) => ({
+      text: `${source.providerJa}「${source.titleJa}」`,
+      href: source.url,
+    })),
+  },
 ];
 
 export function renderAttribution(
@@ -178,6 +192,14 @@ export function renderAttribution(
     container.append(
       para(
         "京都地点は歴史的位置の測量成果ではありません。個別カードの位置関係・位置精度・注意事項を確認し、境界、所有権、工事、防災などの判断には使用しないでください。",
+      ),
+    );
+  }
+  if (attributionIds.includes("project-shiga-sengoku-places")) {
+    container.append(heading("滋賀地点の利用上の注意"));
+    container.append(
+      para(
+        "滋賀地点は登山口、通行可能な経路、遺跡境界、戦闘範囲を示すものではありません。現地では立入規制、私有地、天候、文化財保護と公式案内を確認してください。測量、所有権、工事、防災の判断には使用できません。",
       ),
     );
   }

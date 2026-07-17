@@ -12,6 +12,8 @@ import { createHistoricalLayer, type HistoricalLayer } from "./historical";
 import { renderPlaceCard, renderNoData } from "./infocard";
 import { renderKyotoNoData, renderKyotoPlaceCard } from "./kyoto-infocard";
 import { createKyotoBakumatsuLayer } from "./kyoto-layer";
+import { renderShigaNoData, renderShigaPlaceCard } from "./shiga-infocard";
+import { createShigaSengokuLayer } from "./shiga-layer";
 import { getCurrentLocation } from "./geolocation";
 import { renderAttribution, renderPrivacy } from "./attribution";
 import { readAllowedParams } from "./urlparams";
@@ -146,6 +148,7 @@ function main(): void {
   const footerCaution = byId<HTMLElement>("footer-caution");
   const edoLegend = byId<HTMLElement>("edo-legend");
   const kyotoLegend = byId<HTMLElement>("kyoto-legend");
+  const shigaLegend = byId<HTMLElement>("shiga-legend");
   const opacitySlider = byId<HTMLInputElement>("opacity-slider");
   const baseOpacitySlider = byId<HTMLInputElement>("base-opacity-slider");
   const machiyaControls = byId<HTMLFieldSetElement>("machiya-controls");
@@ -200,7 +203,9 @@ function main(): void {
 
   function applyRegionPresentation(pack: Readonly<RegionPack>): void {
     const presentation = pack.region.presentation;
+    const isEdo = pack.region.id === "edo";
     const isKyoto = pack.region.id === "kyoto";
+    const isShiga = pack.region.id === "shiga";
     document.title = presentation.pageTitle;
     const description = document.querySelector<HTMLMetaElement>(
       'meta[name="description"]',
@@ -214,8 +219,9 @@ function main(): void {
       "aria-label",
       presentation.historicalViewLabel,
     );
-    edoLegend.hidden = isKyoto;
+    edoLegend.hidden = !isEdo;
     kyotoLegend.hidden = !isKyoto;
+    shigaLegend.hidden = !isShiga;
     footerCaution.textContent = presentation.footerCaution;
   }
 
@@ -267,7 +273,8 @@ function main(): void {
   ): SearchablePlaceDatasetId | null {
     if (
       value === "codh-edo-maps-places" ||
-      value === "project-kyoto-bakumatsu-places"
+      value === "project-kyoto-bakumatsu-places" ||
+      value === "project-shiga-sengoku-places"
     ) {
       return value;
     }
@@ -287,8 +294,8 @@ function main(): void {
     placeSearchController.setContext(
       {
         datasetId,
-        regionId: datasetId === "codh-edo-maps-places" ? "edo" : "kyoto",
-        eraId: datasetId === "codh-edo-maps-places" ? "edo-late" : "bakumatsu",
+        regionId: datasetId === "codh-edo-maps-places" ? "edo" : datasetId === "project-kyoto-bakumatsu-places" ? "kyoto" : "shiga",
+        eraId: datasetId === "codh-edo-maps-places" ? "edo-late" : datasetId === "project-kyoto-bakumatsu-places" ? "bakumatsu" : "sengoku",
         copy: {
           searchButtonLabel: presentation.searchButtonLabel,
           searchHeading: presentation.searchHeading,
@@ -453,6 +460,9 @@ function main(): void {
       if (id === "project-kyoto-bakumatsu-places") {
         return historicalPointsLayer !== null;
       }
+      if (id === "project-shiga-sengoku-places") {
+        return historicalPointsLayer !== null;
+      }
       if (id === "codh-edo-machiya-areas") {
         return machiyaLayer !== null && machiyaVisible.checked;
       }
@@ -498,7 +508,8 @@ function main(): void {
 
   type PointDatasetId =
     | "codh-edo-maps-places"
-    | "project-kyoto-bakumatsu-places";
+    | "project-kyoto-bakumatsu-places"
+    | "project-shiga-sengoku-places";
   const pointLayerPromises = new Map<
     PointDatasetId,
     Promise<TransitionLayer>
@@ -538,6 +549,19 @@ function main(): void {
               record: place,
               sourceIndex: -1,
             },
+            source: "map",
+            returnFocus: map.getContainer(),
+          });
+        },
+        panes.get(MAP_PANES.historicalPoints) as HTMLElement,
+      ),
+    "project-shiga-sengoku-places": async () =>
+      createShigaSengokuLayer(
+        await datasetRegistry.load("project-shiga-sengoku-places"),
+        (place) => {
+          void selectHistoricalPlace({
+            datasetId: "project-shiga-sengoku-places",
+            record: { datasetId: "project-shiga-sengoku-places", record: place, sourceIndex: -1 },
             source: "map",
             returnFocus: map.getContainer(),
           });
@@ -621,12 +645,14 @@ function main(): void {
         selection.record.record,
         selection.returnFocus,
       );
-    } else {
+    } else if (selection.record.datasetId === "project-kyoto-bakumatsu-places") {
       renderKyotoPlaceCard(
         infoCard,
         selection.record.record,
         selection.returnFocus,
       );
+    } else {
+      renderShigaPlaceCard(infoCard, selection.record.record, selection.returnFocus);
     }
 
     const searchable =
@@ -734,7 +760,9 @@ function main(): void {
         },
         pointDatasetId === "project-kyoto-bakumatsu-places"
           ? "京都・幕末地点を読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。"
-          : "歴史データを読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。",
+          : pointDatasetId === "project-shiga-sengoku-places"
+            ? "滋賀・戦国地点を読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。"
+            : "歴史データを読み込めませんでした。現代地図はそのまま利用できます。再読み込みすると回復する場合があります。",
       );
     }
     load(
@@ -821,6 +849,12 @@ function main(): void {
       () => {
         if (currentRegion.region.id === "kyoto") {
           renderKyotoNoData(
+            infoCard,
+            map.getContainer(),
+            currentRegion.region.presentation.noDataMessage,
+          );
+        } else if (currentRegion.region.id === "shiga") {
+          renderShigaNoData(
             infoCard,
             map.getContainer(),
             currentRegion.region.presentation.noDataMessage,
