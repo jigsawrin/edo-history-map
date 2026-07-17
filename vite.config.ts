@@ -13,7 +13,10 @@ function injectCsp(): Plugin {
     "script-src 'self'",
     "style-src 'self'",
     "img-src 'self' data: https://cyberjapandata.gsi.go.jp",
-    "connect-src 'self'",
+    // Leaflet assigns its embedded transparent GIF while cancelling in-flight
+    // tiles. Chromium checks that cleanup against connect-src, so permit only
+    // the non-network data: scheme in addition to same-origin data requests.
+    "connect-src 'self' data:",
     "font-src 'self'",
     "manifest-src 'self'",
     "base-uri 'none'",

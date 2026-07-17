@@ -1233,8 +1233,9 @@ const viteConnectSources = viteConfig.match(/"connect-src\s+([^"\r\n]+)"/)?.[1]
   ?.split(/\s+/)
   .filter(Boolean) ?? [];
 if (
-  viteConnectSources.length !== 1 ||
+  viteConnectSources.length !== 2 ||
   viteConnectSources[0] !== "'self'" ||
+  viteConnectSources[1] !== "data:" ||
   !viteImgSources.some((source) =>
     isExactOriginSource(source, EXPECTED_TILE_ORIGIN),
   )
@@ -1402,8 +1403,9 @@ if (existsSync(distDir)) {
     const imgSources = directives.get("img-src") ?? [];
     if (
       !csp ||
-      connectSources.length !== 1 ||
+      connectSources.length !== 2 ||
       connectSources[0] !== "'self'" ||
+      connectSources[1] !== "data:" ||
       !imgSources.some((source) =>
         isExactOriginSource(source, EXPECTED_TILE_ORIGIN),
       ) ||
