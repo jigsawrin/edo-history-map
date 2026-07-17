@@ -1,33 +1,6 @@
 import type { KyotoBakumatsuPlace } from "./kyoto-bakumatsu-places";
 import { KYOTO_SOURCE_REGISTRY } from "./kyoto-source-registry";
-
-const CATEGORY_LABELS = Object.freeze({
-  "court-politics": "朝廷・政治",
-  bakufu: "幕府",
-  "domain-residence": "藩邸・藩関係地",
-  shinsengumi: "新選組・御陵衛士",
-  incident: "事件・遭難",
-  battle: "戦闘関係地",
-  residence: "寓居・滞在地",
-  memorial: "墓所・顕彰地",
-});
-
-const BASIS_LABELS = Object.freeze({
-  "extant-site": "幕末当時から同位置に現存すると確認できる場所",
-  "official-historic-marker": "公的データベースに記録された史跡碑の現在位置",
-  "official-address": "公式資料に基づく現在の住所",
-  "historical-area": "史料が示す歴史上のおおよその範囲",
-  "memorial-location": "出来事の現場ではなく顕彰・追悼の場所",
-});
-
-const STATUS_LABELS = Object.freeze({
-  extant: "現存",
-  rebuilt: "再建",
-  relocated: "移転",
-  destroyed: "焼失・滅失",
-  "marker-only": "史跡表示のみ",
-  "approximate-area": "おおよその範囲",
-});
+import presentation from "./kyoto-place-presentation.json";
 
 function addRow(dl: HTMLDListElement, term: string, value: string): void {
   const dt = document.createElement("dt");
@@ -50,14 +23,14 @@ export function renderKyotoPlaceCard(
   container.append(heading);
 
   const dl = document.createElement("dl");
-  addRow(dl, "分類", CATEGORY_LABELS[place.category]);
+  addRow(dl, "分類", presentation.categoryLabels[place.category]);
   addRow(dl, "時期", place.dateDisplayJa);
-  addRow(dl, "現在地と歴史位置", BASIS_LABELS[place.locationBasis]);
-  addRow(dl, "史跡の状態", STATUS_LABELS[place.historicalSiteStatus]);
+  addRow(dl, "現在地と歴史位置", presentation.locationBasisLabels[place.locationBasis]);
+  addRow(dl, "史跡の状態", presentation.historicalSiteStatusLabels[place.historicalSiteStatus]);
   addRow(
     dl,
     "位置精度",
-    place.coordinateConfidence === "high" ? "高" : "中",
+    presentation.coordinateConfidenceLabels[place.coordinateConfidence],
   );
   container.append(dl);
 
@@ -73,8 +46,7 @@ export function renderKyotoPlaceCard(
   if (place.coordinateConfidence === "medium") {
     const confidenceNote = document.createElement("p");
     confidenceNote.className = "card-note card-warning";
-    confidenceNote.textContent =
-      "位置精度は中です。表示点は公的資料に記録された碑・住所・範囲の代表点で、幕末当時の一点と一致するとは限りません。";
+    confidenceNote.textContent = presentation.mediumConfidenceWarning;
     container.append(confidenceNote);
   }
 

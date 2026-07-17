@@ -9,6 +9,7 @@
 - 地域・年代・承認済みデータ・出典を結び付ける地域パック方式を採用
 - 京都の古地図画像、推定町割り、河川・水域、街道、藩邸敷地、鳥羽・伏見の戦闘範囲は未導入
 - 公開 URL: <https://jigsawrin.github.io/edo-history-map/>
+- 静的地点一覧: <https://jigsawrin.github.io/edo-history-map/places/>
 
 ## 機能
 
@@ -23,6 +24,10 @@
 - 京都・幕末の史跡36地点をLeaflet Canvasで表示し、東京・江戸と同じ地図上で地域切替
 - 地域別の地点名検索と分類絞り込み。江戸地名8,788件は50件ずつページ分割し、
   京都・幕末36件も同じ通常HTMLボタンの一覧からキーボードで選択可能
+- 同じ検索条件での前後ページ移動・地点選択・パネル再表示では検索結果を再利用し、
+  検索語・分類・地域・年代・読込世代が変わった場合だけ再検索
+- JavaScriptや地図を利用しない場合にも読める静的地点一覧。東京・江戸は100件ずつ
+  88ページ、京都・幕末は36件を1ページで掲載
 - 地点検索はキーボード操作に対応。支援技術による動作は環境により異なり、
   すべてのスクリーンリーダーでの確認を完了したものではない
 - Canvas地点を直接クリック・タップしにくい場合も、検索結果から地点を選ぶと
@@ -95,6 +100,8 @@
   サーバー・URL・Cookie・localStorage へ保存しません。
 - アクセス解析・広告・トラッカー・Cookie は使用していません。
 - 地点検索はブラウザのページ内メモリだけで実行し、検索語を保存・送信しません。
+- 静的地点一覧はJavaScript、検索フォーム、位置情報、Cookie、ブラウザストレージ、
+  外部画像・外部フォントを使用しません。
 - 地図タイル取得のため国土地理院のサーバーへ、配信のため GitHub Pages へ
   通信が発生します。詳細は [PRIVACY.md](PRIVACY.md) を参照してください。
 
@@ -142,6 +149,8 @@ npm test                  # テスト(機能・セキュリティ・アクセシ
 npm run lint              # ESLint(innerHTML/eval 禁止などを強制)
 npm run typecheck         # TypeScript strict
 npm run build             # 本番ビルド(dist/)
+npm run build:static-places # 承認済みGeoJSONから静的地点一覧を生成
+npm run audit:static-links  # 静的一覧のリンク・HTML・manifestを監査
 npm run audit:prepublish  # 公開前監査(秘密情報・ライセンス・出典検査)
 ```
 
@@ -166,6 +175,7 @@ Content Security Policy で制限しています。
 - [CONTRIBUTING.md](CONTRIBUTING.md) — 開発ルール
 - [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) — 脅威モデル
 - [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) — アクセシビリティ設計と今後の代替操作
+- [docs/STATIC_PLACE_PAGES.md](docs/STATIC_PLACE_PAGES.md) — JavaScript不要の静的地点一覧の生成・監査仕様
 - [docs/HISTORICAL_BASEMAP.md](docs/HISTORICAL_BASEMAP.md) — 年代・pane・歴史画像の安全な拡張設計
 - [docs/REGION_PACKS.md](docs/REGION_PACKS.md) — 地域パックの構造と安全な追加手順
 - [docs/BROWSER_QA.md](docs/BROWSER_QA.md) — Canvas操作とPagesキャッシュの実ブラウザ確認手順

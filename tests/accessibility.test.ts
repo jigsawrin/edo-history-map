@@ -106,6 +106,9 @@ describe("アクセシビリティ(静的マークアップ)", () => {
 
   it("地点検索結果はol、専用aria-live、通常buttonのページ操作を持つ", () => {
     expect(doc.getElementById("place-search-results")?.tagName).toBe("OL");
+    expect(doc.getElementById("place-search-status")?.getAttribute("role")).toBe(
+      "status",
+    );
     expect(doc.getElementById("place-search-status")?.getAttribute("aria-live")).toBe(
       "polite",
     );
@@ -130,9 +133,16 @@ describe("アクセシビリティ(静的マークアップ)", () => {
   });
 
   it("JavaScript 非対応環境向けの説明(noscript)がある", () => {
-    expect(doc.querySelector("noscript")?.textContent).toContain(
-      "JavaScript",
+    const noscript = doc.querySelector("noscript");
+    expect(noscript?.textContent).toContain("JavaScript");
+    expect(noscript?.querySelector('a[href="./places/"]')?.textContent).toBe(
+      "歴史地点一覧",
     );
+  });
+
+  it("地図版からJavaScript不要の歴史地点一覧へ到達できる", () => {
+    const link = doc.querySelector('a.toolbar-link[href="./places/"]');
+    expect(link?.textContent).toBe("歴史地点一覧");
   });
 
   it("位置情報ダイアログに保存しない旨と外部通信の説明がある", () => {

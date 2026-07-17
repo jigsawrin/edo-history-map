@@ -4,26 +4,15 @@ import type {
   KyotoPlaceCategory,
 } from "../kyoto-bakumatsu-places";
 import type { PlaceFeature } from "../validate";
+import presentation from "../kyoto-place-presentation.json";
 import { normalizeSearchText } from "./normalize";
 import type {
   SearchableHistoricalPlace,
   SearchablePlaceDatasetId,
 } from "./types";
 
-export const KYOTO_CATEGORY_LABELS: Readonly<
-  Record<KyotoPlaceCategory, string>
-> = Object.freeze({
-  "court-politics": "朝廷・政治",
-  bakufu: "幕府",
-  "domain-residence": "藩邸・藩関係地",
-  shinsengumi: "新選組・御陵衛士",
-  incident: "事件・遭難",
-  battle: "戦闘関係地",
-  residence: "寓居・滞在地",
-  memorial: "墓所・顕彰地",
-});
-
-const CONFIDENCE_LABELS = Object.freeze({ high: "高", medium: "中" });
+export const KYOTO_CATEGORY_LABELS: Readonly<Record<KyotoPlaceCategory, string>> =
+  presentation.categoryLabels;
 
 function combinedNormalizedText(parts: readonly string[]): string {
   return normalizeSearchText(parts.filter(Boolean).join(" "));
@@ -98,7 +87,7 @@ export function createKyotoSearchRecords(
         eraId: "bakumatsu" as const,
         name: record.nameJa,
         secondaryText,
-        detailText: `位置精度：${CONFIDENCE_LABELS[record.coordinateConfidence]}`,
+        detailText: `位置精度：${presentation.coordinateConfidenceLabels[record.coordinateConfidence]}`,
         categoryId: record.category,
         categoryLabel,
         latitude: record.latitude,

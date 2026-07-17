@@ -1,4 +1,4 @@
-import { sanitizeSearchInput } from "./normalize";
+import { normalizeSearchText, sanitizeSearchInput } from "./normalize";
 import { placeSearchModelCache, type PlaceSearchModelCache } from "./model-cache";
 import {
   paginateSearchResults,
@@ -45,7 +45,16 @@ export interface PlaceSearchControllerOptions {
     trigger: HTMLButtonElement,
   ) => void | Promise<void>;
   readonly modelCache?: Pick<PlaceSearchModelCache, "load">;
+  readonly search?: typeof searchHistoricalPlaces;
   readonly onVisibilityChange?: (open: boolean) => void;
+}
+
+interface SearchMatchCache {
+  readonly datasetId: SearchablePlaceDatasetId;
+  readonly normalizedQuery: string;
+  readonly categoryId: string;
+  readonly modelGeneration: number;
+  readonly matches: readonly SearchableHistoricalPlace[];
 }
 
 function formatCount(value: number): string {
@@ -72,6 +81,7 @@ export class PlaceSearchController {
   readonly #elements: PlaceSearchElements;
   readonly #onSelect: PlaceSearchControllerOptions["onSelect"];
   readonly #modelCache: Pick<PlaceSearchModelCache, "load">;
+  readonly #search: typeof searchHistoricalPlaces;
   readonly #onVisibilityChange: (open: boolean) => void;
   #context: PlaceSearchContext | null = null;
   #contextInitialized = false;
@@ -79,12 +89,17 @@ export class PlaceSearchController {
   #page = 1;
   #selectedKey: string | null = null;
   #generation = 0;
+  #modelGeneration = 0;
+  #matchCache: SearchMatchCache | null = null;
+  #preparingGeneration: number | null = null;
+  #focusAfterPrepare = false;
   #debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(options: PlaceSearchControllerOptions) {
     this.#elements = options.elements;
     this.#onSelect = options.onSelect;
     this.#modelCache = options.modelCache ?? placeSearchModelCache;
+    this.#search = options.search ?? searchHistoricalPlaces;
     this.#onVisibilityChange = options.onVisibilityChange ?? (() => {});
     this.#bindEvents();
   }
@@ -103,6 +118,7 @@ export class PlaceSearchController {
     const previousDatasetId = this.#context?.datasetId;
     this.#generation += 1;
     this.#clearDebounce();
+    this.#invalidateMatchCache();
     this.#context = context;
     this.#records = [];
     this.#page = 1;
@@ -169,6 +185,17 @@ export class PlaceSearchController {
       "現代年代では歴史地点検索を利用できません。";
   }
 
+  destroy(): void {
+    this.#generation += 1;
+    this.#modelGeneration += 1;
+    this.#clearDebounce();
+    this.#invalidateMatchCache();
+    this.#context = null;
+    this.#records = [];
+    this.#selectedKey = null;
+    this.#elements.results.replaceChildren();
+  }
+
   #bindEvents(): void {
     const elements = this.#elements;
     elements.openButton.addEventListener("click", () => this.open());
@@ -178,11 +205,13 @@ export class PlaceSearchController {
       const sanitized = sanitizeSearchInput(elements.input.value);
       if (sanitized !== elements.input.value) elements.input.value = sanitized;
       this.#page = 1;
+      this.#invalidateMatchCache();
       this.#clearDebounce();
       this.#debounceTimer = setTimeout(() => this.#render(), SEARCH_DEBOUNCE_MS);
     });
     elements.category.addEventListener("change", () => {
       this.#page = 1;
+      this.#invalidateMatchCache();
       this.#render();
     });
     elements.previous.addEventListener("click", () => {
@@ -205,21 +234,33 @@ export class PlaceSearchController {
   async #prepare(generation: number, focusInput: boolean): Promise<void> {
     const context = this.#context;
     if (!context) return;
+    this.#focusAfterPrepare ||= focusInput;
+    if (this.#preparingGeneration === generation) return;
+    this.#preparingGeneration = generation;
     try {
       const records = await this.#modelCache.load(context.datasetId);
       if (generation !== this.#generation || context !== this.#context) return;
       this.#records = records;
+      this.#modelGeneration += 1;
+      this.#invalidateMatchCache();
       this.#populateCategories(categoriesFor(records));
       this.#render();
       this.#announceAvailable();
-      if (focusInput && this.isOpen()) this.#elements.input.focus();
+      if (this.#focusAfterPrepare && this.isOpen()) this.#elements.input.focus();
     } catch {
       if (generation !== this.#generation || context !== this.#context) return;
       this.#records = [];
+      this.#modelGeneration += 1;
+      this.#invalidateMatchCache();
       this.#elements.results.replaceChildren();
       this.#elements.pagination.hidden = true;
       this.#elements.status.textContent =
         "地点検索を準備できませんでした。地図上の地点は引き続き利用できます。";
+    } finally {
+      if (this.#preparingGeneration === generation) {
+        this.#preparingGeneration = null;
+        this.#focusAfterPrepare = false;
+      }
     }
   }
 
@@ -262,11 +303,25 @@ export class PlaceSearchController {
   #render(focusFirstResult = false): void {
     const context = this.#context;
     if (!context || this.#records.length === 0) return;
-    const matches = searchHistoricalPlaces(
-      this.#records,
-      this.#elements.input.value,
-      this.#elements.category.value,
-    );
+    const normalizedQuery = normalizeSearchText(this.#elements.input.value);
+    const categoryId = this.#elements.category.value;
+    const cached = this.#matchCache;
+    const matches =
+      cached?.datasetId === context.datasetId &&
+      cached.normalizedQuery === normalizedQuery &&
+      cached.categoryId === categoryId &&
+      cached.modelGeneration === this.#modelGeneration
+        ? cached.matches
+        : this.#search(this.#records, this.#elements.input.value, categoryId);
+    if (matches !== cached?.matches) {
+      this.#matchCache = Object.freeze({
+        datasetId: context.datasetId,
+        normalizedQuery,
+        categoryId,
+        modelGeneration: this.#modelGeneration,
+        matches,
+      });
+    }
     const page = paginateSearchResults(matches, this.#page);
     this.#page = page.page;
     const buttons = page.items.map((place) => this.#createResult(place));
@@ -341,5 +396,9 @@ export class PlaceSearchController {
       clearTimeout(this.#debounceTimer);
       this.#debounceTimer = null;
     }
+  }
+
+  #invalidateMatchCache(): void {
+    this.#matchCache = null;
   }
 }
