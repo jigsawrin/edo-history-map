@@ -46,6 +46,16 @@ localStorage / sessionStorage / IndexedDB の使用は一切ありません。
 
 上記以外の外部通信先はありません(Content Security Policy で制限しています)。
 
+## 静的地点一覧
+
+`/places/`以下の地点一覧は、承認済みデータからビルド時に作成した静的HTMLです。
+JavaScript、検索フォーム、位置情報API、Cookie、localStorage / sessionStorage /
+IndexedDB、アクセス解析、広告、外部画像、外部フォントを使用しません。閲覧中の
+検索語や操作状態を保存・送信する機能もありません。
+
+一覧ページ自体の配信ではGitHub Pagesへの通信が発生します。利用者が出典リンクを
+選んだ場合に限り、明示された外部サイトへ移動し、そのサイトとの通信が発生します。
+
 ## お問い合わせについて
 
 GitHub リポジトリの Issue 等で利用者自身が送信した情報は、

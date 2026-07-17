@@ -61,5 +61,7 @@ describe("京都・幕末公開前監査", () => {
     ]) {
       expect(audit).toContain(token);
     }
+    expect(audit).toContain('"dist/places/kyoto/index.html"');
+    expect(audit).toContain("!generatedKyotoStaticPages.has(file.rel)");
   });
 });

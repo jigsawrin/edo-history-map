@@ -21,6 +21,7 @@ import { join, relative, extname } from "node:path";
 import { createHash } from "node:crypto";
 import { URL } from "node:url";
 import { buildKyotoGeoJson } from "./build-kyoto-bakumatsu-places.mjs";
+import { auditStaticPlaceLinks } from "./audit-static-place-links.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -1128,6 +1129,9 @@ const forbiddenKyotoAssetExtensions = new Set([
   ".html",
   ".htm",
 ]);
+const generatedKyotoStaticPages = new Set([
+  "dist/places/kyoto/index.html",
+]);
 for (const file of allFiles) {
   const lower = file.rel.toLowerCase();
   const extension = extname(lower);
@@ -1139,7 +1143,8 @@ for (const file of allFiles) {
   }
   if (
     (lower.includes("kyoto") || lower.startsWith("data-curation/")) &&
-    forbiddenKyotoAssetExtensions.has(extension)
+    forbiddenKyotoAssetExtensions.has(extension) &&
+    !generatedKyotoStaticPages.has(file.rel)
   ) {
     addFinding("error", "京都原画像", file.rel, 0, "京都の原画像・PDF・HTMLコピーは公開禁止です");
   }
@@ -1404,6 +1409,20 @@ if (existsSync(distDir)) {
     }
   }
   infos.push(`dist: ${distFiles.length} ファイル`);
+  try {
+    const staticAudit = auditStaticPlaceLinks(ROOT, distDir);
+    infos.push(
+      `静的地点一覧: HTML ${staticAudit.htmlFileCount}、EDO ${staticAudit.edoCount}件、京都 ${staticAudit.kyotoCount}件、manifest SHA ${staticAudit.manifestSha256.slice(0, 12)}…`,
+    );
+  } catch (error) {
+    addFinding(
+      "error",
+      "静的地点一覧",
+      "dist/places/",
+      0,
+      error instanceof Error ? error.message : "静的一覧監査に失敗しました",
+    );
+  }
 } else {
   addFinding("warn", "ビルド未確認", "dist/", 0, "dist がありません(npm run build を実行して再監査すること)");
 }

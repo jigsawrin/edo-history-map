@@ -1,0 +1,32 @@
+{
+  "categoryLabels": {
+    "court-politics": "朝廷・政治",
+    "bakufu": "幕府",
+    "domain-residence": "藩邸・藩関係地",
+    "shinsengumi": "新選組・御陵衛士",
+    "incident": "事件・遭難",
+    "battle": "戦闘関係地",
+    "residence": "寓居・滞在地",
+    "memorial": "墓所・顕彰地"
+  },
+  "locationBasisLabels": {
+    "extant-site": "幕末当時から同位置に現存すると確認できる場所",
+    "official-historic-marker": "公的データベースに記録された史跡碑の現在位置",
+    "official-address": "公式資料に基づく現在の住所",
+    "historical-area": "史料が示す歴史上のおおよその範囲",
+    "memorial-location": "出来事の現場ではなく顕彰・追悼の場所"
+  },
+  "historicalSiteStatusLabels": {
+    "extant": "現存",
+    "rebuilt": "再建",
+    "relocated": "移転",
+    "destroyed": "焼失・滅失",
+    "marker-only": "史跡表示のみ",
+    "approximate-area": "おおよその範囲"
+  },
+  "coordinateConfidenceLabels": {
+    "high": "高",
+    "medium": "中"
+  },
+  "mediumConfidenceWarning": "位置精度は中です。表示点は公的資料に記録された碑・住所・範囲の代表点で、幕末当時の一点と一致するとは限りません。"
+}

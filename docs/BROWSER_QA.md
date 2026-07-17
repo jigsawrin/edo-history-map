@@ -1,5 +1,39 @@
 # 実ブラウザ確認手順
 
+## 2026-07-16 検索性能・静的地点一覧QA結果
+
+全コード検査とproduction build後、外部Chrome 150.0.7871.116を専用一時profile、
+拡張無効、単一QAインスタンス、ローカルproduction previewで確認した。Codex内蔵
+ブラウザと既存ユーザーprofileは使用していない。
+
+- 地図版: EDOの空検索50件、2/176ページへの移動（click処理6.9ms）、結果選択と
+  情報カード、京都切替、36件、8分類＋全分類、検索、Escape閉鎖、開くボタンへの
+  フォーカス復帰、現代年代で検索UI非表示を確認した。
+- 自動ARIA・Accessibility Tree: button、searchbox、combobox、heading、statusのroleと
+  空でない主要accessible nameを取得した。`aria-expanded`、label、disabled、hidden、
+  `aria-current`、`aria-live`等はDOMテストと併せて確認した。実読み上げ確認ではない。
+- 静的一覧PC: トップ、EDO 1・44・88ページ、京都を確認した。内部移動、地図リンク、
+  外部出典、スキップリンク、focus-visible、JavaScript 0、form 0、横スクロールなしを確認した。
+- 200％・400％: 1280pxを基準に640px・320pxのCDPリフロー相当で、主要内容、397リンク、
+  横スクロールなしを確認した。Chrome UIのズームメニューを操作した確認とは区別する。
+- モバイル相当: 390×844で京都36記事、前後・外部・地図リンク、横スクロールなしを確認した。
+  最小リンク高さの計測値は21pxであり、全リンクが44px以上という保証はしない。
+- 印刷: print mediaでPDFレンダリングが成功した。可視の印刷プレビュー画面は未確認。
+- JavaScript無効: EDO最終ページ88件、出典、ページ移動導線、地図版`noscript`から一覧への
+  導線を確認した。
+- プライバシー・通信: localStorage、sessionStorage、Cookie、Service Workerは0。
+  HTTP/HTTPS要求はlocalhostと地理院タイルだけで、許可外通信と検索語を含む要求は0。
+- Console: Runtime例外と通常のerror/warningは0。地図からCSPの厳しい静的ページへCDPで
+  連続遷移した際、Leafletが破棄中タイルを同梱の空`data:image/gif`へ差し替える処理に
+  対するCSPログが20件あった。外部通信や検索語送信ではなく、機能影響は確認されなかった。
+
+QAスクリプトは初回に非同期カードを同期判定、次に京都ラベルの仮定、閉鎖後Treeでhidden
+searchboxを期待したため停止した。アプリのクラッシュではなくQA判定を実装どおりに修正した。
+その後、明示的な`status` roleがTreeにない点を確認して通知領域へ追加し、最終一式を成功させた。
+
+Windows Narrator、NVDA、VoiceOver、TalkBackによる実読み上げと物理モバイル実機は未確認。
+スクリーンリーダー確認済み、または完全なアクセシビリティ対応済みとは扱わない。
+
 ## 地域別検索・地点一覧の確認項目
 
 全コード検査後、外部Chromeを専用一時profile・拡張無効・単一インスタンスで起動する。

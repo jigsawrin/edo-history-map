@@ -24,9 +24,22 @@ describe("公開ワークフローの退行防止", () => {
   it("CI は本番ビルド後に公開前監査を実行する", () => {
     const source = workflow("ci.yml");
     const build = source.indexOf("run: npm run build");
+    const staticAudit = source.indexOf("run: npm run audit:static-links");
     const audit = source.indexOf("run: npm run audit:prepublish");
     expect(build).toBeGreaterThanOrEqual(0);
-    expect(audit).toBeGreaterThan(build);
+    expect(staticAudit).toBeGreaterThan(build);
+    expect(audit).toBeGreaterThan(staticAudit);
+  });
+
+  it("CodeQLのJavaScript解析も静的一覧を生成してリンク監査する", () => {
+    const source = workflow("codeql.yml");
+    const install = source.indexOf("run: npm ci --ignore-scripts");
+    const build = source.indexOf("run: npm run build");
+    const staticAudit = source.indexOf("run: npm run audit:static-links");
+    expect(install).toBeGreaterThanOrEqual(0);
+    expect(build).toBeGreaterThan(install);
+    expect(staticAudit).toBeGreaterThan(build);
+    expect(source).toContain("if: matrix.language == 'javascript-typescript'");
   });
 
   it("Pages は全ゲートを順番に通過してからartifactをアップロードする", () => {
@@ -37,6 +50,7 @@ describe("公開ワークフローの退行防止", () => {
       "run: npm run typecheck",
       "run: npm test",
       "run: npm run build",
+      "run: npm run audit:static-links",
       "run: npm audit --audit-level=high",
       "run: npm run audit:prepublish",
     ];

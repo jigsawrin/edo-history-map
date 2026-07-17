@@ -175,6 +175,7 @@
         </button>
       </div>
       <button type="button" id="locate-button">現在地を表示</button>
+      <a class="toolbar-link" href="./places/">歴史地点一覧</a>
       <button type="button" id="attribution-button">出典・ライセンス</button>
       <button type="button" id="privacy-button">プライバシー</button>
     </div>
@@ -213,6 +214,7 @@
         <p
           id="place-search-status"
           class="place-search-status"
+          role="status"
           aria-live="polite"
           aria-atomic="true"
         ></p>
@@ -244,8 +246,8 @@
 
     <noscript>
       <p class="noscript-note">
-        このアプリの地図表示には JavaScript が必要です。JavaScript
-        を利用できない場合は、国土地理院の地図サービス(maps.gsi.go.jp)などをご利用ください。
+        このアプリの地図表示にはJavaScriptが必要です。歴史地点と出典は、
+        JavaScript不要の<a href="./places/">歴史地点一覧</a>から確認できます。
       </p>
     </noscript>
 

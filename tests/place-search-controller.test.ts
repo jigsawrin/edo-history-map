@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlaceSearchController } from "../src/place-search/controller";
 import { normalizeSearchText } from "../src/place-search/normalize";
+import { searchHistoricalPlaces } from "../src/place-search/query";
 import type {
   PlaceSearchCopy,
   SearchableHistoricalPlace,
@@ -134,6 +135,111 @@ afterEach(() => {
 });
 
 describe("地点検索コントローラー", () => {
+  it("ページ移動・選択・開閉では一致結果を再検索しない", async () => {
+    const refs = elements();
+    const search = vi.fn(searchHistoricalPlaces);
+    const controller = new PlaceSearchController({
+      elements: refs,
+      onSelect: vi.fn(),
+      search,
+      modelCache: {
+        load: vi.fn().mockResolvedValue(Array.from({ length: 51 }, (_, i) => record(i))),
+      },
+    });
+    controller.setContext(context());
+    await vi.waitFor(() => expect(refs.results.children).toHaveLength(50));
+    expect(search).toHaveBeenCalledTimes(1);
+
+    refs.next.click();
+    refs.previous.click();
+    (refs.results.querySelector("button") as HTMLButtonElement).click();
+    controller.open();
+    controller.close();
+    controller.open();
+    expect(search).toHaveBeenCalledTimes(1);
+  });
+
+  it("検索語・分類・地域変更では一致結果を一度ずつ再検索する", async () => {
+    vi.useFakeTimers();
+    const refs = elements();
+    const search = vi.fn(searchHistoricalPlaces);
+    const edoRecords = Array.from({ length: 51 }, (_, i) => record(i, i === 0 ? "寺社" : "施設"));
+    const kyotoRecord = {
+      ...record(100),
+      datasetId: "project-kyoto-bakumatsu-places" as const,
+      regionId: "kyoto" as const,
+      eraId: "bakumatsu" as const,
+    };
+    const load = vi.fn((id: SearchablePlaceDatasetId) =>
+      Promise.resolve(id === "codh-edo-maps-places" ? edoRecords : [kyotoRecord]),
+    );
+    const controller = new PlaceSearchController({
+      elements: refs,
+      onSelect: vi.fn(),
+      search,
+      modelCache: { load },
+    });
+
+    controller.setContext(context());
+    await vi.runAllTimersAsync();
+    expect(search).toHaveBeenCalledTimes(1);
+    refs.input.value = "地点";
+    refs.input.dispatchEvent(new Event("input", { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(150);
+    expect(search).toHaveBeenCalledTimes(2);
+    refs.category.value = "寺社";
+    refs.category.dispatchEvent(new Event("change"));
+    expect(search).toHaveBeenCalledTimes(3);
+
+    controller.setContext(context("project-kyoto-bakumatsu-places"));
+    await vi.runAllTimersAsync();
+    expect(search).toHaveBeenCalledTimes(4);
+    controller.setContext(context());
+    await vi.runAllTimersAsync();
+    expect(search).toHaveBeenCalledTimes(5);
+    expect(load).toHaveBeenCalledTimes(3);
+  });
+
+  it("年代変更とdestroyで一致結果キャッシュを破棄する", async () => {
+    const refs = elements();
+    const search = vi.fn(searchHistoricalPlaces);
+    const controller = new PlaceSearchController({
+      elements: refs,
+      onSelect: vi.fn(),
+      search,
+      modelCache: { load: vi.fn().mockResolvedValue([record(1)]) },
+    });
+    controller.setContext(context());
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    controller.setContext(null);
+    controller.setContext(context());
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(2));
+    controller.destroy();
+    controller.setContext(context());
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(3));
+  });
+
+  it("読み込み失敗をキャッシュせず、再試行成功時だけ検索する", async () => {
+    const refs = elements();
+    const search = vi.fn(searchHistoricalPlaces);
+    const load = vi
+      .fn<() => Promise<readonly SearchableHistoricalPlace[]>>()
+      .mockRejectedValueOnce(new Error("失敗"))
+      .mockResolvedValueOnce([record(1)]);
+    const controller = new PlaceSearchController({
+      elements: refs,
+      onSelect: vi.fn(),
+      search,
+      modelCache: { load },
+    });
+    controller.setContext(context());
+    await vi.waitFor(() => expect(refs.status.textContent).toContain("準備できません"));
+    expect(search).not.toHaveBeenCalled();
+    controller.open();
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
   it("初期年代が現代の場合も検索UIを非表示にする", () => {
     const refs = elements();
     const controller = new PlaceSearchController({
@@ -270,9 +376,11 @@ describe("地点検索コントローラー", () => {
     const load = vi.fn((id: SearchablePlaceDatasetId) =>
       id === "codh-edo-maps-places" ? edo : Promise.resolve([kyotoRecord]),
     );
+    const search = vi.fn(searchHistoricalPlaces);
     const controller = new PlaceSearchController({
       elements: refs,
       onSelect: vi.fn(),
+      search,
       modelCache: { load },
     });
     controller.setContext(context());
@@ -281,6 +389,8 @@ describe("地点検索コントローラー", () => {
     resolveEdo([record(1)]);
     await Promise.resolve();
     expect(refs.results.textContent).not.toContain("地点0001");
+    expect(search).toHaveBeenCalledTimes(1);
+    expect(search.mock.calls[0]?.[0]).toEqual([kyotoRecord]);
   });
 
   it("パネル閉鎖中の地図選択では自動で開かない", async () => {

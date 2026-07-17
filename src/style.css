@@ -260,6 +260,19 @@ button:hover {
   background: #e8e8e8;
 }
 
+.toolbar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg);
+  background: #f5f5f5;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 /* フォーカスを明確に表示(キーボード操作対応) */
 button:focus-visible,
 select:focus-visible,
