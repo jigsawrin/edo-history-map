@@ -9,6 +9,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import { JSDOM } from "jsdom";
 import { validateSources } from "./build-kyoto-bakumatsu-places.mjs";
+import { validateSources as validateShigaSources } from "./build-shiga-sengoku-places.mjs";
 import { EXPECTED_DATA_SHA256 } from "./build-static-place-pages.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -138,7 +139,7 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   const places = join(dist, "places");
   if (!existsSync(join(places, "index.html"))) fail("静的一覧トップがありません");
   const htmlFiles = walk(places).filter((path) => path.endsWith(".html"));
-  if (htmlFiles.length !== 90) fail("静的HTML数が期待値と一致しません");
+  if (htmlFiles.length !== 91) fail("静的HTML数が期待値と一致しません");
   const sourceData = JSON.parse(
     readFileSync(join(root, "src/kyoto-source-registry.json"), "utf8"),
   );
@@ -147,6 +148,10 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   for (const source of sourceRegistry.values()) {
     allowedOrigins.add(new URL(source.url).origin);
   }
+  const shigaSources = validateShigaSources(JSON.parse(
+    readFileSync(join(root, "src/shiga-source-registry.json"), "utf8"),
+  ));
+  for (const source of shigaSources.values()) allowedOrigins.add(new URL(source.url).origin);
   const documents = new Map(
     htmlFiles.map((path) => {
       const dom = new JSDOM(readFileSync(path, "utf8"));
@@ -166,7 +171,9 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
     manifest.edo?.perPage !== 100 ||
     manifest.edo?.finalPageCount !== 88 ||
     manifest.kyoto?.placeCount !== 36 ||
-    manifest.kyoto?.pageCount !== 1
+    manifest.kyoto?.pageCount !== 1 ||
+    manifest.shiga?.placeCount !== 36 ||
+    manifest.shiga?.pageCount !== 1
   ) {
     fail("静的一覧manifestの件数が不正です");
   }
@@ -198,7 +205,11 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
     (count, document) => count + document.querySelectorAll('article[data-place-region="kyoto"]').length,
     0,
   );
-  if (edoCount !== 8788 || kyotoCount !== 36) fail("生成地点数が入力件数と一致しません");
+  const shigaCount = [...documents.values()].reduce(
+    (count, document) => count + document.querySelectorAll('article[data-place-region="shiga"]').length,
+    0,
+  );
+  if (edoCount !== 8788 || kyotoCount !== 36 || shigaCount !== 36) fail("生成地点数が入力件数と一致しません");
   const anchors = [...documents.values()].flatMap((document) =>
     [...document.querySelectorAll("article.place-card[id]")].map((article) => article.id),
   );
@@ -221,6 +232,7 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
     htmlFileCount: htmlFiles.length,
     edoCount,
     kyotoCount,
+    shigaCount,
     manifestSha256: sha256(readFileSync(manifestPath)),
   });
 }
@@ -228,6 +240,6 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
 const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (isDirectRun) {
   const result = auditStaticPlaceLinks();
-  console.log(`静的リンク監査: HTML ${result.htmlFileCount}、EDO ${result.edoCount}件、京都 ${result.kyotoCount}件、エラー0`);
+  console.log(`静的リンク監査: HTML ${result.htmlFileCount}、EDO ${result.edoCount}件、京都 ${result.kyotoCount}件、滋賀 ${result.shigaCount}件、エラー0`);
   console.log(`manifest SHA-256: ${result.manifestSha256}`);
 }

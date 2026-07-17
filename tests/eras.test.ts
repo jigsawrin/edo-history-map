@@ -20,6 +20,7 @@ describe("年代カタログと地域・年代バインディング", () => {
       "edo-late",
       "bakumatsu",
       "edo-early",
+      "sengoku",
     ]);
     const edo = eraRegistry.get("edo-late");
     expect(edo && formatEraLabel(edo)).toBe("江戸後期 1849–1862");

@@ -59,11 +59,12 @@ function withEra(
 }
 
 describe("RegionRegistry", () => {
-  it("東京・江戸と京都を本番有効地域として返す", () => {
+  it("東京・江戸、京都、滋賀を本番有効地域として返す", () => {
     const registry = new RegionRegistry();
     expect(registry.enabled().map((item) => item.region.id)).toEqual([
       "edo",
       "kyoto",
+      "shiga",
     ]);
     expect(registry.get("edo")?.region.center).toEqual([35.6852, 139.7528]);
     expect(registry.getEraBinding("edo", "edo-late")?.datasetIds).toHaveLength(3);
@@ -77,6 +78,8 @@ describe("RegionRegistry", () => {
       "modern",
       "bakumatsu",
     ]);
+    expect(registry.get("shiga")?.region.center).toEqual([35.24, 136.13]);
+    expect(registry.get("shiga")?.region.enabledEraIds).toEqual(["modern", "sengoku"]);
     expect(
       registry.getEraBinding("kyoto", "bakumatsu")?.datasetIds,
     ).toEqual(["project-kyoto-bakumatsu-places"]);

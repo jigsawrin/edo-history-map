@@ -6,12 +6,13 @@ import {
 } from "../src/datasets";
 
 describe("承認済みデータセットレジストリ", () => {
-  it("承認済み4 IDを固定ローカルパスへだけ解決する", () => {
+  it("承認済み5 IDを固定ローカルパスへだけ解決する", () => {
     expect(DATASET_DEFINITIONS.map(({ id, kind, path }) => ({ id, kind, path }))).toEqual([
       { id: "codh-edo-maps-places", kind: "places", path: "data/edo-places.geojson" },
       { id: "codh-edo-machiya-areas", kind: "polygon", path: "data/edo-machiya-areas.geojson" },
       { id: "codh-edo-coastline", kind: "line", path: "data/edo-coastlines.geojson" },
       { id: "project-kyoto-bakumatsu-places", kind: "places", path: "data/kyoto-bakumatsu-places.geojson" },
+      { id: "project-shiga-sengoku-places", kind: "places", path: "data/shiga-sengoku-places.geojson" },
     ]);
   });
 

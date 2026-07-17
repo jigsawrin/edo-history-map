@@ -92,7 +92,7 @@ export const DATA_BOUNDS = EDO_REGION_PACK.region.bounds;
 /** URL クエリパラメータの許可リスト。ここにない値・キーはすべて無視する。 */
 export const ALLOWED_QUERY_PARAMS: Readonly<Record<string, readonly string[]>> =
   {
-    era: ["modern", "none", "edo-late", "bakumatsu"],
+    era: ["modern", "none", "edo-late", "bakumatsu", "sengoku"],
     base: ["pale", "std"],
-    region: ["edo", "kyoto"],
+    region: ["edo", "kyoto", "shiga"],
   };

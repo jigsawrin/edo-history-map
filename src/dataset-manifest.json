@@ -26,5 +26,12 @@
     "path": "data/kyoto-bakumatsu-places.geojson",
     "sourceId": "project-kyoto-bakumatsu-places",
     "publicSha256": "d141eb046d34c2c16b49286d3a70de49ea06f79e59561ae20537cd934e06f4d6"
+  },
+  {
+    "id": "project-shiga-sengoku-places",
+    "kind": "places",
+    "path": "data/shiga-sengoku-places.geojson",
+    "sourceId": "project-shiga-sengoku-places",
+    "publicSha256": "0467e166fdd7ff58bcc9ada8366068fe6e877edfc6af508df65ac7b355c26fb9"
   }
 ]

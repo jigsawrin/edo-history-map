@@ -37,6 +37,9 @@ Desktop.ini
 
 # 監査レポート(実行ごとに生成。公開しない)
 audit/
+!audit/
+audit/*
+!audit/shiga-sengoku-place-review.md
 
 # 原データ(公式配布元から取得する。リポジトリで再配布しない)
 data-raw/

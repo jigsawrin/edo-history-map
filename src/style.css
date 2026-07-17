@@ -168,6 +168,18 @@ body {
   border-width: 3px;
 }
 
+.legend-shiga-castle,
+.legend-shiga-battle,
+.legend-shiga-temple,
+.legend-shiga-politics {
+  border-radius: 50%;
+  border-width: 3px;
+}
+.legend-shiga-castle { border-color: #44260f; border-style: dashed; background: #dba85b; }
+.legend-shiga-battle { border-color: #781d18; border-style: dotted; background: #ed8c78; }
+.legend-shiga-temple { border-color: #215528; border-style: dashed; background: #a9d59e; }
+.legend-shiga-politics { border-color: #42206d; background: #c5a7e8; }
+
 .legend-kyoto-politics {
   border-color: #3f1d70;
   background: #d7c5f2;
@@ -581,6 +593,13 @@ dialog::backdrop {
   .legend-kyoto-people,
   .legend-kyoto-event,
   .legend-kyoto-memorial {
+    border-color: #000;
+    background: #fff;
+  }
+  .legend-shiga-castle,
+  .legend-shiga-battle,
+  .legend-shiga-temple,
+  .legend-shiga-politics {
     border-color: #000;
     background: #fff;
   }

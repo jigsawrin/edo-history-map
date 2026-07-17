@@ -23,6 +23,11 @@ export function parseStaticKyotoPlaces(
   sourceRegistry: ReadonlyMap<string, unknown>,
   presentation: Record<string, unknown>,
 ): readonly Readonly<Record<string, unknown>>[];
+export function parseStaticShigaPlaces(
+  raw: string,
+  sourceRegistry: ReadonlyMap<string, unknown>,
+  presentation: Record<string, unknown>,
+): readonly Readonly<Record<string, unknown>>[];
 
 export interface StaticPlaceGeneration {
   readonly files: ReadonlyMap<string, string>;
@@ -37,10 +42,12 @@ export interface StaticPlaceGeneration {
       readonly finalPageCount: number;
     };
     readonly kyoto: { readonly placeCount: number; readonly pageCount: number };
+    readonly shiga: { readonly placeCount: number; readonly pageCount: number };
     readonly files: Readonly<Record<string, string>>;
   };
   readonly edoPlaces: readonly Readonly<Record<string, unknown>>[];
   readonly kyotoPlaces: readonly Readonly<Record<string, unknown>>[];
+  readonly shigaPlaces: readonly Readonly<Record<string, unknown>>[];
 }
 
 export function generateStaticPlaceFiles(options: {
@@ -48,6 +55,9 @@ export function generateStaticPlaceFiles(options: {
   kyotoRaw: string;
   sourceData: unknown;
   presentation: Record<string, unknown>;
+  shigaRaw: string;
+  shigaSourceData: unknown;
+  shigaPresentation: Record<string, unknown>;
   css: string;
   inputSha256: Readonly<Record<string, string>>;
 }): StaticPlaceGeneration;

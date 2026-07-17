@@ -1,0 +1,1021 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.864026,
+          35.011417
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-001",
+        "nameJa": "大津城跡",
+        "category": "battle",
+        "municipalityJa": "大津市",
+        "dateDisplayJa": "慶長5年（1600年）",
+        "summaryJa": "京極高次が守った大津城は、関ヶ原合戦直前に西軍の攻撃を受けました。籠城戦は西軍の部隊を大津へ引き付け、同時期の畿内情勢に影響したとされます。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "destroyed",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "城域が失われた市街地の代表位置です。現存建物や戦闘範囲の中心を示す座標ではありません。",
+        "sourceIds": [
+          "shiga-pref-castles-map",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.846446,
+          35.034052
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-002",
+        "nameJa": "宇佐山城跡",
+        "category": "castle",
+        "municipalityJa": "大津市",
+        "dateDisplayJa": "元亀元年（1570年）頃",
+        "summaryJa": "織田信長が京都と湖西を結ぶ経路を押さえるため、森可成を配置した山城です。浅井・朝倉方との攻防で軍事拠点となり、森可成はこの周辺の戦いで討死しました。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城全体の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.84096,
+          35.070503
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-003",
+        "nameJa": "比叡山延暦寺・根本中堂",
+        "category": "temple-shrine",
+        "municipalityJa": "大津市",
+        "dateDisplayJa": "元亀2年（1571年）",
+        "summaryJa": "延暦寺は戦国期にも大きな宗教勢力で、元亀2年に織田信長軍の焼き討ちを受けました。表示地点は現在の根本中堂で、戦国期の寺域全体や焼き討ち範囲を一点で表すものではありません。",
+        "locationBasis": "official-address",
+        "historicalSiteStatus": "rebuilt",
+        "coordinateConfidence": "high",
+        "locationNoteJa": "現存する根本中堂の位置です。建物は戦国期の焼失後に再建されており、当時の建物そのものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.864853,
+          35.071457
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-004",
+        "nameJa": "日吉大社",
+        "category": "temple-shrine",
+        "municipalityJa": "大津市",
+        "dateDisplayJa": "元亀2年（1571年）",
+        "summaryJa": "延暦寺の門前に位置する日吉大社も、比叡山をめぐる戦国期の兵火で大きな被害を受けました。現在の社殿群はその後の復興を伝え、戦国期の宗教勢力と地域の関係を示します。",
+        "locationBasis": "official-address",
+        "historicalSiteStatus": "rebuilt",
+        "coordinateConfidence": "high",
+        "locationNoteJa": "現在の日吉大社境内の代表位置です。戦国期の社殿配置や被災範囲を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.866467,
+          35.081106
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-005",
+        "nameJa": "西教寺",
+        "category": "temple-shrine",
+        "municipalityJa": "大津市",
+        "dateDisplayJa": "天正年間（1573～1592年）",
+        "summaryJa": "坂本にある西教寺は比叡山焼き討ち後の復興と明智光秀の保護に関係し、境内には光秀一族の墓所が伝わります。現在の寺院と墓所を、坂本城や当時の居所と混同しないよう表示します。",
+        "locationBasis": "official-address",
+        "historicalSiteStatus": "extant",
+        "coordinateConfidence": "high",
+        "locationNoteJa": "現在の寺院境内の位置です。光秀の居城や戦闘地点ではなく、保護と追善に関係する寺院です。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.851545,
+          35.055867
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-006",
+        "nameJa": "壺笠山城跡",
+        "category": "castle",
+        "municipalityJa": "大津市",
+        "dateDisplayJa": "元亀元年（1570年）",
+        "summaryJa": "壺笠山城は志賀の陣で浅井・朝倉方が比叡山周辺に築いた陣城の一つです。京都へ通じる道と琵琶湖西岸を見渡す山地が、織田方との対峙に使われました。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城の代表位置です。陣地全体、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.878762,
+          35.05838
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-007",
+        "nameJa": "坂本城跡",
+        "category": "castle",
+        "municipalityJa": "大津市",
+        "dateDisplayJa": "元亀2年～天正14年（1571～1586年）",
+        "summaryJa": "明智光秀が信長から志賀郡を与えられた後、琵琶湖岸に築いた城です。湖上交通と京都への経路を押さえる拠点となり、本能寺の変後には明智氏の退勢とともに歴史の転機を迎えました。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "archaeological-remains",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "史跡指定地の代表位置です。城域の一部は市街地や湖岸に及び、城全体の中心を断定する座標ではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "bunka-sakamoto",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.990798,
+          35.024716
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-008",
+        "nameJa": "足利義尚陣所跡（鈎の陣）",
+        "category": "battle",
+        "municipalityJa": "栗東市",
+        "dateDisplayJa": "長享元～3年（1487～1489年）",
+        "summaryJa": "将軍足利義尚が六角高頼を討つため近江へ出陣し、鈎に長期滞在した際の陣所跡です。将軍の在陣と死去は、近江の戦国政治と幕府権力の変化を示す出来事となりました。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "archaeological-remains",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "陣所遺跡の代表位置です。軍勢の配置範囲や戦闘地点全体を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-ashikaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.979243,
+          35.057207
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-009",
+        "nameJa": "金森寺内町跡（善立寺・因宗寺付近）",
+        "category": "politics",
+        "municipalityJa": "守山市",
+        "dateDisplayJa": "15世紀末～元亀3年（1572年）頃",
+        "summaryJa": "金森では真宗門徒の道場を核に寺内町が形成され、元亀年間には織田信長方へ抵抗しました。表示地点は現在の善立寺・因宗寺付近で、中世寺内町全体の範囲を示すものではありません。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "approximate-area",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "現在の寺院付近を寺内町の代表位置として表示します。金森城や町域の境界を確定する座標ではありません。",
+        "sourceIds": [
+          "shiga-pref-temples-map",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.139654,
+          35.155367
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-010",
+        "nameJa": "安土城跡",
+        "category": "castle",
+        "municipalityJa": "近江八幡市",
+        "dateDisplayJa": "天正4～10年（1576～1582年）",
+        "summaryJa": "織田信長が天下統一の拠点として安土山に築いた城です。石垣を多用した郭群と城下町を備え、信長の死後に中心部が焼失した後も、城郭遺構が特別史跡として残されています。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "特別史跡の代表位置です。広い城域全体、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.128718,
+          35.137849
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-011",
+        "nameJa": "浄厳院",
+        "category": "temple-shrine",
+        "municipalityJa": "近江八幡市",
+        "dateDisplayJa": "天正7年（1579年）",
+        "summaryJa": "安土城下の浄厳院では、織田信長のもとで浄土宗と法華宗の宗論が行われました。戦国期の宗教政策と安土城下の政治性を伝える現存寺院として表示します。",
+        "locationBasis": "official-address",
+        "historicalSiteStatus": "extant",
+        "coordinateConfidence": "high",
+        "locationNoteJa": "現在の浄厳院境内の位置です。宗論の参加者配置や当時の境内範囲を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.154171,
+          35.148129
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-012",
+        "nameJa": "桑実寺",
+        "category": "temple-shrine",
+        "municipalityJa": "近江八幡市",
+        "dateDisplayJa": "天文年間（1532～1555年）",
+        "summaryJa": "足利義晴が京都を離れた時期に滞在し、近江で幕府政治を行った寺院です。観音寺城を本拠とする六角氏の支援と、戦国期に将軍が近江へ移る政治状況を伝えます。",
+        "locationBasis": "official-address",
+        "historicalSiteStatus": "extant",
+        "coordinateConfidence": "high",
+        "locationNoteJa": "現在の桑実寺境内の位置です。将軍の滞在施設や当時の寺域を一点で確定するものではありません。",
+        "sourceIds": [
+          "shiga-pref-ashikaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.157805,
+          35.145611
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-013",
+        "nameJa": "観音寺城跡",
+        "category": "castle",
+        "municipalityJa": "近江八幡市",
+        "dateDisplayJa": "15世紀後半～永禄11年（1568年）",
+        "summaryJa": "近江守護六角氏が繖山に展開した大規模な山城です。多数の郭と石垣を持ち、六角氏の領国支配の中心となりましたが、織田信長の近江侵攻後に本拠としての役割を失いました。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "史跡全体の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-rokkaku-map",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.082919,
+          35.143924
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-014",
+        "nameJa": "八幡山城跡",
+        "category": "castle",
+        "municipalityJa": "近江八幡市",
+        "dateDisplayJa": "天正13年（1585年）以降",
+        "summaryJa": "豊臣秀次が八幡山に築いた城で、安土に代わる城下町の整備と結び付きました。秀次の失脚後に廃城となりましたが、山上の石垣と麓の町割りが豊臣期の支配拠点を伝えます。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山上城郭の代表位置です。城域、ロープウェー駅、登山経路を示す座標ではありません。",
+        "sourceIds": [
+          "shiga-pref-castles-map",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.132027,
+          35.105579
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-015",
+        "nameJa": "長光寺城跡",
+        "category": "castle",
+        "municipalityJa": "近江八幡市",
+        "dateDisplayJa": "元亀元年（1570年）頃",
+        "summaryJa": "東山道に近い瓶割山の城で、浅井氏離反後には柴田勝家が配置されたとされます。織田方が近江南部と京都への経路を維持するために用いた軍事拠点の一つです。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.04578,
+          35.138523
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-016",
+        "nameJa": "水茎岡山城跡",
+        "category": "politics",
+        "municipalityJa": "近江八幡市",
+        "dateDisplayJa": "永正年間（1504～1521年）",
+        "summaryJa": "足利義澄が京都を追われた後に滞在し、この地で没したとされる城跡です。琵琶湖岸の城が将軍を受け入れる政治拠点となった、近江戦国史の特徴を示します。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "岡山に広がる城跡の代表位置です。主郭、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-ashikaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.288974,
+          35.126754
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-017",
+        "nameJa": "百済寺",
+        "category": "temple-shrine",
+        "municipalityJa": "東近江市",
+        "dateDisplayJa": "天正元年（1573年）",
+        "summaryJa": "中世に大きな寺勢を持った百済寺は、防御施設を備える山岳寺院でもありました。天正元年に織田信長軍の焼き討ちで大きな被害を受け、現在の伽藍は後世の復興を伝えます。",
+        "locationBasis": "official-address",
+        "historicalSiteStatus": "rebuilt",
+        "coordinateConfidence": "high",
+        "locationNoteJa": "現在の百済寺境内の位置です。中世の坊院群や防御施設の範囲全体を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-temples-map",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.290543,
+          35.208166
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-018",
+        "nameJa": "敏満寺遺跡",
+        "category": "temple-shrine",
+        "municipalityJa": "多賀町",
+        "dateDisplayJa": "永禄5年～元亀3年（1562～1572年）",
+        "summaryJa": "敏満寺は浅井長政と織田信長の攻撃を受けて堂塔や坊舎を失い、寺勢が衰退しました。発掘された土塁や空堀などは、宗教拠点が軍事的性格も備えたことを示します。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "archaeological-remains",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "広い寺院遺跡の代表位置です。遺構範囲や安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-temples-map",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.207366,
+          35.201342
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-019",
+        "nameJa": "肥田城跡",
+        "category": "battle",
+        "municipalityJa": "彦根市",
+        "dateDisplayJa": "永禄2～3年（1559～1560年）頃",
+        "summaryJa": "肥田城をめぐる六角氏と浅井氏の対立は、野良田の戦いへ続く江北・江南の争いと結び付きます。表示地点は城跡の代表位置で、周辺に広がった戦闘範囲の中心ではありません。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "城跡を戦国期争乱の根拠地点として表示します。野良田の戦場全体や境界を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-rokkaku-map",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.290428,
+          35.191082
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-020",
+        "nameJa": "勝楽寺城跡",
+        "category": "castle",
+        "municipalityJa": "甲良町",
+        "dateDisplayJa": "15～16世紀",
+        "summaryJa": "勝楽寺城は京極氏に関係する山城で、北近江の守護権力と在地支配の変化を伝えます。戦国期に浅井氏が台頭する以前の京極氏の拠点群を考える上で重要な城跡です。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-north-omi-map-1",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.269383,
+          35.27964
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-021",
+        "nameJa": "佐和山城跡",
+        "category": "castle",
+        "municipalityJa": "彦根市",
+        "dateDisplayJa": "16世紀～慶長5年（1600年）",
+        "summaryJa": "近江東部の交通を押さえる山城で、浅井氏・織田氏配下の城主を経て、豊臣政権下では石田三成の居城となりました。関ヶ原合戦後に落城し、彦根城築城に伴い廃城となりました。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "shiga-pref-ieyasu-map",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.270708,
+          35.32749
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-022",
+        "nameJa": "朝妻城跡",
+        "category": "transport",
+        "municipalityJa": "米原市",
+        "dateDisplayJa": "中世～16世紀",
+        "summaryJa": "朝妻は琵琶湖東岸の港として水運を支え、城は湖上交通と陸路を結ぶ地点に置かれました。戦国大名が琵琶湖の船運と沿岸拠点を重視したことを示す代表地点です。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "城跡の代表位置です。中世港の正確な岸線、船着場、城域全体を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.259013,
+          35.301464
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-023",
+        "nameJa": "磯山城跡",
+        "category": "castle",
+        "municipalityJa": "米原市",
+        "dateDisplayJa": "16世紀",
+        "summaryJa": "琵琶湖と中山道・北国脇往還に近い磯山の城跡で、湖北と湖東を結ぶ交通を監視する位置にあります。北近江の国人領主と戦国期城郭網の一端を示します。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-north-omi-map-1",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.315367,
+          35.29678
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-024",
+        "nameJa": "鎌刃城跡",
+        "category": "castle",
+        "municipalityJa": "米原市",
+        "dateDisplayJa": "15世紀後半～元亀年間（1570～1573年）頃",
+        "summaryJa": "江濃国境に近い湖北最大級の山城で、堀氏らの拠点となりました。浅井・織田両勢力の境目に位置し、石垣や大規模な郭群が戦国期の山城構造を伝えます。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "国指定史跡の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-north-omi-map-1",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.31472,
+          35.319724
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-025",
+        "nameJa": "地頭山城跡",
+        "category": "castle",
+        "municipalityJa": "米原市",
+        "dateDisplayJa": "16世紀",
+        "summaryJa": "湖北の交通路に近い地頭山に築かれた城跡で、周辺の鎌刃城や磯山城とともに地域の城郭網を構成しました。尾根上の郭や防御施設が在地勢力の軍事拠点を伝えます。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-north-omi-map-1",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.412139,
+          35.396183
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-026",
+        "nameJa": "上平寺城跡",
+        "category": "castle",
+        "municipalityJa": "米原市",
+        "dateDisplayJa": "16世紀前半～元亀元年（1570年）頃",
+        "summaryJa": "伊吹山南麓に築かれた京極氏ゆかりの山城で、のちに浅井氏が江濃国境を守る拠点として利用しました。織田信長の近江侵攻時には長比城とともに国境防衛に関係します。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-north-omi-map-2",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.261784,
+          35.377409
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-027",
+        "nameJa": "長浜城跡",
+        "category": "politics",
+        "municipalityJa": "長浜市",
+        "dateDisplayJa": "天正2年（1574年）頃以降",
+        "summaryJa": "羽柴秀吉が浅井氏旧領を与えられた後、琵琶湖岸に築いた支配拠点です。港と城下町を整備し、湖北統治と湖上交通を結び付けました。現在の模擬天守は後世の博物館建築です。",
+        "locationBasis": "reconstructed-site",
+        "historicalSiteStatus": "rebuilt",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "城跡公園の代表位置です。現在の天守風建物は戦国期の建物を復元したものではなく、旧城域も一点に限られません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nagahama-cultural-assets",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.327691,
+          35.386445
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-028",
+        "nameJa": "横山城跡",
+        "category": "castle",
+        "municipalityJa": "長浜市",
+        "dateDisplayJa": "永禄～天正年間（1558～1592年）",
+        "summaryJa": "小谷城の南を押さえる支城で、姉川の戦い後は織田方が湖北攻略の足掛かりとしました。羽柴秀吉が城番として入り、浅井氏への圧力を継続した拠点です。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nagahama-cultural-assets",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.206693,
+          35.4501
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-029",
+        "nameJa": "山本山城跡",
+        "category": "castle",
+        "municipalityJa": "長浜市",
+        "dateDisplayJa": "16世紀～天正元年（1573年）",
+        "summaryJa": "琵琶湖東岸を見下ろす山城で、浅井氏家臣の阿閉氏が守りました。天正元年に阿閉氏が織田方へ転じたことは、小谷城包囲と浅井氏滅亡へつながる重要な転機となりました。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "山城の代表位置です。城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nagahama-cultural-assets",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.277457,
+          35.459095
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-030",
+        "nameJa": "小谷城跡",
+        "category": "castle",
+        "municipalityJa": "長浜市",
+        "dateDisplayJa": "大永年間以前～天正元年（～1573年）",
+        "summaryJa": "北近江を支配した浅井氏三代の居城で、小谷山の尾根と谷に大規模な郭群と家臣屋敷が展開しました。天正元年の織田信長軍の攻撃で落城し、浅井氏は滅亡しました。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "国指定史跡の代表位置です。広大な城域、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-nobunaga-guide",
+          "nagahama-cultural-assets",
+          "nii-shiga-place-index"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.263108,
+          35.445127
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-031",
+        "nameJa": "虎御前山城跡",
+        "category": "battle",
+        "municipalityJa": "長浜市",
+        "dateDisplayJa": "元亀3年～天正元年（1572～1573年）",
+        "summaryJa": "織田信長が小谷城を包囲するため虎御前山に築いた付城群です。尾根上に家臣ごとの陣地が置かれ、浅井氏の本拠を継続的に圧迫する包囲拠点となりました。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "虎御前山の代表位置です。付城群全体、各武将の陣地、登山口や安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-north-omi-map-2",
+          "nagahama-cultural-assets",
+          "gsi-toragozen"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.176637,
+          35.598409
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-032",
+        "nameJa": "玄蕃尾城跡",
+        "category": "battle",
+        "municipalityJa": "長浜市",
+        "dateDisplayJa": "天正11年（1583年）",
+        "summaryJa": "賤ヶ岳の戦いで柴田勝家方の本陣として築かれた陣城です。土塁、空堀、虎口などがまとまって残り、短期の軍事行動に備えた織豊期陣城の構造を伝えます。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "ruins",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "滋賀・福井県境に近い国指定史跡の代表位置です。陣城全体、登山口、安全な進入経路を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-north-omi-map-1",
+          "gsi-genbao"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.193117,
+          35.506093
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-033",
+        "nameJa": "賤ヶ岳古戦場・山頂代表点",
+        "category": "battle",
+        "municipalityJa": "長浜市",
+        "dateDisplayJa": "天正11年（1583年）",
+        "summaryJa": "羽柴秀吉と柴田勝家が織田政権の後継を争った賤ヶ岳の戦いに関係する山地です。戦闘は周辺の広い範囲で行われ、この地点は地名を示す山頂の代表位置に限られます。",
+        "locationBasis": "historical-area",
+        "historicalSiteStatus": "approximate-area",
+        "coordinateConfidence": "medium",
+        "locationNoteJa": "国土地理院の賤ヶ岳山頂を代表点にしています。戦場全体の中心、境界、各陣地や安全な進入経路を示しません。",
+        "sourceIds": [
+          "shiga-pref-north-omi-map-1",
+          "nagahama-cultural-assets",
+          "gsi-shizugatake"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.300204,
+          35.417674
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-034",
+        "nameJa": "三田村氏館跡",
+        "category": "battle",
+        "municipalityJa": "長浜市",
+        "dateDisplayJa": "元亀元年（1570年）",
+        "summaryJa": "姉川の戦いで浅井・朝倉方の朝倉軍本陣が置かれたとされる城館跡です。現在残る土塁や堀の遺構を、周辺一帯に広がった戦場と区別して表示します。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "archaeological-remains",
+        "coordinateConfidence": "high",
+        "locationNoteJa": "国指定史跡の館跡位置です。姉川古戦場全体の中心や戦闘範囲を示すものではありません。",
+        "sourceIds": [
+          "nagahama-cultural-assets",
+          "gsi-mitamura"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.285207,
+          35.365932
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-035",
+        "nameJa": "下坂氏館跡",
+        "category": "residence",
+        "municipalityJa": "長浜市",
+        "dateDisplayJa": "15～16世紀",
+        "summaryJa": "浅井氏に仕えた国人領主下坂氏の居館跡で、土塁や堀に囲まれた中世城館の姿を伝えます。山城だけでなく平地の館を基盤にした在地領主の生活と支配を示す遺跡です。",
+        "locationBasis": "archaeological-site",
+        "historicalSiteStatus": "archaeological-remains",
+        "coordinateConfidence": "high",
+        "locationNoteJa": "国指定史跡として確認された館跡の代表位置です。私有地や立入条件については現地の案内に従う必要があります。",
+        "sourceIds": [
+          "nagahama-cultural-assets",
+          "gsi-shimosaka"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.954981,
+          35.062928
+        ]
+      },
+      "properties": {
+        "id": "shiga-sengoku-036",
+        "nameJa": "芦浦観音寺跡",
+        "category": "politics",
+        "municipalityJa": "草津市",
+        "dateDisplayJa": "16世紀後半～慶長年間（1596～1615年）",
+        "summaryJa": "芦浦観音寺は琵琶湖の船運や湖上支配に関わり、織田・豊臣政権から湖上交通に関する役割を認められました。寺院であると同時に、戦国末期の水運管理を担った政治拠点です。",
+        "locationBasis": "existing-remains",
+        "historicalSiteStatus": "extant",
+        "coordinateConfidence": "high",
+        "locationNoteJa": "国指定史跡の寺院境内を示します。戦国期の湖岸線、港、支配範囲を示すものではありません。",
+        "sourceIds": [
+          "shiga-pref-temples-map",
+          "gsi-ashiura"
+        ],
+        "eraId": "sengoku",
+        "sourceId": "project-shiga-sengoku-places"
+      }
+    }
+  ]
+}

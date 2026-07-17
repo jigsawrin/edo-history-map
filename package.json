@@ -18,6 +18,7 @@
     "data:convert:machiya": "node scripts/convert-machiya-areas.mjs",
     "data:convert:coastline": "node scripts/convert-historical-coastline.mjs",
     "data:build:kyoto": "node scripts/build-kyoto-bakumatsu-places.mjs",
+    "data:build:shiga": "node scripts/build-shiga-sengoku-places.mjs",
     "audit:prepublish": "node scripts/prepublish-audit.mjs"
   },
   "dependencies": {
