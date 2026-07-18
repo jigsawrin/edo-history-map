@@ -3,6 +3,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 
 const STATUS = new Set(["approved", "pending", "rejected"]);
+const TECHNICAL_STATUS = new Set(["not-started", "in-review", "approved", "rejected"]);
+const PUBLICATION_STATUS = new Set(["candidate", "shortlisted", "published"]);
 const SUITABILITY = new Set(["high", "medium", "low"]);
 const COVERAGE = new Set(["narrow", "medium", "broad"]);
 const REASON_CODES = new Set([
@@ -69,6 +71,20 @@ function assertHttps(value, label, { nullable = false } = {}) {
   assert(parsed.protocol === "https:" && !parsed.username && !parsed.password, `${label}は認証情報なしのHTTPS URLである必要があります`);
 }
 
+function migrateCandidateV1(candidate) {
+  return {
+    ...candidate,
+    rightsReviewStatus: candidate.reviewStatus,
+    technicalReviewStatus: "not-started",
+    publicationStatus: "candidate",
+  };
+}
+
+export function migrateHistoricalRasterCandidateRegistryV1(value) {
+  if (!value || value.schemaVersion !== 1) return value;
+  return { ...value, schemaVersion: 2, candidates: value.candidates.map(migrateCandidateV1) };
+}
+
 function validateCandidate(candidate, index) {
   const label = `候補${index + 1}`;
   assert(candidate && typeof candidate === "object" && !Array.isArray(candidate), `${label}がobjectではありません`);
@@ -84,11 +100,16 @@ function validateCandidate(candidate, index) {
   for (const field of BOOLEAN_FIELDS) assert(typeof candidate[field] === "boolean", `${label}.${field}はbooleanである必要があります`);
   for (const field of BOOLEAN_OR_NULL_FIELDS) assert(candidate[field] === null || typeof candidate[field] === "boolean", `${label}.${field}はbooleanまたはnullである必要があります`);
   assert(STATUS.has(candidate.reviewStatus), `${label}.reviewStatusが不正です`);
+  assert(STATUS.has(candidate.rightsReviewStatus), `${label}.rightsReviewStatusが不正です`);
+  assert(candidate.reviewStatus === candidate.rightsReviewStatus, `${label}: reviewStatusはrightsReviewStatusの後方互換aliasである必要があります`);
+  assert(TECHNICAL_STATUS.has(candidate.technicalReviewStatus), `${label}.technicalReviewStatusが不正です`);
+  assert(PUBLICATION_STATUS.has(candidate.publicationStatus), `${label}.publicationStatusが不正です`);
+  if (candidate.technicalReviewStatus === "rejected") assert(typeof candidate.technicalReviewReasonJa === "string" && candidate.technicalReviewReasonJa.trim().length > 0, `${label}.technicalReviewReasonJaがありません`);
   assert(REASON_CODES.has(candidate.reviewReasonCode), `${label}.reviewReasonCodeが不正です`);
   for (const field of ["technicalSuitability", "rightsSuitability", "expectedResolutionSuitability", "expectedControlPointAvailability", "expectedSeamRisk", "expectedTileSizeRisk"]) assert(SUITABILITY.has(candidate[field]), `${label}.${field}が不正です`);
   assert(COVERAGE.has(candidate.expectedCoverageBreadth), `${label}.expectedCoverageBreadthが不正です`);
   assert(Number.isInteger(candidate.priorityScore) && candidate.priorityScore >= 0 && candidate.priorityScore <= 100, `${label}.priorityScoreが不正です`);
-  if (candidate.reviewStatus === "approved") {
+  if (candidate.rightsReviewStatus === "approved") {
     for (const field of APPROVAL_FIELDS) assert(candidate[field] === true, `${candidate.candidateId}: approvedには${field}=trueが必要です`);
     assert(candidate.rightsSuitability === "high", `${candidate.candidateId}: approvedにはrightsSuitability=highが必要です`);
     assert(candidate.imageFileAvailable && (candidate.directDownloadAvailable || candidate.iiifAvailable), `${candidate.candidateId}: approved画像の取得経路がありません`);
@@ -97,12 +118,17 @@ function validateCandidate(candidate, index) {
   } else {
     assert(!APPROVAL_FIELDS.every((field) => candidate[field] === true), `${candidate.candidateId}: 全権利条件がtrueならpending/rejected理由を見直してください`);
   }
+  if (candidate.publicationStatus === "published") {
+    assert(candidate.rightsReviewStatus === "approved" && candidate.technicalReviewStatus === "approved", `${candidate.candidateId}: publishedには権利と技術の両approvedが必要です`);
+  }
+  if (candidate.technicalReviewStatus === "approved") assert(candidate.rightsReviewStatus === "approved", `${candidate.candidateId}: 技術approvedだけでは公開できません`);
   return Object.freeze({ ...candidate, rightsEvidenceUrls: Object.freeze([...candidate.rightsEvidenceUrls]) });
 }
 
 export function validateHistoricalRasterCandidateRegistry(value) {
+  value = migrateHistoricalRasterCandidateRegistryV1(value);
   assert(value && typeof value === "object" && !Array.isArray(value), "候補台帳がobjectではありません");
-  assert(value.schemaVersion === 1, "候補台帳schemaVersionは1である必要があります");
+  assert(value.schemaVersion === 2, "候補台帳schemaVersionは2である必要があります");
   assert(/^\d{4}-\d{2}-\d{2}$/u.test(value.reviewedAt), "候補台帳reviewedAtが不正です");
   assert(typeof value.commercialContextJa === "string" && value.commercialContextJa.includes("広告") && value.commercialContextJa.includes("寄付") && value.commercialContextJa.includes("NC"), "候補台帳に商用利用前提がありません");
   assert(Array.isArray(value.candidates) && value.candidates.length >= 10, "候補は10件以上必要です");
@@ -118,7 +144,7 @@ export function validateHistoricalRasterCandidateRegistry(value) {
     assert(new Set(family.map((candidate) => candidate.exactItemUrl)).size === family.length, `${familyId}: 同題資料の個別URLが分離されていません`);
   }
   return Object.freeze({
-    schemaVersion: 1,
+    schemaVersion: 2,
     reviewedAt: value.reviewedAt,
     commercialContextJa: value.commercialContextJa,
     candidates: Object.freeze(candidates),
@@ -131,7 +157,7 @@ export function loadHistoricalRasterCandidateRegistry(root) {
 
 export function summarizeHistoricalRasterCandidates(registry) {
   const candidates = registry.candidates;
-  const count = (status) => candidates.filter((candidate) => candidate.reviewStatus === status).length;
+  const count = (status) => candidates.filter((candidate) => candidate.rightsReviewStatus === status).length;
   return Object.freeze({
     total: candidates.length,
     institutions: new Set(candidates.map((candidate) => candidate.holdingInstitution)).size,

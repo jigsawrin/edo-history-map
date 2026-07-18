@@ -1,9 +1,11 @@
 export interface HistoricalRasterCandidateRegistry {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly reviewedAt: string;
   readonly commercialContextJa: string;
   readonly candidates: readonly Readonly<Record<string, unknown>>[];
 }
+
+export function migrateHistoricalRasterCandidateRegistryV1(value: unknown): unknown;
 
 export interface HistoricalRasterCandidateSummary {
   readonly total: number;

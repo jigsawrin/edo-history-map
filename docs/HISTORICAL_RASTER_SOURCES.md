@@ -4,6 +4,8 @@
 
 江戸古地図候補は`data-curation/historical-raster-candidates.json`で1資料・1画像系列ごとに管理する。2026-07-18時点で15候補・4所蔵機関を登録し、権利面approved 13、pending 1、rejected 1である。候補のapprovedは商用利用を含む権利条件の適合を示し、本番公開や位置精度の承認を意味しない。
 
+schema v2では`reviewStatus`を権利審査の後方互換aliasとして残し、`rightsReviewStatus`、`technicalReviewStatus`、`publicationStatus`を分離する。`published`にはrightsとtechnicalの両approvedが必要である。`shortlisted`は技術監査対象を示すだけで、本番source、raster、public画像を要求しない。v1入力は明示的な移行関数でv2へ正規化できる。
+
 同じ題名でも所蔵館、資料コード、版、スキャン、画像SHA、歪み、基準点、位置合わせ、タイルmanifestは共有しない。`titleFamilyId`は同系統を検索するためだけに使い、画像同一性の根拠にしない。
 
 ## 商用利用ゲート
@@ -24,4 +26,4 @@
 
 ## 現在の公開状態
 
-2026-07-18の技術検査では、CC BY 4.0の台東区版「御大名小路辰之口辺図」1件だけをGit除外の`data-raw/`へ取得した。位置合わせ基準点と誤差評価を確定できなかったため、本番ラスタは0件、公開画像・タイル・静的説明ページは0件である。地図版は外部アーカイブへ画像通信せず、CSP、Cookieなし、storageなしを維持する。
+2026-07-18の技術検査では、CC BY 4.0の台東区版「御大名小路辰之口辺図」1件だけをGit除外の`data-raw/`へ取得した。公式根拠でtransform 8点と独立validation 4点を確定できなかったため、rights `approved`、technical `rejected`、publication `shortlisted`とした。本番ラスタは0件、公開画像・タイル・静的説明ページは0件である。地図版は外部アーカイブへ画像通信せず、CSP、Cookieなし、storageなしを維持する。

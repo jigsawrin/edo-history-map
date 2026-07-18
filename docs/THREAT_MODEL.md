@@ -120,6 +120,8 @@ flowchart LR
 
 候補台帳は実行時URLレジストリではなく、調査証跡である。HTTPSの個別資料URLだけを許可し、candidateId・資料URLの重複、10件未満、3機関未満、approvedの商用・再配布・加工・切り抜き・位置合わせ・タイル化フラグ欠落を監査で拒否する。候補approvedだけではpublic配信を許可せず、既存のsource承認、raster定義、manifest、基準点、誤差評価の二重ゲートを維持する。
 
+候補schema v2は権利、技術、公開状態を分離する。権利approvedだけでruntime registryやpublic artifactへ昇格できず、technical approvedとpublication publishedを別に要求する。基準点はrole、公式evidence URL、source approvalを検証し、推測点や独立validationの使い回しによる見かけの精度向上を拒否する。
+
 - 任意URL、query/hash由来raster ID、外部画像originを使わず、固定レジストリの同一originパスだけを解決する。
 - sourceとrasterのapproved二重ゲート、region/era/attribution一致を必須にし、pending/rejectedを拒否する。
 - manifestはXYZ、PNG/lossless WebP、256pxに限定し、絶対パス、`..`、colon、backslash、重複、欠損、orphan、symlink、SVG、HTML、ZIP、JPEG、不正magic bytes・寸法・SHA・bytesを拒否する。

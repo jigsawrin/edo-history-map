@@ -32,6 +32,7 @@ export interface HistoricalRasterDefinition {
   readonly titleJa: string;
   readonly titleEn?: string;
   readonly sheetLabelJa: string;
+  readonly sheetLabelEn?: string;
   readonly sourceId: string;
   readonly attributionId: string;
   readonly localTilePath: string;
@@ -50,6 +51,8 @@ export interface HistoricalRasterDefinition {
   readonly controlPointCount: number;
   readonly estimatedErrorMeters: number | null;
   readonly maximumErrorMeters: number | null;
+  readonly qualityGateVersion?: 1;
+  readonly qualityGatePassed?: boolean;
   readonly sourceDateDisplayJa: string;
   readonly geographicCoverageJa: string;
   readonly georeferenceNoteJa: string;
@@ -82,6 +85,7 @@ export function getApprovedHistoricalRasters(
   const approved = validatedDefinitions.filter(
     (definition) =>
       definition.reviewStatus === "approved" &&
+      definition.qualityGatePassed === true &&
       approvedSources.has(definition.sourceId),
   );
   return Object.freeze(

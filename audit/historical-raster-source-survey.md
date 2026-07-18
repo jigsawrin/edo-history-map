@@ -4,7 +4,9 @@
 
 対象: `edo` / `edo-late`
 
-結論: **15候補・4所蔵機関を調査。権利面approved 13、pending 1、rejected 1。本番導入0。**
+結論: **15候補・4所蔵機関を調査。権利面approved 13、pending 1、rejected 1。本番導入0。候補台帳schema v2で権利・技術・公開状態を分離した。**
+
+`reviewStatus`は後方互換のため残し、`rightsReviewStatus`と同値だけを許可する。`technicalReviewStatus`と`publicationStatus`は独立であり、権利approvedを位置精度approvedや公開済みと解釈しない。対象候補はrights `approved`、technical `rejected`、publication `shortlisted`である。
 
 ## 判定基準
 
@@ -43,7 +45,7 @@ approvedは次をすべて満たす候補だけである。
 | `tokyo-archive-00042226-daimyo-koji-1863` | 東京都立中央図書館 | 大名小路・文久3年改 | PD/open data | high | approved | 初期表示中心、権利明確 |
 | `tokyo-archive-00042700-daimyo-koji-1849` | 東京都立中央図書館 | 大名小路・嘉永2年 | PD/open data | high | approved | 別資料コード・別スキャン |
 | `tokyo-archive-00042236-okuruwauchi-1865` | 東京都立中央図書館 | 御曲輪内大名小路・慶応元年 | PD/open data | high | approved | 初期表示中心、鶴亀版 |
-| `taito-2017-chi-009-daimyo-koji` | 台東区立中央図書館 | 御大名小路辰之口辺図 | CC BY 4.0 | high | approved | 公式IIIF、画像検査済み |
+| `taito-2017-chi-009-daimyo-koji` | 台東区立中央図書館 | 御大名小路辰之口辺図 | CC BY 4.0 | rejected | approved / shortlisted | 公式IIIF、権利合格・位置精度ゲート不合格 |
 | `tokyo-archive-00042235-soto-sakurada-1850` | 東京都立中央図書館 | 外桜田・嘉永3年 | PD/open data | medium | approved | 桜田門・永田町 |
 | `tokyo-archive-00042232-soto-sakurada-1864` | 東京都立中央図書館 | 外桜田・元治元年改 | PD/open data | medium | approved | 同題別版 |
 | `tokyo-archive-00042220-bancho-1864-a` | 東京都立中央図書館 | 番町・資料コード4300035119 | PD/open data | medium | approved | 西側、広範囲 |
@@ -78,4 +80,4 @@ approvedは次をすべて満たす候補だけである。
 - 原本・調査画像: Git除外された`data-raw/`だけ
 - シームレス結合、画像補完、過剰変形: 未実施
 
-権利approvedは「公開位置精度approved」を意味しない。次回は1シートずつ基準点レビューと誤差評価を行い、位置精度ゲートを通ったものだけをHistoricalRasterPackへ昇格する。
+権利approvedは「公開位置精度approved」を意味しない。基準点監査は`taito-daimyo-koji-control-points.md`、技術判定は`taito-daimyo-koji-georeference-review.md`を正本とする。次回も1シートずつ位置精度ゲートを通ったものだけをHistoricalRasterPackへ昇格する。
