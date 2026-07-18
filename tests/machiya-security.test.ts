@@ -75,7 +75,8 @@ describe("町家領域の権利・公開ゲート", () => {
       "cropping_allowed",
       "georeferencing_allowed",
       "tiling_allowed",
-      "sha256_manifest",
+      "original_sha256",
+      "tile_manifest_sha256",
       "未承認歴史画像の公開",
     ]) {
       expect(audit).toContain(field);

@@ -50,6 +50,8 @@ export interface RegionEraDefinition {
   uncertaintyNote: string;
   allowedHistoricalViewModes?: readonly HistoricalViewMode[];
   defaultHistoricalViewMode?: HistoricalViewMode;
+  historicalRasterIds?: readonly string[];
+  defaultHistoricalRasterId?: string;
 }
 
 export interface RegionPack {

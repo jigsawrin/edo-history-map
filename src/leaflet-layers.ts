@@ -7,6 +7,7 @@ import {
 } from "./config";
 import type { HistoricalLayer } from "./historical";
 import type { TransitionLayer } from "./layer-transition";
+import type { HistoricalRasterLayer } from "./historical-raster";
 
 export const MAP_PANES = {
   modernBase: "modern-base-pane",
@@ -175,6 +176,46 @@ export class ModernBaseTransitionLayer implements TransitionLayer {
       durationMs > 0 ? `opacity ${durationMs}ms ease-in-out` : "none";
   }
 }
+
+export class HistoricalRasterTransitionLayer implements TransitionLayer {
+  readonly id: string;
+  readonly #map: L.Map;
+  readonly #historical: HistoricalRasterLayer;
+
+  constructor(map: L.Map, historical: HistoricalRasterLayer) {
+    this.id = `${VISUAL_RASTER_LAYER_ID}:${historical.definition.id}`;
+    this.#map = map;
+    this.#historical = historical;
+  }
+
+  add(): void {
+    this.#historical.activate();
+    if (!this.#map.hasLayer(this.#historical.layer)) {
+      this.#historical.layer.addTo(this.#map);
+    }
+  }
+
+  remove(): void {
+    if (this.#map.hasLayer(this.#historical.layer)) {
+      this.#map.removeLayer(this.#historical.layer);
+    }
+    this.#historical.deactivate();
+  }
+
+  setOpacity(opacity: number): void {
+    this.#historical.setOpacity(opacity);
+  }
+
+  setTransition(durationMs: number): void {
+    const container = this.#historical.layer.getContainer();
+    if (!container) return;
+    if (durationMs > 0) void container.offsetWidth;
+    container.style.transition =
+      durationMs > 0 ? `opacity ${durationMs}ms ease-in-out` : "none";
+  }
+}
+
+const VISUAL_RASTER_LAYER_ID = "historical-raster";
 
 export function createHistoricalPointsTransitionLayer(
   map: L.Map,

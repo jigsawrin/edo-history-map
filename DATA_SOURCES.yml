@@ -61,27 +61,39 @@ sources:
 
   - id: kiriezu-images
     asset_type: historical-raster
-    title: 江戸切絵図(尾張屋版)デジタル画像
-    provider: 国立国会図書館ほか
-    official_source: https://dl.ndl.go.jp/
-    original_item: 切絵図の資料画像
-    license: 未確認(画像単位の公開範囲・転載可否の確認が未完了)
+    title: 江戸切絵図画像候補（包括項目・公開不可）
+    provider: 国立国会図書館
+    official_source: https://ndlsearch.ndl.go.jp/books/R100000002-I000007297269
+    original_item: 大名小路神田橋内内桜田之図（[江戸切絵図]. 1、文久2年、請求記号182-375）
+    bibliographic_id: 000007297269
+    persistent_identifier: https://id.ndl.go.jp/bib/000007297269
+    license: 未確認（正確な資料ページは紙資料の書誌情報のみで、公開画像単位の条件を確認できない）
     license_url: null
     attribution: null
     modification: null
     redistribution_allowed: null
-    accessed_at: "2026-07-15"
+    modification_allowed: null
+    cropping_allowed: null
+    georeferencing_allowed: null
+    tiling_allowed: null
+    historical_period: 文久2年（1862年）
+    geographic_bounds: 未確認（画像未取得）
+    original_sha256: null
+    tile_manifest_sha256: null
+    tile_manifest_path: null
+    review_audit: audit/historical-raster-pilot-review.md
+    accessed_at: "2026-07-18"
     downloaded_at: null
     sha256: null
     local_files: []
     review_status: rejected
     reviewer_note: >-
-      原資料の著作権保護期間は満了していると考えられるが、
-      デジタル画像の利用条件は所蔵機関・画像単位で確認が必要。
-      「インターネット公開」の表示だけでは転載可否を判断できないため、
-      MVP では画像レイヤーを実装せず(historical.ts の
-      addHistoricalImageLayer は常に無効)、権利確認完了後に
-      本台帳へ approved で登録した場合のみ追加可能とする。
+      東京中心部の候補を資料単位で調査し、NDL書誌ID 000007297269を特定した。
+      ただし正確な資料ページは紙資料のみを示し、ログインなしで取得できる
+      デジタル画像、画像単位の公開範囲、再配布・改変・切り抜き・位置合わせ・
+      タイル化の条件を確認できなかった。一般的なNDL転載案内だけでは
+      この画像を承認できないため、画像をダウンロード・Git追跡・Pages公開せず、
+      個別source IDも作成しない。詳細はaudit/historical-raster-pilot-review.md。
 
   - id: codh-edo-machiya-areas
     asset_type: historical-vector

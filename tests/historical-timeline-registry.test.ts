@@ -80,6 +80,36 @@ describe("歴史年表レジストリ", () => {
     expect(source).not.toMatch(/new\s+Date|Date\.parse/u);
   });
 
+  it.each([
+    [1868, 2, 29],
+    [1868, 4, 30],
+  ])("gregorian dayの実在日 %i-%i-%i を許可する", (year, month, day) => {
+    const data = clone();
+    const date = data[34]!.date as Record<string, unknown>;
+    Object.assign(date, { startYear: year, startMonth: month, startDay: day, precision: "day", calendarBasis: "gregorian" });
+    expect(() => parseHistoricalTimeline(data)).not.toThrow();
+  });
+
+  it.each([
+    [1867, 2, 29],
+    [1868, 2, 30],
+    [1868, 4, 31],
+  ])("gregorian dayの不正日 %i-%i-%i を拒否する", (year, month, day) => {
+    const data = clone();
+    const date = data[year === 1867 ? 29 : 34]!.date as Record<string, unknown>;
+    Object.assign(date, { startYear: year, startMonth: month, startDay: day, precision: "day", calendarBasis: "gregorian" });
+    expect(() => parseHistoricalTimeline(data)).toThrow(/グレゴリオ暦日付/u);
+  });
+
+  it("日本旧暦とmixedにはグレゴリオ暦の日数規則を強制しない", () => {
+    for (const calendarBasis of ["japanese-lunisolar", "mixed"] as const) {
+      const data = clone();
+      const date = data[23]!.date as Record<string, unknown>;
+      Object.assign(date, { startMonth: 2, startDay: 30, precision: "day", calendarBasis });
+      expect(() => parseHistoricalTimeline(data)).not.toThrow();
+    }
+  });
+
   it("同一入力の決定的JSONとSHAを再現する", () => {
     const first = JSON.stringify(parseHistoricalTimeline(clone()));
     const second = JSON.stringify(parseHistoricalTimeline(clone()));

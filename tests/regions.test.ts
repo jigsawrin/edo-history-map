@@ -4,6 +4,8 @@ import { EDO_REGION_PACK } from "../src/regions/edo";
 import { KYOTO_REGION_PACK } from "../src/regions/kyoto";
 import { RegionRegistry } from "../src/regions/registry";
 import type { RegionPack } from "../src/regions/types";
+import { datasetRegistry } from "../src/datasets";
+import { rasterDefinition as raster } from "./fixtures/historical-raster-definition";
 
 function pack(overrides: Partial<RegionPack["region"]> = {}): RegionPack {
   return {
@@ -85,6 +87,56 @@ describe("RegionRegistry", () => {
     ).toEqual(["project-kyoto-bakumatsu-places"]);
     expect(registry.getEraBinding("kyoto", "edo-late")).toBeNull();
     expect(registry.getEraBinding("edo", "bakumatsu")).toBeNull();
+    expect(registry.enabled().flatMap((item) => item.eras).every((binding) => binding.historicalRasterIds === undefined && binding.defaultHistoricalRasterId === undefined)).toBe(true);
+    expect(registry.enabled().flatMap((item) => item.eras).every((binding) => !binding.allowedHistoricalViewModes?.includes("historical-map"))).toBe(true);
+  });
+
+  it("approved古地図IDをregion・era・sourceの二重ゲートで接続する", () => {
+    const source = withEra(pack({ defaultEraId: "edo-late", enabledEraIds: ["edo-late"] }), {
+      eraId: "edo-late", baseMode: "reconstructed", visualLayers: ["historical-raster"],
+      allowedHistoricalViewModes: ["historical-map"], defaultHistoricalViewMode: "historical-map",
+      historicalRasterIds: ["project-grid"], defaultHistoricalRasterId: "project-grid",
+    });
+    const definition = raster({ regionId: "fixture" });
+    const registry = new RegionRegistry([source], eraRegistry, "fixture", datasetRegistry, [definition], [definition.sourceId]);
+    expect(registry.getEraBinding("fixture", "edo-late")?.historicalRasterIds).toEqual(["project-grid"]);
+    expect(Object.isFrozen(registry.getEraBinding("fixture", "edo-late")?.historicalRasterIds)).toBe(true);
+  });
+
+  it.each([
+    ["pending", raster({ regionId: "fixture", reviewStatus: "pending" }), ["project-generated-fixture"]],
+    ["rejected", raster({ regionId: "fixture", reviewStatus: "rejected" }), ["project-generated-fixture"]],
+    ["source不一致", raster({ regionId: "fixture" }), []],
+    ["region不一致", raster(), ["project-generated-fixture"]],
+    ["era不一致", raster({ regionId: "fixture", eraId: "modern" }), ["project-generated-fixture"]],
+  ])("%s古地図参照を拒否する", (_label, definition, approvedSources) => {
+    const source = withEra(pack({ defaultEraId: "edo-late", enabledEraIds: ["edo-late"] }), {
+      eraId: "edo-late", baseMode: "reconstructed", visualLayers: ["historical-raster"],
+      allowedHistoricalViewModes: ["historical-map"], defaultHistoricalViewMode: "historical-map",
+      historicalRasterIds: ["project-grid"], defaultHistoricalRasterId: "project-grid",
+    });
+    expect(() => new RegionRegistry([source], eraRegistry, "fixture", datasetRegistry, [definition], approvedSources)).toThrow(/未承認|地域または年代/u);
+  });
+
+  it("古地図ID重複・default配列外・古地図なしhistorical-mapを拒否する", () => {
+    const base = pack({ defaultEraId: "edo-late", enabledEraIds: ["edo-late"] });
+    for (const overrides of [
+      { historicalRasterIds: ["project-grid", "project-grid"], defaultHistoricalRasterId: "project-grid" },
+      { historicalRasterIds: ["project-grid"], defaultHistoricalRasterId: "missing" },
+    ]) {
+      const source = withEra(base, {
+        eraId: "edo-late", baseMode: "reconstructed", visualLayers: ["historical-raster"],
+        allowedHistoricalViewModes: ["historical-map"], defaultHistoricalViewMode: "historical-map", ...overrides,
+      });
+      const definition = raster({ regionId: "fixture" });
+      expect(() => new RegionRegistry([source], eraRegistry, "fixture", datasetRegistry, [definition], [definition.sourceId])).toThrow(/古地図/u);
+    }
+    const withoutRaster = withEra(base, {
+      eraId: "edo-late", baseMode: "reconstructed", visualLayers: ["historical-raster"],
+      allowedHistoricalViewModes: ["historical-map"], defaultHistoricalViewMode: "historical-map",
+    });
+    const definition = raster({ regionId: "fixture" });
+    expect(() => new RegionRegistry([withoutRaster], eraRegistry, "fixture", datasetRegistry, [definition], [definition.sourceId])).toThrow(/古地図/u);
   });
 
   it("重複地域IDを拒否する", () => {

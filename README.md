@@ -210,6 +210,7 @@ URL、Cookie、ブラウザストレージへ保存しません。
 - [docs/HISTORICAL_THEMES.md](docs/HISTORICAL_THEMES.md) — 歴史テーマの採用原則、地図UI、静的索引、更新手順
 - [docs/HISTORICAL_TIMELINE.md](docs/HISTORICAL_TIMELINE.md) — 歴史年表の日付モデル、採用原則、地図UI、静的ページ
 - [docs/HISTORICAL_BASEMAP.md](docs/HISTORICAL_BASEMAP.md) — 年代・pane・歴史画像の安全な拡張設計
+- [docs/HISTORICAL_RASTER_PACKS.md](docs/HISTORICAL_RASTER_PACKS.md) — 1シート単位の古地図ラスターパック、権利・manifest・位置誤差監査
 - [docs/REGION_PACKS.md](docs/REGION_PACKS.md) — 地域パックの構造と安全な追加手順
 - [docs/BROWSER_QA.md](docs/BROWSER_QA.md) — Canvas操作とPagesキャッシュの実ブラウザ確認手順
 
@@ -219,3 +220,16 @@ URL、Cookie、ブラウザストレージへ保存しません。
 [MIT License](LICENSE) です。
 第三者の地図タイル・データ・ライブラリには適用されません
 (各提供元の条件に従います)。
+
+## 古地図ラスターパック基盤
+
+将来、権利確認済みの古地図画像を1シートずつ同じLeaflet地図へ同期表示するための
+基盤を備えています。シートごとの範囲、変換方式、基準点、誤差、歪み、境界方針、
+出典、加工履歴を固定metadataとmanifestで監査します。複数シートを見た目だけで
+一枚に接続したり、隙間をAI画像や推定道路で補完したりしません。
+
+2026-07-18時点では候補画像の画像単位の取得・再配布・加工・タイル化条件を確認できず、
+公開画像は0件です。承認source一覧と実行時レジストリは空で、既存の江戸後期、京都、
+滋賀のUIに空の古地図操作は表示されません。検証にはプロジェクトが決定的に生成する
+テスト専用格子PNGを使い、fixtureは`dist/`やPages artifactへ含めません。古地図選択、
+不透明度、読込状態はURL、Cookie、localStorage、sessionStorage、IndexedDBへ保存しません。

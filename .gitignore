@@ -42,9 +42,11 @@ audit/*
 !audit/shiga-sengoku-place-review.md
 !audit/historical-theme-review.md
 !audit/historical-timeline-review.md
+!audit/historical-raster-pilot-review.md
 
 # 原データ(公式配布元から取得する。リポジトリで再配布しない)
 data-raw/
+data-derived/
 
 # 危険・不要な拡張子(そもそも置かないこと)
 *.exe

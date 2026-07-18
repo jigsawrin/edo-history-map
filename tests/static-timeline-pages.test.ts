@@ -40,9 +40,13 @@ describe("静的歴史年表生成", () => {
     const top = generated.files.get("index.html") ?? ""; expect(top).toContain("大きな空白"); expect(top).toContain("連続的・網羅的"); expect(top).toContain("JavaScript");
   });
 
-  it("旧暦の月日をdatetimeへ入れず年精度だけを機械可読化する", () => {
+  it("yearだけを機械可読化しcirca・旧暦・mixedの月日へdatetimeを付けない", () => {
     const kyoto = generated.files.get("kyoto-bakumatsu/index.html") ?? ""; const shiga = generated.files.get("shiga-sengoku/index.html") ?? "";
     expect(kyoto).not.toContain('datetime="1864-06-05"'); expect(kyoto).toContain("グレゴリオ暦へ換算していません"); expect(shiga).toContain('<time datetime="1571">元亀2年（1571年）</time>');
+    expect(shiga).toContain("<span>永禄3年（1560年）頃</span>");
+    expect(shiga).not.toContain('datetime="1560"');
+    expect(Object.values(generated.placeUpdates).join("")).not.toContain('datetime="1560"');
+    expect([...generated.themeUpdates.values()].join("")).not.toContain('datetime="1560"');
   });
 
   it("全アンカー・地点リンク・テーマリンク・前後リンクを固定内部リンクで出力する", () => {

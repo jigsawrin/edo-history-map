@@ -25,10 +25,12 @@ describe("公開ワークフローの退行防止", () => {
     const source = workflow("ci.yml");
     const build = source.indexOf("run: npm run build");
     const staticAudit = source.indexOf("run: npm run audit:static-links");
+    const rasterAudit = source.indexOf("run: npm run audit:historical-rasters");
     const audit = source.indexOf("run: npm run audit:prepublish");
     expect(build).toBeGreaterThanOrEqual(0);
     expect(staticAudit).toBeGreaterThan(build);
-    expect(audit).toBeGreaterThan(staticAudit);
+    expect(rasterAudit).toBeGreaterThan(staticAudit);
+    expect(audit).toBeGreaterThan(rasterAudit);
   });
 
   it("CodeQLのJavaScript解析も静的一覧を生成してリンク監査する", () => {
@@ -36,9 +38,13 @@ describe("公開ワークフローの退行防止", () => {
     const install = source.indexOf("run: npm ci --ignore-scripts");
     const build = source.indexOf("run: npm run build");
     const staticAudit = source.indexOf("run: npm run audit:static-links");
+    const rasterAudit = source.indexOf("run: npm run audit:historical-rasters");
+    const fixtureAudit = source.indexOf("run: npm run verify:historical-raster-package");
     expect(install).toBeGreaterThanOrEqual(0);
     expect(build).toBeGreaterThan(install);
     expect(staticAudit).toBeGreaterThan(build);
+    expect(fixtureAudit).toBeGreaterThan(install);
+    expect(rasterAudit).toBeGreaterThan(staticAudit);
     expect(source).toContain("if: matrix.language == 'javascript-typescript'");
   });
 
@@ -48,9 +54,11 @@ describe("公開ワークフローの退行防止", () => {
       "run: npm ci --ignore-scripts",
       "run: npm run lint",
       "run: npm run typecheck",
+      "run: npm run verify:historical-raster-package",
       "run: npm test",
       "run: npm run build",
       "run: npm run audit:static-links",
+      "run: npm run audit:historical-rasters",
       "run: npm audit --audit-level=high",
       "run: npm run audit:prepublish",
     ];

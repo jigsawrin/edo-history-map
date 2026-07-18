@@ -115,3 +115,13 @@ flowchart LR
   効かないため、X-Frame-Options 相当の保護は限定的)。
 - タイル要求から表示地域(現在地表示中はその周辺)がタイル提供者に
   伝わること(地図サービスの性質上不可避。プライバシー文書に明示)。
+
+## 古地図ラスターパックの脅威と対策
+
+- 任意URL、query/hash由来raster ID、外部画像originを使わず、固定レジストリの同一originパスだけを解決する。
+- sourceとrasterのapproved二重ゲート、region/era/attribution一致を必須にし、pending/rejectedを拒否する。
+- manifestはXYZ、PNG/lossless WebP、256pxに限定し、絶対パス、`..`、colon、backslash、重複、欠損、orphan、symlink、SVG、HTML、ZIP、JPEG、不正magic bytes・寸法・SHA・bytesを拒否する。
+- 個別5MiB、総100MiB、2万タイル、zoom 22を上限とし、ZIPを扱わないことで展開爆弾経路を持たない。
+- 原本と一時加工物はGit除外し、approvedタイルと小さな監査metadataだけを公開候補にする。
+- manifestはメモリ内Promiseで再利用し、地域tokenと古地図世代番号で古い非同期完了を破棄する。Service Worker、storage、blob URLは使わない。
+- 原本の不適切表現は画像改変や自動置換をせず、文脈注意を別テキストで表示する。

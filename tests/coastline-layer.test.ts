@@ -44,6 +44,7 @@ describe("江戸末期海岸線Leafletレイヤー", () => {
 
   it("現代では非表示、歴史・比較モードは既定ON、pointsは既定OFFにする", () => {
     expect(defaultCoastlineVisibilityForView("reconstructed")).toBe(true);
+    expect(defaultCoastlineVisibilityForView("historical-map")).toBe(true);
     expect(defaultCoastlineVisibilityForView("compare")).toBe(true);
     expect(defaultCoastlineVisibilityForView("points")).toBe(false);
     expect(shouldShowCoastline({ isHistorical: false, layerAvailable: true, registryEnabled: true, selected: true })).toBe(false);

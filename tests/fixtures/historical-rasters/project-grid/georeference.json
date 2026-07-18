@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "rasterId": "project-grid",
+  "method": "projective",
+  "controlPointCount": 4,
+  "software": "プロジェクト内決定的fixture生成器",
+  "softwareVersion": "1",
+  "meanErrorMeters": 0,
+  "medianErrorMeters": 0,
+  "maximumErrorMeters": 0,
+  "geographicCoverageJa": "テスト専用の架空格子範囲",
+  "distortionNoteJa": "実在する古地図ではなく、歪み検証用の自作格子です。",
+  "adjacentSheetNoteJa": "2タイルの境界だけを検証し、実在シートとの関係はありません。",
+  "controlPointsSha256": "e0ec576889238c855bd626c4e08130d7fbd7d867676820764f3ecda1a4bc96ac",
+  "transformationParametersSha256": "ff77ec2ce91ae479a62abacabcb82f09a8775bef8c74c8ebf4198918fdb60d56"
+}

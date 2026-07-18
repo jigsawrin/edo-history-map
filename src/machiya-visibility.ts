@@ -1,4 +1,6 @@
-export type HistoricalViewMode = "reconstructed" | "compare" | "points";
+import type { HistoricalViewMode } from "./eras";
+
+export type { HistoricalViewMode } from "./eras";
 
 export function defaultMachiyaVisibilityForView(
   view: HistoricalViewMode,

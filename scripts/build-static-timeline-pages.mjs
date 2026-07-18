@@ -39,6 +39,9 @@ function safeText(value, label, max = 240) { if (typeof value !== "string" || !v
 function safeSource(source) { const url = new URL(source.url); if (url.protocol !== "https:" || url.username || url.password || !SOURCE_ORIGINS.has(url.origin)) fail("年表出典URLが許可リスト外です"); return url.href; }
 function sourceTitle(source) { return `${source.publisher ?? source.providerJa}「${source.title ?? source.titleJa}」`;
 }
+function isGregorianLeapYear(year) { return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0); }
+function gregorianDaysInMonth(year, month) { if (month === 2) return isGregorianLeapYear(year) ? 29 : 28; return [4, 6, 9, 11].includes(month) ? 30 : 31; }
+function validateGregorianDay(date, label) { if (date.startDay > gregorianDaysInMonth(date.startYear, date.startMonth)) fail(`${label}は実在しないグレゴリオ暦日付です`); }
 
 export function validateTimelineData(raw, context) {
   if (!Array.isArray(raw) || raw.length < 24 || raw.length > 50) fail("年表項目数が24から50件ではありません");
@@ -62,6 +65,7 @@ export function validateTimelineData(raw, context) {
     if (["year", "circa"].includes(date.precision) && (date.startMonth !== undefined || date.endYear !== undefined)) fail(`${entry.id}の年精度が不整合です`);
     if (date.precision === "range" && !Number.isInteger(date.endYear)) fail(`${entry.id}の期間終了がありません`);
     if (Number.isInteger(date.endYear) && date.endYear < date.startYear) fail(`${entry.id}の期間が逆転しています`);
+    if (date.calendarBasis === "gregorian" && date.precision === "day") validateGregorianDay(date, `${entry.id}.date`);
     safeText(entry.titleJa, `${entry.id}.titleJa`, 100); safeText(entry.summaryJa, `${entry.id}.summaryJa`, 240);
     if (!Array.isArray(entry.relatedThemeIds) || entry.relatedThemeIds.length === 0 || new Set(entry.relatedThemeIds).size !== entry.relatedThemeIds.length || entry.relatedThemeIds.some((id) => !themeIds.has(id))) fail(`${entry.id}のテーマ参照が不正です`);
     if (!Array.isArray(entry.relatedPlaces) || entry.relatedPlaces.length === 0) fail(`${entry.id}に関連地点がありません`);
@@ -86,7 +90,7 @@ function documentPage({ title, description, canonical, cssHref, body }) {
 function header(depth, current) { const root = depth === 0 ? "./" : "../"; return `<header class="site-header"><p class="site-title"><a href="${root}">歴史年表</a></p><nav class="global-nav" aria-label="歴史年表の主要ナビゲーション"><a href="${root}"${current === "top" ? ' aria-current="page"' : ""}>年表トップ</a><a href="${root}shiga-sengoku/"${current === "shiga-sengoku" ? ' aria-current="page"' : ""}>滋賀・戦国</a><a href="${root}kyoto-bakumatsu/"${current === "kyoto-bakumatsu" ? ' aria-current="page"' : ""}>京都・幕末</a><a href="${root}../themes/">テーマ索引</a><a href="${root}../places/">地点一覧</a><a href="${root}../">地図版</a></nav></header>`; }
 function footer() { return `<footer class="site-footer"><p>この年表は収録地点から確認できる出来事だけを掲載し、日本史全体を連続的・網羅的に示すものではありません。JavaScript、フォーム、Cookie、storage、外部画像、外部フォントを使用しません。</p></footer>`; }
 function machineDate(date) {
-  if (date.precision === "year" || date.precision === "circa") return `<time datetime="${date.startYear}">${escapeHtml(date.displayJa)}</time>`;
+  if (date.precision === "year") return `<time datetime="${date.startYear}">${escapeHtml(date.displayJa)}</time>`;
   if (date.precision === "month" && date.calendarBasis === "gregorian") return `<time datetime="${date.startYear}-${String(date.startMonth).padStart(2, "0")}">${escapeHtml(date.displayJa)}</time>`;
   if (date.precision === "day" && date.calendarBasis === "gregorian") return `<time datetime="${date.startYear}-${String(date.startMonth).padStart(2, "0")}-${String(date.startDay).padStart(2, "0")}">${escapeHtml(date.displayJa)}</time>`;
   return `<span>${escapeHtml(date.displayJa)}</span>`;
@@ -117,7 +121,7 @@ function insertPlaceBacklinks(html, track, entries) {
   for (const placeId of placeIds) {
     const related = entries.filter((entry) => entry.relatedPlaces.some((reference) => reference.placeId === placeId)).slice(0, 5);
     const marker = `<article id="${meta.placeAnchor}${placeId}"`; const start = output.indexOf(marker); if (start < 0) fail(`年表逆リンク対象の地点アンカーがありません: ${placeId}`); const end = output.indexOf("</article>", start);
-    const links = related.map((entry) => { const reference = entry.relatedPlaces.find((item) => item.placeId === placeId); return `<li>${escapeHtml(entry.date.displayJa)}：<a href="../../timeline/${track}/#${entry.id}">${escapeHtml(entry.titleJa)}</a><p>${escapeHtml(reference.relationSummaryJa)}</p></li>`; }).join("");
+    const links = related.map((entry) => { const reference = entry.relatedPlaces.find((item) => item.placeId === placeId); return `<li>${machineDate(entry.date)}：<a href="../../timeline/${track}/#${entry.id}">${escapeHtml(entry.titleJa)}</a><p>${escapeHtml(reference.relationSummaryJa)}</p></li>`; }).join("");
     output = `${output.slice(0, end)}<section class="related-timeline" aria-labelledby="related-timeline-${placeId}"><h4 id="related-timeline-${placeId}">関連する歴史年表</h4><ul>${links}</ul></section>${output.slice(end)}`; count += related.length;
   }
   return { html: output, count };
@@ -126,7 +130,7 @@ function insertThemeBacklinks(html, theme, entries) {
   const related = entries.filter((entry) => entry.relatedThemeIds.includes(theme.id));
   const cleaned = html.replace(/<section class="related-timeline"[\s\S]*?<\/section>/gu, ""); if (related.length === 0) return { html: cleaned, count: 0 };
   const marker = '<nav class="theme-nav"'; const index = cleaned.indexOf(marker); if (index < 0) fail(`テーマページの挿入位置がありません: ${theme.id}`);
-  const links = related.map((entry) => `<li>${escapeHtml(entry.date.displayJa)}：<a href="../../../timeline/${entry.track}/#${entry.id}">${escapeHtml(entry.titleJa)}</a>（${escapeHtml(TRACK_META[entry.track].label)}）</li>`).join("");
+  const links = related.map((entry) => `<li>${machineDate(entry.date)}：<a href="../../../timeline/${entry.track}/#${entry.id}">${escapeHtml(entry.titleJa)}</a>（${escapeHtml(TRACK_META[entry.track].label)}）</li>`).join("");
   return { html: `${cleaned.slice(0, index)}<section class="related-timeline"><h2>関連する歴史年表</h2><ul>${links}</ul></section>${cleaned.slice(index)}`, count: related.length };
 }
 

@@ -85,9 +85,10 @@ describe("歴史基図統合の退行防止", () => {
       "cropping_allowed",
       "georeferencing_allowed",
       "tiling_allowed",
-      "sha256",
-      "sha256_manifest",
-      "era_id",
+      "original_sha256",
+      "tile_manifest_sha256",
+      "tile_manifest_path",
+      "eraId",
       "geographic_bounds",
     ]) {
       expect(audit).toContain(field);
