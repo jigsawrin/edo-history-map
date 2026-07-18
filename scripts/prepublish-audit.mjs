@@ -26,6 +26,7 @@ import { auditStaticPlaceLinks } from "./audit-static-place-links.mjs";
 import { validateHistoricalThemeData } from "./build-static-theme-pages.mjs";
 import { validateTimelineData } from "./build-static-timeline-pages.mjs";
 import { auditHistoricalRasterRepository } from "./audit-historical-rasters.mjs";
+import { auditHistoricalRasterCandidateRepository, summarizeHistoricalRasterCandidates } from "./historical-raster-candidates.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -138,6 +139,10 @@ const ALLOWED_HOSTS = new Set([
   "ndlsearch.ndl.go.jp",
   "id.ndl.go.jp",
   "archive.library.metro.tokyo.jp",
+  "archive.library.metro.tokyo.lg.jp",
+  "adeac.jp",
+  "iiif.adeac.jp",
+  "www.digital.archives.go.jp",
   "github.com",
   "jigsawrin.github.io",
   "registry.npmjs.org",
@@ -204,6 +209,8 @@ const SHIGA_CURATION_FILE = "data-curation/shiga-sengoku-places.json";
 const SHIGA_PUBLIC_FILE = "public/data/shiga-sengoku-places.geojson";
 const HISTORICAL_THEME_CURATION_FILE = "data-curation/historical-themes.json";
 const HISTORICAL_TIMELINE_CURATION_FILE = "data-curation/historical-timeline.json";
+const HISTORICAL_RASTER_CANDIDATE_CURATION_FILE =
+  "data-curation/historical-raster-candidates.json";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -1191,7 +1198,16 @@ for (const file of allFiles) {
   if (lower.endsWith(".map")) {
     addFinding("error", "ソースマップ露出", file.rel, 0, "source mapは公開・追跡禁止です");
   }
-  if (lower.startsWith("data-curation/") && ![KYOTO_CURATION_FILE, SHIGA_CURATION_FILE, HISTORICAL_THEME_CURATION_FILE, HISTORICAL_TIMELINE_CURATION_FILE].includes(file.rel)) {
+  if (
+    lower.startsWith("data-curation/") &&
+    ![
+      KYOTO_CURATION_FILE,
+      SHIGA_CURATION_FILE,
+      HISTORICAL_THEME_CURATION_FILE,
+      HISTORICAL_TIMELINE_CURATION_FILE,
+      HISTORICAL_RASTER_CANDIDATE_CURATION_FILE,
+    ].includes(file.rel)
+  ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
   }
   if (
@@ -1480,6 +1496,15 @@ for (const message of historicalRasterAudit.errors) {
 }
 infos.push(...historicalRasterAudit.infos.map((message) => `古地図ラスタ: ${message}`));
 
+const historicalRasterCandidateAudit = auditHistoricalRasterCandidateRepository(ROOT);
+for (const message of historicalRasterCandidateAudit.errors) {
+  addFinding("error", "古地図候補台帳", "data-curation/historical-raster-candidates.json", 0, message);
+}
+if (historicalRasterCandidateAudit.registry) {
+  const summary = summarizeHistoricalRasterCandidates(historicalRasterCandidateAudit.registry);
+  infos.push(`古地図候補: ${summary.total}件、${summary.institutions}機関、approved ${summary.approved}、pending ${summary.pending}、rejected ${summary.rejected}`);
+}
+
 // ---- 4. 出典表示の確認 -------------------------------------------------------
 
 const attrChecks = [
@@ -1647,7 +1672,7 @@ if (historyNames !== null) {
 
 // 追跡ファイルと .gitignore の整合(追跡中の除外対象がないか)
 for (const t of tracked) {
-  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && !["audit/shiga-sengoku-place-review.md", "audit/historical-theme-review.md", "audit/historical-timeline-review.md", "audit/historical-raster-pilot-review.md"].includes(t))) {
+  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && !["audit/shiga-sengoku-place-review.md", "audit/historical-theme-review.md", "audit/historical-timeline-review.md", "audit/historical-raster-pilot-review.md", "audit/historical-raster-source-survey.md", "audit/historical-raster-first-import.md"].includes(t))) {
     addFinding("error", "追跡対象違反", t, 0, "公開対象外ファイルが Git 追跡されています");
   }
 }

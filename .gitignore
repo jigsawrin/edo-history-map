@@ -43,6 +43,8 @@ audit/*
 !audit/historical-theme-review.md
 !audit/historical-timeline-review.md
 !audit/historical-raster-pilot-review.md
+!audit/historical-raster-source-survey.md
+!audit/historical-raster-first-import.md
 
 # 原データ(公式配布元から取得する。リポジトリで再配布しない)
 data-raw/
