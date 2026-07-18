@@ -29,9 +29,11 @@
 - bytes: 819,585
 - width × height: 4,908 × 3,472 px
 - SHA-256: `415562a866a568c9f68b9e520baab40157654a38fd7d74170abf4da739007353`
-- pixel format: 24-bit RGB
-- EXIF property数: 2
+- JPEG marker: progressive DCT、8-bit、3 components、JFIF 1.02
+- color space: YCbCr（JFIFからの推定）
+- EXIF / XMP / orientation: なし
 - ICC profile: なし
+- 埋め込みサムネイル: なし
 - ログイン・paywall: なし
 
 ## 目視検査
@@ -45,7 +47,9 @@
 
 ## 位置合わせ検査
 
-- control points JSON: 未作成
+- control points候補監査: `audit/taito-daimyo-koji-control-points.md`
+- georeference技術監査: `audit/taito-daimyo-koji-georeference-review.md`
+- control points本番JSON: 未作成
 - 確定基準点数: 0
 - 変換方式: 未決定
 - 使用ソフト: 未使用
@@ -57,7 +61,7 @@
 - tile形式・zoom・tile数・総容量: 未算出
 - tile manifest SHA: 該当なし
 
-門・堀・橋の候補を目視できるだけではapprovedにしない。現存性、移設の有無、現代座標の一次根拠を確認し、画像四隅付近を含む分散、変換に使わない検証点、残差の平均・中央値・最大値を揃える必要がある。raw JPEGの容量はlossless PNG/WebPタイル容量の予測値には使わない。
+15候補を公式資料で検討したが、transformへ昇格できる点0、独立validationへ昇格できる点0だった。門・堀・橋の候補を目視できるだけではapprovedにしない。現存性、移設の有無、現代座標の一次根拠を確認し、画像四隅付近を含む分散、変換に使わない検証点、残差の平均・中央値・P90・最大値を揃える必要がある。raw JPEGの容量はlossless PNG/WebPタイル容量の予測値には使わない。
 
 ## 導入見送りの理由
 

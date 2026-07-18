@@ -6,6 +6,7 @@ import {
   loadHistoricalRasterCandidateRegistry,
   summarizeHistoricalRasterCandidates,
   validateHistoricalRasterCandidateRegistry,
+  migrateHistoricalRasterCandidateRegistryV1,
 } from "../scripts/historical-raster-candidates.mjs";
 
 const ROOT = join(__dirname, "..");
@@ -23,6 +24,33 @@ describe("古地図候補台帳", () => {
       rejected: 1,
       commercialUseCompatible: 13,
     });
+  });
+
+  it("schema v2で権利・技術・公開状態を分離し、対象だけshortlistedの技術不合格にする", () => {
+    const registry = loadHistoricalRasterCandidateRegistry(ROOT);
+    expect(registry.schemaVersion).toBe(2);
+    const target = registry.candidates.find((candidate) => candidate.candidateId === "taito-2017-chi-009-daimyo-koji");
+    expect(target).toMatchObject({ reviewStatus: "approved", rightsReviewStatus: "approved", technicalReviewStatus: "rejected", publicationStatus: "shortlisted" });
+  });
+
+  it("v1を後方互換aliasつきv2へ明示移行する", () => {
+    const v1 = structuredClone(RAW) as Record<string, unknown>;
+    v1.schemaVersion = 1;
+    for (const candidate of v1.candidates as Record<string, unknown>[]) {
+      delete candidate.rightsReviewStatus; delete candidate.technicalReviewStatus; delete candidate.publicationStatus;
+    }
+    const migrated = migrateHistoricalRasterCandidateRegistryV1(v1) as typeof RAW;
+    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.candidates[0]).toMatchObject({ rightsReviewStatus: migrated.candidates[0]!.reviewStatus, technicalReviewStatus: "not-started", publicationStatus: "candidate" });
+    expect(() => validateHistoricalRasterCandidateRegistry(v1)).not.toThrow();
+  });
+
+  it("publishedにはrights/technicalの両approvedを要求し、shortlistedは本番rasterを要求しない", () => {
+    const data = clone(); const candidate = (data.candidates as Record<string, unknown>[])[0]!;
+    candidate.publicationStatus = "published"; candidate.technicalReviewStatus = "in-review";
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).toThrow(/published/u);
+    candidate.publicationStatus = "shortlisted";
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).not.toThrow();
   });
 
   it("approvedは商用・再配布・加工・切り抜き・位置合わせ・タイル化の二重ゲートを満たす", () => {
