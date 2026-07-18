@@ -118,6 +118,26 @@ function compareDateParts(
   return 0;
 }
 
+function isGregorianLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+function gregorianDaysInMonth(year: number, month: number): number {
+  if (month === 2) return isGregorianLeapYear(year) ? 29 : 28;
+  return [4, 6, 9, 11].includes(month) ? 30 : 31;
+}
+
+function validateGregorianDay(
+  year: number,
+  month: number,
+  day: number,
+  label: string,
+): void {
+  if (day > gregorianDaysInMonth(year, month)) {
+    throw new Error(`${label}は実在しないグレゴリオ暦日付です`);
+  }
+}
+
 function parseDate(value: unknown, label: string): HistoricalTimelineDate {
   assertPlainObject(value, label, DATE_KEYS);
   const startYear = integer(value.startYear, `${label}.startYear`, 1467, 1868);
@@ -138,6 +158,14 @@ function parseDate(value: unknown, label: string): HistoricalTimelineDate {
   if (endYear !== undefined && compareDateParts([startYear, startMonth, startDay], [endYear, endMonth, endDay]) > 0) throw new Error(`${label}の終了が開始より前です`);
   const calendarBasis = requiredText(value.calendarBasis, `${label}.calendarBasis`, 30);
   if (!(HISTORICAL_TIMELINE_CALENDAR_BASES as readonly string[]).includes(calendarBasis)) throw new Error(`${label}.calendarBasisが不正です`);
+  if (
+    calendarBasis === "gregorian" &&
+    precision === "day" &&
+    startMonth !== undefined &&
+    startDay !== undefined
+  ) {
+    validateGregorianDay(startYear, startMonth, startDay, label);
+  }
   const noteJa = optionalText(value.noteJa, `${label}.noteJa`, 180);
   return Object.freeze({
     displayJa: requiredText(value.displayJa, `${label}.displayJa`, 100), startYear,

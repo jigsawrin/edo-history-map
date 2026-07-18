@@ -72,3 +72,13 @@
 新地域ではRegionRegistry、URL、地域UI、中心・ズーム、現在地保持、地域別レイヤー・出典、非同期競合、重複fetch、失敗後再試行、アクセシビリティのテストを追加します。公開前には個別のライセンスと位置精度を再確認し、ブラウザ手動QAも別途実施します。
 
 既存の `edo-places.geojson` は公開URLと内容を維持するため `sourceId` を後付けしません。この1ファイルに限り、固定SHA、approved ID、固定パス、各FeatureのCODH公式`source` URLを組み合わせて同一性を検証します。新規データは固定`sourceId`を必須とします。
+
+## 古地図ラスタとの接続
+
+`RegionEraDefinition`の`historicalRasterIds`と`defaultHistoricalRasterId`は、承認済み画像がある年代だけ
+同時に定義する。ID重複、default配列外、存在しないID、region/era/source/attribution不一致、
+pending/rejected、古地図なしの`historical-map`をRegistryが拒否する。複数IDは配列と固定priorityで扱うが、
+同時合成はせず利用者が1シートを選ぶ。選択で中心・zoomを自動変更せず、既存地域の初期表示を維持する。
+
+現在の江戸後期は古地図参照を持たず`reconstructed`のままで、京都・滋賀にも古地図設定はない。
+東京8,788地点の整理・再分類はこの仕組みと別フェーズである。

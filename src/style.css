@@ -82,6 +82,30 @@ body {
   display: contents;
 }
 
+.historical-raster-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.7rem;
+  min-width: min(100%, 28rem);
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.historical-raster-controls legend {
+  padding: 0 0.25rem;
+  font-weight: 700;
+}
+
+.historical-raster-details,
+#historical-raster-status {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
 .machiya-controls {
   display: flex;
   flex-wrap: wrap;

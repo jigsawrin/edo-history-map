@@ -36,7 +36,7 @@ import {
 import { ATTRIBUTION_REGISTRY } from "./attribution-registry";
 import { datasetRegistry, type ApprovedDatasetId } from "./datasets";
 import { regionRegistry } from "./regions/registry";
-import type { RegionPack } from "./regions/types";
+import type { RegionEraDefinition, RegionPack } from "./regions/types";
 import { PlaceSearchController } from "./place-search/controller";
 import { HistoricalThemeController } from "./historical-theme-controller";
 import type { HistoricalThemePlaceReference } from "./historical-theme-registry";
@@ -71,7 +71,15 @@ import {
   LeafletTransitionLayer,
   MAP_PANES,
   ModernBaseTransitionLayer,
+  HistoricalRasterTransitionLayer,
 } from "./leaflet-layers";
+import {
+  HistoricalRasterManifestCache,
+  createHistoricalRasterLayer,
+  getApprovedHistoricalRasters,
+  type HistoricalRasterDefinition,
+  type HistoricalRasterLayer,
+} from "./historical-raster";
 
 const ERA_TRANSITION_MS = 220;
 
@@ -170,6 +178,14 @@ function main(): void {
   const machiyaAreaControls = byId<HTMLElement>("machiya-area-controls");
   const pointsOpacityControl = byId<HTMLElement>("points-opacity-control");
   const baseOpacityControl = byId<HTMLElement>("base-opacity-control");
+  const historicalRasterControls = byId<HTMLFieldSetElement>("historical-raster-controls");
+  const historicalRasterSheetControl = byId<HTMLElement>("historical-raster-sheet-control");
+  const historicalRasterSelect = byId<HTMLSelectElement>("historical-raster-select");
+  const historicalRasterOpacity = byId<HTMLInputElement>("historical-raster-opacity");
+  const historicalRasterOpacityValue = byId<HTMLOutputElement>("historical-raster-opacity-value");
+  const historicalRasterStatus = byId<HTMLElement>("historical-raster-status");
+  const historicalRasterDetails = byId<HTMLElement>("historical-raster-details");
+  const historicalOriginalNote = byId<HTMLElement>("historical-original-note");
   const infoCard = byId<HTMLElement>("info-card");
   const placeSearchContainer = byId<HTMLElement>("place-search-control");
   const placeSearchOpen = byId<HTMLButtonElement>("place-search-open");
@@ -206,6 +222,14 @@ function main(): void {
   let historicalPointsLayer: TransitionLayer | null = null;
   let machiyaLayer: MachiyaAreaTransitionLayer | null = null;
   let coastlineLayer: CoastlineTransitionLayer | null = null;
+  let activeHistoricalRaster: {
+    readonly historical: HistoricalRasterLayer;
+    readonly transition: HistoricalRasterTransitionLayer;
+  } | null = null;
+  const rasterManifestCache = new HistoricalRasterManifestCache();
+  let rasterRequestGeneration = 0;
+  let rasterRequestId: string | null = null;
+  let opacityRasterId: string | null = null;
   let activeAttributionIds: readonly string[] = ["gsi-tiles"];
   const visibleLeafletAttributions = new Set<string>();
   const loadCoordinator = new RegionLoadCoordinator();
@@ -219,8 +243,8 @@ function main(): void {
     reconstructedLayer,
     panes.get(MAP_PANES.historicalRaster) as HTMLElement,
     (opacity) => {
-      const pane = panes.get(MAP_PANES.historicalRaster);
-      if (pane) pane.style.opacity = String(opacity);
+      const container = reconstructedLayer.getContainer();
+      if (container) container.style.opacity = String(opacity);
     },
   );
   const transitions = new LayerTransitionController();
@@ -409,6 +433,93 @@ function main(): void {
     return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
   }
 
+  function historicalRastersForEra(
+    era: Readonly<RegionEraDefinition>,
+  ): readonly Readonly<HistoricalRasterDefinition>[] {
+    const ids = new Set(era.historicalRasterIds ?? []);
+    return getApprovedHistoricalRasters().filter((definition) =>
+      ids.has(definition.id) &&
+      definition.regionId === currentRegion.region.id &&
+      definition.eraId === era.eraId);
+  }
+
+  function syncHistoricalMapOption(
+    hasRaster: boolean,
+    allowedViews: readonly HistoricalViewMode[],
+  ): void {
+    let historicalMap = historyViewSelect.querySelector<HTMLOptionElement>(
+      'option[value="historical-map"]',
+    );
+    if (hasRaster && allowedViews.includes("historical-map")) {
+      if (!historicalMap) {
+        historicalMap = document.createElement("option");
+        historicalMap.value = "historical-map";
+        const compare = historyViewSelect.querySelector('option[value="compare"]');
+        historyViewSelect.insertBefore(historicalMap, compare);
+      }
+      historicalMap.textContent = "古地図";
+    } else {
+      historicalMap?.remove();
+    }
+    const compare = historyViewSelect.querySelector<HTMLOptionElement>(
+      'option[value="compare"]',
+    );
+    if (compare) {
+      compare.textContent = hasRaster
+        ? "古地図と現代地図を比較"
+        : "現代地図と比較";
+    }
+  }
+
+  function syncHistoricalRasterControls(
+    era: Readonly<RegionEraDefinition>,
+    allowedViews: readonly HistoricalViewMode[],
+  ): readonly Readonly<HistoricalRasterDefinition>[] {
+    const rasters = historicalRastersForEra(era);
+    syncHistoricalMapOption(rasters.length > 0, allowedViews);
+    historicalRasterControls.hidden = rasters.length === 0;
+    historicalOriginalNote.hidden = rasters.length === 0;
+    if (rasters.length === 0) {
+      historicalRasterSelect.replaceChildren();
+      historicalRasterStatus.textContent = "";
+      historicalRasterDetails.textContent = "";
+      opacityRasterId = null;
+      return rasters;
+    }
+    const selected = rasters.find((raster) => raster.id === historicalRasterSelect.value)
+      ?? rasters.find((raster) => raster.id === era.defaultHistoricalRasterId)
+      ?? rasters[0] as Readonly<HistoricalRasterDefinition>;
+    const options = rasters.map((raster) => {
+      const option = document.createElement("option");
+      option.value = raster.id;
+      option.textContent = raster.sheetLabelJa;
+      return option;
+    });
+    historicalRasterSelect.replaceChildren(...options);
+    historicalRasterSelect.value = selected.id;
+    historicalRasterSheetControl.hidden = rasters.length === 1;
+    if (opacityRasterId !== selected.id) {
+      const value = Math.round(selected.defaultOpacity * 100);
+      historicalRasterOpacity.value = String(value);
+      opacityRasterId = selected.id;
+    }
+    const opacity = percentage(historicalRasterOpacity);
+    historicalRasterOpacity.setAttribute("aria-valuetext", `${opacity}パーセント`);
+    historicalRasterOpacityValue.value = `${opacity}%`;
+    const estimated = selected.estimatedErrorMeters === null
+      ? "位置誤差を定量評価できていません。"
+      : `推定誤差 ${selected.estimatedErrorMeters}m`;
+    const maximum = selected.maximumErrorMeters === null
+      ? "最大誤差は未評価です。"
+      : `最大誤差 ${selected.maximumErrorMeters}m`;
+    historicalRasterDetails.textContent =
+      `${selected.titleJa}。原本年代：${selected.sourceDateDisplayJa}。位置合わせ：${selected.georeferenceMethod}、基準点 ${selected.controlPointCount}点、${estimated}、${maximum}。対象範囲：${selected.geographicCoverageJa}。${selected.georeferenceNoteJa} ${selected.contextNoteJa} シート境界や隣接地図とは一致しない場合があります。現代の地籍・境界ではなく、測量・所有権・防災判断には使えません。研究・歴史資料として原本表記を保持しており、現在では不適切な名称・表現を含む可能性があります。出典ID：${selected.sourceId}。`;
+    if (!map.getBounds().intersects(L.latLngBounds([[...selected.bounds[0]], [...selected.bounds[1]]]))) {
+      historicalRasterStatus.textContent = "現在の表示範囲は、この古地図シートの対象範囲外です。";
+    }
+    return rasters;
+  }
+
   function syncAttributions(ids: readonly string[]): void {
     activeAttributionIds = [...ids];
     const next = new Set(
@@ -455,10 +566,18 @@ function main(): void {
       "compare",
       "points",
     ];
+    const rasters = syncHistoricalRasterControls(era, allowedViews);
     if (!allowedViews.includes(historyViewSelect.value as HistoricalViewMode)) {
       historyViewSelect.value = era.defaultHistoricalViewMode ?? "reconstructed";
     }
     const view = historyViewSelect.value as HistoricalViewMode;
+    const selectedRaster = rasters.find((raster) =>
+      raster.id === historicalRasterSelect.value);
+    const rasterVisible = Boolean(
+      selectedRaster &&
+      activeHistoricalRaster?.historical.definition.id === selectedRaster.id &&
+      (view === "historical-map" || view === "compare"),
+    );
     historyControls.hidden = !isHistorical;
     historyViewControl.hidden = !isHistorical || allowedViews.length === 1;
     historyViewSelect.disabled = !isHistorical || allowedViews.length === 1;
@@ -491,13 +610,19 @@ function main(): void {
       targets.push({ layer: modernBase, opacity: 1 });
     } else {
       if (
-        view !== "points" &&
+        (view === "reconstructed" || (view === "compare" && !rasterVisible)) &&
         era.visualLayers.includes(VISUAL_LAYER_IDS.reconstructedBackground) &&
         isVisualLayerEnabled(VISUAL_LAYER_IDS.reconstructedBackground)
       ) {
         targets.push({
           layer: reconstructedTransition,
           opacity: view === "compare" ? 0.78 : 1,
+        });
+      }
+      if (rasterVisible && activeHistoricalRaster) {
+        targets.push({
+          layer: activeHistoricalRaster.transition,
+          opacity: percentage(historicalRasterOpacity) / 100,
         });
       }
       if (view === "compare") {
@@ -552,6 +677,7 @@ function main(): void {
       : 0;
     transitions.switchTo(targets, duration);
     const visibleIds = era.attributionIds.filter((id) => {
+      if (selectedRaster?.attributionId === id) return rasterVisible;
       if (id === "codh-edo-maps-places") return historicalPointsLayer !== null;
       if (id === "project-kyoto-bakumatsu-places") {
         return historicalPointsLayer !== null;
@@ -570,6 +696,56 @@ function main(): void {
     syncAttributions(visibleIds);
   }
 
+  function requestHistoricalRaster(): void {
+    const era = regionRegistry.getEraBinding(currentRegion.region.id, eraSelect.value);
+    if (!era) return;
+    const view = historyViewSelect.value as HistoricalViewMode;
+    const definition = historicalRastersForEra(era).find((raster) =>
+      raster.id === historicalRasterSelect.value);
+    if (!definition || (view !== "historical-map" && view !== "compare")) {
+      rasterRequestGeneration += 1;
+      rasterRequestId = null;
+      historicalRasterStatus.textContent = "";
+      return;
+    }
+    if (activeHistoricalRaster?.historical.definition.id === definition.id) {
+      rasterRequestId = null;
+      applyEra(false);
+      return;
+    }
+    if (rasterRequestId === definition.id) return;
+    const generation = ++rasterRequestGeneration;
+    const token = regionToken;
+    rasterRequestId = definition.id;
+    historicalRasterStatus.textContent = "古地図を読み込んでいます。";
+    void rasterManifestCache.load(definition).then(() => {
+      const latestEra = regionRegistry.getEraBinding(currentRegion.region.id, eraSelect.value);
+      const latestView = historyViewSelect.value as HistoricalViewMode;
+      if (
+        generation !== rasterRequestGeneration ||
+        !loadCoordinator.isCurrent(token) ||
+        rasterRequestId !== definition.id ||
+        !latestEra?.historicalRasterIds?.includes(definition.id) ||
+        (latestView !== "historical-map" && latestView !== "compare")
+      ) return;
+      const historical = createHistoricalRasterLayer(definition, {
+        onTileError: (message) => { historicalRasterStatus.textContent = message; },
+      });
+      activeHistoricalRaster = {
+        historical,
+        transition: new HistoricalRasterTransitionLayer(map, historical),
+      };
+      rasterRequestId = null;
+      historicalRasterStatus.textContent = "古地図を読み込みました。";
+      applyEra(false);
+    }).catch(() => {
+      if (generation !== rasterRequestGeneration || !loadCoordinator.isCurrent(token)) return;
+      rasterRequestId = null;
+      historicalRasterStatus.textContent = "古地図を読み込めませんでした。現代地図と地点は引き続き利用できます。";
+      applyEra(false);
+    });
+  }
+
   function applyHistoricalOpacity(): void {
     const value = percentage(opacitySlider);
     opacitySlider.setAttribute("aria-valuetext", `${value}パーセント`);
@@ -579,6 +755,13 @@ function main(): void {
   function applyBaseOpacity(): void {
     const value = percentage(baseOpacitySlider);
     baseOpacitySlider.setAttribute("aria-valuetext", `${value}パーセント`);
+    applyEra(false);
+  }
+
+  function applyHistoricalRasterOpacity(): void {
+    const value = percentage(historicalRasterOpacity);
+    historicalRasterOpacity.setAttribute("aria-valuetext", `${value}パーセント`);
+    historicalRasterOpacityValue.value = `${value}%`;
     applyEra(false);
   }
 
@@ -940,6 +1123,10 @@ function main(): void {
 
   function activateRegion(pack: Readonly<RegionPack>, moveMap: boolean): void {
     transitions.switchTo([], 0);
+    activeHistoricalRaster?.historical.dispose();
+    activeHistoricalRaster = null;
+    rasterRequestGeneration += 1;
+    rasterRequestId = null;
     syncAttributions(["gsi-tiles"]);
     currentRegion = pack;
     regionToken = loadCoordinator.begin(pack.region.id);
@@ -950,6 +1137,7 @@ function main(): void {
     populateRegionEraSelect(eraSelect, pack);
     applyRegionPresentation(pack);
     applyEra(false);
+    requestHistoricalRaster();
     if (moveMap) {
       map.invalidateSize({ pan: false });
       applyRegionMapView(map, pack);
@@ -975,6 +1163,7 @@ function main(): void {
   eraSelect.addEventListener("change", () => {
     curatedSelectionGeneration += 1;
     applyEra(true);
+    requestHistoricalRaster();
   });
   historyViewSelect.addEventListener("change", () => {
     machiyaVisible.checked = defaultMachiyaVisibilityForView(
@@ -984,7 +1173,15 @@ function main(): void {
       historyViewSelect.value as HistoricalViewMode,
     );
     applyEra(true);
+    requestHistoricalRaster();
   });
+  historicalRasterSelect.addEventListener("change", () => {
+    rasterRequestGeneration += 1;
+    rasterRequestId = null;
+    applyEra(true);
+    requestHistoricalRaster();
+  });
+  historicalRasterOpacity.addEventListener("input", applyHistoricalRasterOpacity);
   opacitySlider.addEventListener("input", applyHistoricalOpacity);
   baseOpacitySlider.addEventListener("input", applyBaseOpacity);
   machiyaVisible.addEventListener("change", () => applyEra(true));
@@ -995,6 +1192,8 @@ function main(): void {
   applyBaseOpacity();
   applyMachiyaOpacity();
   applyCoastlineOpacity();
+  applyHistoricalRasterOpacity();
+  requestHistoricalRaster();
 
   // 何もない場所のクリック: データなし表示(マーカークリックはイベントが止まる)
   map.on("click", () => {
@@ -1128,7 +1327,10 @@ function main(): void {
     privacyDialog.close(),
   );
 
-  window.addEventListener("beforeunload", () => transitions.dispose(), {
+  window.addEventListener("beforeunload", () => {
+    transitions.dispose();
+    activeHistoricalRaster?.historical.dispose();
+  }, {
     once: true,
   });
 }

@@ -72,8 +72,9 @@ describe("町家領域Leafletレイヤー", () => {
     expect(pane.style.transition).toBe("none");
   });
 
-  it("現代では非表示、歴史2モードでは既定ON、pointsモードでは既定OFFにする", () => {
+  it("現代では非表示、歴史3モードでは既定ON、pointsモードでは既定OFFにする", () => {
     expect(defaultMachiyaVisibilityForView("reconstructed")).toBe(true);
+    expect(defaultMachiyaVisibilityForView("historical-map")).toBe(true);
     expect(defaultMachiyaVisibilityForView("compare")).toBe(true);
     expect(defaultMachiyaVisibilityForView("points")).toBe(false);
     expect(

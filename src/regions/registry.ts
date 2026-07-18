@@ -10,6 +10,12 @@ import { KYOTO_REGION_PACK } from "./kyoto";
 import { SHIGA_REGION_PACK } from "./shiga";
 import { datasetRegistry, type DatasetRegistry } from "../datasets";
 import { ATTRIBUTION_REGISTRY } from "../attribution-registry";
+import {
+  APPROVED_HISTORICAL_RASTER_SOURCE_IDS,
+  HISTORICAL_RASTER_DEFINITIONS,
+  getApprovedHistoricalRasters,
+  type HistoricalRasterDefinition,
+} from "../historical-raster";
 import type {
   RegionDefinition,
   RegionEraDefinition,
@@ -106,6 +112,7 @@ function validateDatasetOwnership(regionId: string, datasetIds: readonly string[
 function validateEraBinding(
   regionId: string,
   binding: Readonly<RegionEraDefinition>,
+  approvedRasters: ReadonlyMap<string, Readonly<HistoricalRasterDefinition>>,
 ): void {
   if (!ERA_BASE_MODE_IDS.has(binding.baseMode)) {
     throw new Error(`不正な基図モードです: ${binding.baseMode}`);
@@ -154,6 +161,37 @@ function validateEraBinding(
   if (regionId === "kyoto" && (!modes || defaultMode === undefined)) {
     throw new Error("京都地域の歴史表示モードがありません");
   }
+  const rasterIds = binding.historicalRasterIds;
+  const defaultRasterId = binding.defaultHistoricalRasterId;
+  if ((rasterIds === undefined) !== (defaultRasterId === undefined)) {
+    throw new Error("古地図ラスタ参照が不完全です");
+  }
+  if (rasterIds) {
+    if (rasterIds.length === 0 || hasDuplicates(rasterIds)) {
+      throw new Error("古地図ラスタIDが不正または重複しています");
+    }
+    if (!rasterIds.includes(defaultRasterId as string)) {
+      throw new Error("既定古地図ラスタが配列内にありません");
+    }
+    for (const rasterId of rasterIds) {
+      const raster = approvedRasters.get(rasterId);
+      if (!raster) throw new Error(`未承認の古地図ラスタIDです: ${rasterId}`);
+      if (raster.regionId !== regionId || raster.eraId !== binding.eraId) {
+        throw new Error("古地図ラスタの地域または年代が一致しません");
+      }
+      if (!binding.attributionIds.includes(raster.attributionId)) {
+        throw new Error("古地図ラスタの出典IDが地域・年代へ接続されていません");
+      }
+    }
+    if (!binding.visualLayers.includes("historical-raster")) {
+      throw new Error("古地図ラスタ参照にはhistorical-raster表示レイヤーが必要です");
+    }
+    if (!modes?.includes("historical-map")) {
+      throw new Error("古地図ラスタ参照にはhistorical-map表示モードが必要です");
+    }
+  } else if (modes?.includes("historical-map") || binding.visualLayers.includes("historical-raster")) {
+    throw new Error("古地図がない年代に古地図表示設定があります");
+  }
   if (
     binding.baseMode === "historical-points" &&
     (!binding.visualLayers.includes("historical-points") ||
@@ -175,6 +213,9 @@ function cloneEra(binding: RegionEraDefinition): Readonly<RegionEraDefinition> {
     clone.allowedHistoricalViewModes = Object.freeze([
       ...binding.allowedHistoricalViewModes,
     ]);
+  }
+  if (binding.historicalRasterIds) {
+    clone.historicalRasterIds = Object.freeze([...binding.historicalRasterIds]);
   }
   return Object.freeze(clone);
 }
@@ -207,8 +248,18 @@ export class RegionRegistry {
     eras: EraRegistry = eraRegistry,
     defaultRegionId = EDO_REGION_ID,
     datasets: DatasetRegistry = datasetRegistry,
+    rasterDefinitions: readonly HistoricalRasterDefinition[] =
+      HISTORICAL_RASTER_DEFINITIONS,
+    approvedRasterSourceIds: readonly string[] =
+      APPROVED_HISTORICAL_RASTER_SOURCE_IDS,
   ) {
     if (packs.length === 0) throw new Error("地域定義がありません");
+    const approvedRasters = new Map(
+      getApprovedHistoricalRasters(
+        rasterDefinitions,
+        approvedRasterSourceIds,
+      ).map((definition) => [definition.id, definition]),
+    );
     const entries = packs.map((sourcePack) => {
       const pack = clonePack(sourcePack);
       const { region } = pack;
@@ -255,7 +306,7 @@ export class RegionRegistry {
         throw new Error("地域・年代バインディングが重複しています");
       }
       for (const binding of pack.eras) {
-        validateEraBinding(region.id, binding);
+        validateEraBinding(region.id, binding, approvedRasters);
         if (!eras.get(binding.eraId)) {
           throw new Error(`存在しない年代IDです: ${binding.eraId}`);
         }

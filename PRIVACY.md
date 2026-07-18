@@ -68,3 +68,11 @@ localStorage、sessionStorage、IndexedDBへ保存しません。年表の利用
 GitHub リポジトリの Issue 等で利用者自身が送信した情報は、
 GitHub のサービス上で公開・処理されます。本アプリの動作による
 データ収集とは別の扱いになります。個人情報を Issue に書かないでください。
+
+## 古地図ラスターパック
+
+承認済み古地図が将来導入された場合も、定義・manifest・タイルは自サイトと同一originから
+読み込み、古地図のための外部画像通信は行いません。選択シート、不透明度、表示モード、
+読込状態はメモリ内だけで扱い、URL、Cookie、localStorage、sessionStorage、IndexedDBへ
+保存しません。Service Workerや永続キャッシュも追加しません。現在は承認済み画像がなく、
+古地図タイル通信自体が発生しません。

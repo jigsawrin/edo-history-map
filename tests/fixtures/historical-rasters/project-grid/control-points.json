@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "rasterId": "project-grid",
+  "imageWidth": 512,
+  "imageHeight": 256,
+  "points": [
+    {
+      "id": "cp-001",
+      "pixelX": 8,
+      "pixelY": 8,
+      "latitude": 35.7,
+      "longitude": 139.7,
+      "basisJa": "プロジェクト自作格子の左上検証点",
+      "confidence": "high",
+      "sourceIds": [
+        "project-generated-fixture"
+      ]
+    },
+    {
+      "id": "cp-002",
+      "pixelX": 503,
+      "pixelY": 8,
+      "latitude": 35.7,
+      "longitude": 139.8,
+      "basisJa": "プロジェクト自作格子の右上検証点",
+      "confidence": "high",
+      "sourceIds": [
+        "project-generated-fixture"
+      ]
+    },
+    {
+      "id": "cp-003",
+      "pixelX": 8,
+      "pixelY": 247,
+      "latitude": 35.6,
+      "longitude": 139.7,
+      "basisJa": "プロジェクト自作格子の左下検証点",
+      "confidence": "high",
+      "sourceIds": [
+        "project-generated-fixture"
+      ]
+    },
+    {
+      "id": "cp-004",
+      "pixelX": 503,
+      "pixelY": 247,
+      "latitude": 35.6,
+      "longitude": 139.8,
+      "basisJa": "プロジェクト自作格子の右下検証点",
+      "confidence": "high",
+      "sourceIds": [
+        "project-generated-fixture"
+      ]
+    }
+  ]
+}

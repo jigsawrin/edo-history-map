@@ -69,6 +69,21 @@
           />
         </label>
 
+        <fieldset id="historical-raster-controls" class="historical-raster-controls" hidden>
+          <legend>古地図</legend>
+          <label id="historical-raster-sheet-control" class="control" hidden>
+            <span>古地図シート</span>
+            <select id="historical-raster-select" aria-label="古地図シート"></select>
+          </label>
+          <label class="control">
+            <span id="historical-raster-opacity-label">古地図不透明度</span>
+            <input type="range" id="historical-raster-opacity" min="0" max="100" value="70" step="1" aria-labelledby="historical-raster-opacity-label" aria-valuetext="70パーセント" />
+            <output id="historical-raster-opacity-value" for="historical-raster-opacity">70%</output>
+          </label>
+          <p id="historical-raster-status" role="status" aria-live="polite" aria-atomic="true"></p>
+          <p id="historical-raster-details" class="historical-raster-details"></p>
+        </fieldset>
+
         <label id="points-opacity-control" class="control">
           <span id="opacity-label">歴史地点不透明度</span>
           <input

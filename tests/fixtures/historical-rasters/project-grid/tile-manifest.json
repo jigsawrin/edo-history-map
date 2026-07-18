@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "rasterId": "project-grid",
+  "sourceId": "project-generated-fixture",
+  "regionId": "edo",
+  "eraId": "edo-late",
+  "tileScheme": "xyz",
+  "tileFormat": "png",
+  "tileSize": 256,
+  "minZoom": 1,
+  "maxZoom": 1,
+  "maxNativeZoom": 1,
+  "bounds": {
+    "south": 35.6,
+    "west": 139.7,
+    "north": 35.7,
+    "east": 139.8
+  },
+  "originalFileSha256": "3efd17a7298d6d83880e3b0af468c2b4d4d00657f2f38a239c93127b450f0d10",
+  "georeferenceMetadataSha256": "d388e9f502df1f2ddff99659c8b585c90fc0dc40b5a57b20fba58547b3b5c1c0",
+  "tileCount": 2,
+  "totalBytes": 2998,
+  "files": [
+    {
+      "path": "1/0/0.png",
+      "sha256": "ca5d6718bee72f88c6066238aefaa01b69fa113fa7c197de88674bcc85879494",
+      "bytes": 1498,
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "1/1/0.png",
+      "sha256": "6af0752b0f092cc0e68c7cb7c1f311e099274a97f47fa0acdca1c7dd9d148d41",
+      "bytes": 1500,
+      "width": 256,
+      "height": 256
+    }
+  ]
+}

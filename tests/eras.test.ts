@@ -65,6 +65,7 @@ describe("年代カタログと地域・年代バインディング", () => {
       VISUAL_LAYER_IDS.historicalCommonerAreas,
     );
     expect(VISUAL_LAYER_ENABLED[VISUAL_LAYER_IDS.historicalPoints]).toBe(true);
+    expect(VISUAL_LAYER_ENABLED[VISUAL_LAYER_IDS.historicalRaster]).toBe(true);
     expect(VISUAL_LAYER_ENABLED[VISUAL_LAYER_IDS.historicalRoads]).toBe(false);
     expect(EDO_REGION_PACK.eras.find((era) => era.eraId === "edo-early")?.enabled).toBe(false);
   });

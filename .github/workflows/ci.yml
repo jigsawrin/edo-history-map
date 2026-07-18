@@ -24,12 +24,16 @@ jobs:
         run: npm run lint
       - name: Typecheck
         run: npm run typecheck
+      - name: Verify historical raster fixture package
+        run: npm run verify:historical-raster-package
       - name: Test
         run: npm test
       - name: Build
         run: npm run build
       - name: Static place link audit
         run: npm run audit:static-links
+      - name: Historical raster audit
+        run: npm run audit:historical-rasters
       - name: Prepublish audit (公開ビルドを含む)
         run: npm run audit:prepublish
       - name: npm audit (high 以上で失敗)

@@ -11,6 +11,7 @@ export type EraBaseMode = (typeof ERA_BASE_MODES)[number];
 
 export const HISTORICAL_VIEW_MODES = [
   "reconstructed",
+  "historical-map",
   "compare",
   "points",
 ] as const;
@@ -29,6 +30,7 @@ export interface EraDefinition {
 export const VISUAL_LAYER_IDS = {
   modernBase: "modern-base",
   reconstructedBackground: "reconstructed-background",
+  historicalRaster: "historical-raster",
   historicalCoastline: "historical-coastline",
   historicalWater: "historical-water",
   historicalMoats: "historical-moats",
@@ -43,6 +45,7 @@ export const VISUAL_LAYER_IDS = {
 export const VISUAL_LAYER_ENABLED: Readonly<Record<string, boolean>> = {
   [VISUAL_LAYER_IDS.modernBase]: true,
   [VISUAL_LAYER_IDS.reconstructedBackground]: true,
+  [VISUAL_LAYER_IDS.historicalRaster]: true,
   [VISUAL_LAYER_IDS.historicalCoastline]: true,
   [VISUAL_LAYER_IDS.historicalWater]: false,
   [VISUAL_LAYER_IDS.historicalMoats]: false,

@@ -67,7 +67,7 @@ describe("Canvas地点と地図背景のクリック振り分け", () => {
     expect(showNoData).not.toHaveBeenCalled();
   });
 
-  it("3表示モードとreduced motion相当の即時切替後もmarkerイベントを維持する", () => {
+  it("4表示モードとreduced motion相当の即時切替後もmarkerイベントを維持する", () => {
     const onSelect = vi.fn();
     const historical = createHistoricalLayer(
       [PLACE],
@@ -75,10 +75,10 @@ describe("Canvas地点と地図背景のクリック振り分け", () => {
       document.createElement("div"),
     );
     const marker = historical.layer.getLayers()[0] as L.CircleMarker;
-    for (const mode of ["reconstructed", "compare", "points"] as const) {
+    for (const mode of ["reconstructed", "historical-map", "compare", "points"] as const) {
       expect(mode).toBeTruthy();
       marker.fire("click");
     }
-    expect(onSelect).toHaveBeenCalledTimes(3);
+    expect(onSelect).toHaveBeenCalledTimes(4);
   });
 });

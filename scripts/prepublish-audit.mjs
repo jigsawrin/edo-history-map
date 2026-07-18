@@ -25,6 +25,7 @@ import { buildShigaGeoJson } from "./build-shiga-sengoku-places.mjs";
 import { auditStaticPlaceLinks } from "./audit-static-place-links.mjs";
 import { validateHistoricalThemeData } from "./build-static-theme-pages.mjs";
 import { validateTimelineData } from "./build-static-timeline-pages.mjs";
+import { auditHistoricalRasterRepository } from "./audit-historical-rasters.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -60,6 +61,7 @@ const EXCLUDE_DIRS = new Set([
   "node_modules",
   "audit",
   "coverage",
+  "data-derived",
   "data-raw",
 ]);
 
@@ -133,6 +135,9 @@ const ALLOWED_HOSTS = new Set([
   "geoshape.ex.nii.ac.jp",
   "creativecommons.org",
   "dl.ndl.go.jp",
+  "ndlsearch.ndl.go.jp",
+  "id.ndl.go.jp",
+  "archive.library.metro.tokyo.jp",
   "github.com",
   "jigsawrin.github.io",
   "registry.npmjs.org",
@@ -372,24 +377,26 @@ if (!existsSync(dsPath)) {
         }
         const requiredTextFields = [
           "attribution",
-          "era_id",
+          "historical_period",
           "geographic_bounds",
-          "sha256_manifest",
+          "original_sha256",
+          "tile_manifest_sha256",
+          "tile_manifest_path",
+          "review_audit",
         ];
         for (const field of requiredTextFields) {
           if (!P(`^\\s+${field}:\\s*(?!null\\s*$).+`, "m").test(entry)) {
             addFinding("error", "歴史画像メタデータ", "DATA_SOURCES.yml", 0, `${id}: ${field} がありません`);
           }
         }
-        const sha = entry.match(P("^\\s+sha256:\\s*([0-9a-f]{64})\\s*$", "m"))?.[1];
-        if (!sha) {
-          addFinding("error", "歴史画像ハッシュ", "DATA_SOURCES.yml", 0, `${id}: SHA-256 がありません`);
-        }
+        const originalSha = entry.match(P("^\\s+original_sha256:\\s*([0-9a-f]{64})\\s*$", "m"))?.[1];
+        const manifestSha = entry.match(P("^\\s+tile_manifest_sha256:\\s*([0-9a-f]{64})\\s*$", "m"))?.[1];
+        if (!originalSha || !manifestSha) addFinding("error", "歴史画像ハッシュ", "DATA_SOURCES.yml", 0, `${id}: 原本またはmanifest SHA-256がありません`);
         const manifest = entry.match(
-          P("^\\s+sha256_manifest:\\s*(public/data/historical-rasters/[^\\s]+\\.json)\\s*$", "m"),
+          P("^\\s+tile_manifest_path:\\s*(public/data/historical-rasters/[^\\s]+/tile-manifest\\.json)\\s*$", "m"),
         )?.[1];
         if (!manifest || files.length !== 1 || files[0] !== manifest) {
-          addFinding("error", "歴史画像manifest", "DATA_SOURCES.yml", 0, `${id}: local_files にはsha256_manifestだけを登録してください`);
+          addFinding("error", "歴史画像manifest", "DATA_SOURCES.yml", 0, `${id}: local_filesにはtile_manifest_pathだけを登録してください`);
         } else {
           approvedRasterFiles.add(manifest);
           const manifestFull = join(ROOT, manifest);
@@ -398,20 +405,24 @@ if (!existsSync(dsPath)) {
           } else {
             const manifestBuffer = readFileSync(manifestFull);
             const actual = createHash("sha256").update(manifestBuffer).digest("hex");
-            if (sha && actual !== sha) {
+            if (manifestSha && actual !== manifestSha) {
               addFinding("error", "歴史画像ハッシュ", manifest, 0, "manifestのSHA-256が台帳と一致しません");
             }
             try {
-              const hashes = JSON.parse(manifestBuffer.toString("utf8"));
-              if (!hashes || Array.isArray(hashes) || typeof hashes !== "object") throw new Error();
-              const hashEntries = Object.entries(hashes);
-              if (hashEntries.length === 0) {
+              const tileManifest = JSON.parse(manifestBuffer.toString("utf8"));
+              if (!tileManifest || !Array.isArray(tileManifest.files) || tileManifest.files.length === 0) throw new Error();
+              if (originalSha && tileManifest.originalFileSha256 !== originalSha) addFinding("error", "歴史画像ハッシュ", manifest, 0, "原本SHA-256が台帳と一致しません");
+              const base = manifest.slice(0, manifest.lastIndexOf("/") + 1);
+              if (tileManifest.files.length === 0) {
                 addFinding("error", "歴史画像manifest", manifest, 0, "登録ファイルが空です");
               }
-              for (const [file, expectedHash] of hashEntries) {
+              for (const tile of tileManifest.files) {
+                const file = `${base}${tile.path}`;
+                const expectedHash = tile.sha256;
                 if (
                   !file.startsWith("public/data/historical-rasters/") ||
                   file.includes("..") ||
+                  file.includes("\\") ||
                   !P("^[0-9a-f]{64}$").test(String(expectedHash))
                 ) {
                   addFinding("error", "歴史画像manifest", manifest, 0, "不正なパスまたはSHA-256があります");
@@ -423,7 +434,7 @@ if (!existsSync(dsPath)) {
                   continue;
                 }
                 const fileHash = createHash("sha256").update(readFileSync(full)).digest("hex");
-                if (fileHash !== expectedHash) {
+                if (fileHash !== expectedHash || statSync(full).size !== tile.bytes) {
                   addFinding("error", "歴史画像ハッシュ", file, 0, "manifestのSHA-256と一致しません");
                   continue;
                 }
@@ -1128,24 +1139,33 @@ if (existsSync(join(ROOT, SHIGA_CURATION_FILE)) && existsSync(join(ROOT, SHIGA_P
 }
 
 const allowedRuntimeFetches = new Map([
-  ["src/places.ts", "fetch(baseUrl + PLACES_DATA_PATH"],
-  ["src/machiya-areas.ts", "fetch(baseUrl + MACHIYA_DATA_PATH"],
-  ["src/coastlines.ts", "fetch(`${baseUrl}${COASTLINE_DATA_PATH}`"],
-  ["src/kyoto-bakumatsu-places.ts", "fetch(baseUrl + KYOTO_BAKUMATSU_DATA_PATH"],
-  ["src/shiga-sengoku-places.ts", "fetch(`${baseUrl}${SHIGA_SENGOKU_DATA_PATH}`"],
+  ["src/places.ts", ["fetch(baseUrl + PLACES_DATA_PATH"]],
+  ["src/machiya-areas.ts", ["fetch(baseUrl + MACHIYA_DATA_PATH"]],
+  ["src/coastlines.ts", ["fetch(`${baseUrl}${COASTLINE_DATA_PATH}`"]],
+  ["src/kyoto-bakumatsu-places.ts", ["fetch(baseUrl + KYOTO_BAKUMATSU_DATA_PATH"]],
+  ["src/shiga-sengoku-places.ts", ["fetch(`${baseUrl}${SHIGA_SENGOKU_DATA_PATH}`"]],
+  [
+    "src/historical-raster.ts",
+    [
+      "new URL(definition.tileManifestPath, document.baseURI)",
+      "url.origin !== window.location.origin",
+      "fetch(url, {",
+      'credentials: "same-origin"',
+    ],
+  ],
 ]);
 for (const file of allFiles) {
   if (!file.rel.startsWith("src/") || extname(file.rel).toLowerCase() !== ".ts") continue;
   const content = readFileSync(join(ROOT, file.rel), "utf8");
   if (!/\bfetch\s*\(/.test(content)) continue;
   const expected = allowedRuntimeFetches.get(file.rel);
-  if (!expected || !content.includes(expected) || /fetch\s*\(\s*["']https?:/i.test(content)) {
+  if (!expected || expected.some((needle) => !content.includes(needle)) || /fetch\s*\(\s*["']https?:/i.test(content)) {
     addFinding(
       "error",
       "外部fetch",
       file.rel,
       0,
-      "固定同一オリジンGeoJSON以外のfetchが追加されています",
+      "固定同一オリジンデータ以外のfetchが追加されています",
     );
   }
 }
@@ -1454,6 +1474,12 @@ for (const rel of ["src/historical-timeline-registry.ts", "src/historical-timeli
   }
 }
 
+const historicalRasterAudit = auditHistoricalRasterRepository(ROOT);
+for (const message of historicalRasterAudit.errors) {
+  addFinding("error", "古地図ラスターパック", "src/historical-raster-registry.json", 0, message);
+}
+infos.push(...historicalRasterAudit.infos.map((message) => `古地図ラスタ: ${message}`));
+
 // ---- 4. 出典表示の確認 -------------------------------------------------------
 
 const attrChecks = [
@@ -1621,7 +1647,7 @@ if (historyNames !== null) {
 
 // 追跡ファイルと .gitignore の整合(追跡中の除外対象がないか)
 for (const t of tracked) {
-  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && !["audit/shiga-sengoku-place-review.md", "audit/historical-theme-review.md", "audit/historical-timeline-review.md"].includes(t))) {
+  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && !["audit/shiga-sengoku-place-review.md", "audit/historical-theme-review.md", "audit/historical-timeline-review.md", "audit/historical-raster-pilot-review.md"].includes(t))) {
     addFinding("error", "追跡対象違反", t, 0, "公開対象外ファイルが Git 追跡されています");
   }
 }
@@ -1677,7 +1703,7 @@ const report = [
   "# 公開前監査レポート",
   "",
   `実行日時: ${new Date().toISOString()}`,
-  `検査ファイル数: ${allFiles.length}(node_modules, .git, audit, data-raw を除く)`,
+  `検査ファイル数: ${allFiles.length}(node_modules, .git, audit, data-raw, data-derived を除く)`,
   `Git 追跡ファイル数: ${tracked.length}`,
   "",
   `## 結果: ${errors.length === 0 ? "合格(エラー 0 件)" : `不合格(エラー ${errors.length} 件)`}`,
