@@ -38,6 +38,10 @@ import { datasetRegistry, type ApprovedDatasetId } from "./datasets";
 import { regionRegistry } from "./regions/registry";
 import type { RegionPack } from "./regions/types";
 import { PlaceSearchController } from "./place-search/controller";
+import { HistoricalThemeController } from "./historical-theme-controller";
+import type { HistoricalThemePlaceReference } from "./historical-theme-registry";
+import kyotoThemePlaces from "../data-curation/kyoto-bakumatsu-places.json";
+import shigaThemePlaces from "../data-curation/shiga-sengoku-places.json";
 import { placeSearchModelCache } from "./place-search/model-cache";
 import type {
   HistoricalPlaceSource,
@@ -180,6 +184,14 @@ function main(): void {
   const placeSearchPageStatus = byId<HTMLElement>("place-search-page-status");
   const placeSearchNext = byId<HTMLButtonElement>("place-search-next");
   const placeSearchClose = byId<HTMLButtonElement>("place-search-close");
+  const historicalThemeOpen = byId<HTMLButtonElement>("historical-theme-open");
+  const historicalThemePanel = byId<HTMLElement>("historical-theme-panel");
+  const historicalThemeInput = byId<HTMLInputElement>("historical-theme-input");
+  const historicalThemeType = byId<HTMLSelectElement>("historical-theme-type");
+  const historicalThemeList = byId<HTMLOListElement>("historical-theme-list");
+  const historicalThemeDetail = byId<HTMLElement>("historical-theme-detail");
+  const historicalThemeStatus = byId<HTMLElement>("historical-theme-status");
+  const historicalThemeClose = byId<HTMLButtonElement>("historical-theme-close");
   let historicalPointsLayer: TransitionLayer | null = null;
   let machiyaLayer: MachiyaAreaTransitionLayer | null = null;
   let coastlineLayer: CoastlineTransitionLayer | null = null;
@@ -187,6 +199,7 @@ function main(): void {
   const visibleLeafletAttributions = new Set<string>();
   const loadCoordinator = new RegionLoadCoordinator();
   let regionToken = loadCoordinator.begin(currentRegion.region.id);
+  let themeSelectionGeneration = 0;
 
   const reconstructedLayer = createReconstructedBackground();
   const reconstructedTransition = new LeafletTransitionLayer(
@@ -266,6 +279,42 @@ function main(): void {
         map.invalidateSize({ pan: false });
       });
     },
+  });
+
+  const kyotoThemePlaceMap = new Map(kyotoThemePlaces.map((place) => [place.id, place]));
+  const shigaThemePlaceMap = new Map(shigaThemePlaces.map((place) => [place.id, place]));
+  const historicalThemeController = new HistoricalThemeController({
+    elements: {
+      openButton: historicalThemeOpen,
+      panel: historicalThemePanel,
+      input: historicalThemeInput,
+      type: historicalThemeType,
+      list: historicalThemeList,
+      detail: historicalThemeDetail,
+      status: historicalThemeStatus,
+      closeButton: historicalThemeClose,
+    },
+    resolvePlace: (reference) => {
+      const place = reference.datasetId === "project-kyoto-bakumatsu-places"
+        ? kyotoThemePlaceMap.get(reference.placeId)
+        : shigaThemePlaceMap.get(reference.placeId);
+      if (!place) throw new Error("テーマの関連地点が見つかりません");
+      return {
+        name: place.nameJa,
+        regionEraLabel: reference.datasetId === "project-kyoto-bakumatsu-places" ? "京都・幕末" : "滋賀・戦国",
+        coordinateConfidence: place.coordinateConfidence === "high" ? "高" : place.coordinateConfidence === "medium" ? "中" : "低",
+        locationCaution: place.locationNoteJa,
+      };
+    },
+    onSelectPlace: (reference, trigger) => selectThemePlace(reference, trigger),
+    onVisibilityChange: (open) => {
+      if (open && placeSearchController.isOpen()) placeSearchController.close(false);
+      window.requestAnimationFrame(() => {
+        if (open && window.matchMedia("(max-width: 600px)").matches) historicalThemePanel.scrollIntoView({ block: "start", behavior: "auto" });
+        map.invalidateSize({ pan: false });
+      });
+    },
+    onClose: () => { themeSelectionGeneration += 1; },
   });
 
   function searchableDatasetId(
@@ -593,8 +642,9 @@ function main(): void {
     readonly datasetId: PointDatasetId;
     readonly record: HistoricalPlaceSource;
     readonly searchable?: SearchableHistoricalPlace;
-    readonly source: "map" | "search";
+    readonly source: "map" | "search" | "theme";
     readonly returnFocus: HTMLElement;
+    readonly themeGeneration?: number;
   }
 
   async function selectHistoricalPlace(
@@ -611,7 +661,7 @@ function main(): void {
       return;
     }
     const token = regionToken;
-    if (selection.source === "search") {
+    if (selection.source === "search" || selection.source === "theme") {
       const layer = await cachedPointsLayer(selection.datasetId);
       const latestBinding = regionRegistry.getEraBinding(
         currentRegion.region.id,
@@ -619,6 +669,7 @@ function main(): void {
       );
       if (
         !loadCoordinator.isCurrent(token) ||
+        (selection.themeGeneration !== undefined && selection.themeGeneration !== themeSelectionGeneration) ||
         latestBinding?.placeDatasetId !== selection.datasetId
       ) {
         return;
@@ -638,6 +689,8 @@ function main(): void {
     ) {
       return;
     }
+
+    if (selection.themeGeneration !== undefined && selection.themeGeneration !== themeSelectionGeneration) return;
 
     if (selection.record.datasetId === "codh-edo-maps-places") {
       renderPlaceCard(
@@ -673,6 +726,50 @@ function main(): void {
           ?.placeDatasetId
     ) {
       placeSearchController.selectFromMap(searchable);
+    }
+  }
+
+  async function selectThemePlace(
+    reference: HistoricalThemePlaceReference,
+    trigger: HTMLButtonElement,
+  ): Promise<void> {
+    const generation = ++themeSelectionGeneration;
+    const destination = reference.datasetId === "project-kyoto-bakumatsu-places"
+      ? { regionId: "kyoto", eraId: "bakumatsu" }
+      : { regionId: "shiga", eraId: "sengoku" };
+    const pack = regionRegistry.get(destination.regionId);
+    if (!pack) {
+      historicalThemeController.announce("対象地域を利用できません。別の地点を選んでください。");
+      return;
+    }
+    if (currentRegion.region.id !== destination.regionId) {
+      regionSelect.value = destination.regionId;
+      activateRegion(pack, true);
+    }
+    if (eraSelect.value !== destination.eraId) {
+      eraSelect.value = destination.eraId;
+      applyEra(false);
+    }
+    try {
+      const records = await placeSearchModelCache.load(reference.datasetId);
+      if (generation !== themeSelectionGeneration) return;
+      const expectedKey = `${reference.datasetId === "project-kyoto-bakumatsu-places" ? "kyoto" : "shiga"}:${reference.placeId}`;
+      const searchable = records.find((record) => record.key === expectedKey);
+      if (!searchable) throw new Error("関連地点が見つかりません");
+      await selectHistoricalPlace({
+        datasetId: reference.datasetId,
+        record: searchable.sourceRecord,
+        searchable,
+        source: "theme",
+        returnFocus: trigger,
+        themeGeneration: generation,
+      });
+      if (generation !== themeSelectionGeneration) return;
+      historicalThemeController.announce(`${destination.regionId === "kyoto" ? "京都・幕末" : "滋賀・戦国"}へ切り替え、${searchable.name}を表示しました。`);
+      if (window.matchMedia("(max-width: 600px)").matches) historicalThemeController.close(false);
+    } catch {
+      if (generation !== themeSelectionGeneration) return;
+      historicalThemeController.announce("関連地点を読み込めませんでした。再読み込みすると回復する場合があります。");
     }
   }
 
@@ -808,6 +905,7 @@ function main(): void {
   loadRegionLayers(currentRegion);
 
   regionSelect.addEventListener("change", () => {
+    themeSelectionGeneration += 1;
     const next = regionRegistry.get(regionSelect.value);
     if (!next) {
       regionSelect.value = currentRegion.region.id;
@@ -816,7 +914,10 @@ function main(): void {
     activateRegion(next, true);
   });
 
-  eraSelect.addEventListener("change", () => applyEra(true));
+  eraSelect.addEventListener("change", () => {
+    themeSelectionGeneration += 1;
+    applyEra(true);
+  });
   historyViewSelect.addEventListener("change", () => {
     machiyaVisible.checked = defaultMachiyaVisibilityForView(
       historyViewSelect.value as HistoricalViewMode,

@@ -313,7 +313,8 @@ a:focus-visible,
   display: contents;
 }
 
-.place-search-panel {
+.place-search-panel,
+.historical-theme-panel {
   display: flex;
   flex: 0 0 min(22rem, 36vw);
   flex-direction: column;
@@ -329,13 +330,50 @@ a:focus-visible,
 
 .place-search-panel h2,
 .place-search-panel h3,
-.place-search-panel p {
+.place-search-panel p,
+.historical-theme-panel h2,
+.historical-theme-panel h3,
+.historical-theme-panel h4,
+.historical-theme-panel p {
   margin: 0;
 }
 
 .place-search-panel h2 {
   font-size: 1.1rem;
 }
+
+.historical-theme-panel h2 { font-size: 1.1rem; }
+.historical-theme-panel h3,
+.historical-theme-panel h4 { font-size: 0.95rem; }
+.historical-theme-panel > label { font-size: 0.85rem; font-weight: 700; }
+.historical-theme-note,
+.historical-theme-status { font-size: 0.8rem; }
+#historical-theme-input,
+#historical-theme-type { width: 100%; min-height: 44px; font: inherit; }
+#historical-theme-close { min-height: 44px; }
+#historical-theme-list,
+.historical-theme-detail ol {
+  margin: 0;
+  padding-left: 1.65rem;
+}
+#historical-theme-list { max-height: 13rem; overflow-y: auto; overscroll-behavior: contain; }
+#historical-theme-list > li,
+.historical-theme-detail li { margin-bottom: 0.35rem; }
+.historical-theme-button,
+.historical-theme-place-button {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+  text-align: left;
+}
+.historical-theme-button span,
+.historical-theme-place-button span { font-size: 0.75rem; color: #444; }
+.historical-theme-button[aria-current="true"] { border: 3px solid var(--accent); background: #e3f2fd; }
+.historical-theme-button[aria-current="true"]::before { content: "選択中"; font-size: 0.72rem; font-weight: 700; }
+#historical-theme-detail { flex: 1; min-height: 5rem; overflow-y: auto; overscroll-behavior: contain; }
 
 .place-search-panel h3 {
   font-size: 0.95rem;
@@ -508,7 +546,8 @@ dialog::backdrop {
     flex-direction: column;
   }
 
-  .place-search-panel {
+  .place-search-panel,
+  .historical-theme-panel {
     position: absolute;
     z-index: 1000;
     top: 0;
@@ -530,6 +569,12 @@ dialog::backdrop {
 
   body:has(#info-card:not([hidden])) .place-search-panel:not([hidden]) {
     max-height: 34dvh;
+  }
+
+  body:has(#info-card:not([hidden])) .historical-theme-panel:not([hidden]) { max-height: 34dvh; }
+  body:has(#historical-theme-panel:not([hidden])) .info-card:not([hidden]) {
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    max-height: 30dvh;
   }
 
   body:has(#place-search-panel:not([hidden])) .info-card:not([hidden]) {

@@ -5,6 +5,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -17,6 +18,7 @@ import {
   validateExternalSourceUrl,
   type StaticPlaceGeneration,
 } from "../scripts/build-static-place-pages.mjs";
+import { generateStaticThemeFiles } from "../scripts/build-static-theme-pages.mjs";
 
 const ROOT = join(__dirname, "..");
 let generated: StaticPlaceGeneration;
@@ -223,9 +225,35 @@ describe("静的地点一覧生成", () => {
       mkdirSync(dirname(output), { recursive: true });
       writeFileSync(output, content, "utf8");
     }
+    const themeInput = readFileSync(join(ROOT, "data-curation/historical-themes.json"), "utf8");
+    const themeGenerated = generateStaticThemeFiles({
+      themeData: JSON.parse(themeInput),
+      kyotoPlaces: JSON.parse(readFileSync(join(ROOT, "data-curation/kyoto-bakumatsu-places.json"), "utf8")),
+      shigaPlaces: JSON.parse(readFileSync(join(ROOT, "data-curation/shiga-sengoku-places.json"), "utf8")),
+      kyotoSources: JSON.parse(readFileSync(join(ROOT, "src/kyoto-source-registry.json"), "utf8")),
+      shigaSources: JSON.parse(readFileSync(join(ROOT, "src/shiga-source-registry.json"), "utf8")),
+      kyotoPresentation: JSON.parse(readFileSync(join(ROOT, "src/kyoto-place-presentation.json"), "utf8")),
+      shigaPresentation: JSON.parse(readFileSync(join(ROOT, "src/shiga-place-presentation.json"), "utf8")),
+      css: readFileSync(join(ROOT, "src/static-themes.css"), "utf8"),
+      placeManifest: JSON.parse(generated.files.get("manifest.json") ?? "{}"),
+      kyotoPlaceHtml: generated.files.get("kyoto/index.html") ?? "",
+      shigaPlaceHtml: generated.files.get("shiga/index.html") ?? "",
+      themeInputSha256: createHash("sha256").update(themeInput).digest("hex"),
+    });
+    for (const [path, content] of themeGenerated.files) {
+      const output = join(temporaryDist, "themes", path);
+      mkdirSync(dirname(output), { recursive: true });
+      writeFileSync(output, content, "utf8");
+    }
+    writeFileSync(join(temporaryDist, "places/kyoto/index.html"), themeGenerated.updatedKyotoHtml, "utf8");
+    writeFileSync(join(temporaryDist, "places/shiga/index.html"), themeGenerated.updatedShigaHtml, "utf8");
+    writeFileSync(join(temporaryDist, "places/manifest.json"), `${JSON.stringify(themeGenerated.manifest, null, 2)}\n`, "utf8");
     const result = auditStaticPlaceLinks(ROOT, temporaryDist);
     expect(result).toMatchObject({
-      htmlFileCount: 91,
+      htmlFileCount: 117,
+      themeHtmlFileCount: 26,
+      themeCount: 21,
+      relationCount: 87,
       edoCount: 8788,
       kyotoCount: 36,
       shigaCount: 36,

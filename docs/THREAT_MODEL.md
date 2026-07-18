@@ -88,6 +88,10 @@ flowchart LR
 - 脅威: データ由来文字列(地名等)による XSS。
 - 対策: `textContent` のみで挿入(`innerHTML` は ESLint で禁止)。
   CSP `script-src 'self'`。インラインスクリプトなし。
+- 脅威: テーマ定義からの未知ID、出典差し替え、プロトタイプ汚染、静的HTML注入。
+- 対策: 固定JSONを通常オブジェクト・許可enum・既存地点ID・地点所属source IDで厳格検証し、
+  危険キー、HTML、Markdownリンク、制御文字を拒否する。静的出典URLはHTTPSかつ固定origin許可リスト、
+  全文字列をHTMLエスケープし、テーマ静的CSPはscript/connect/image/fontを禁止する。
 - 脅威: `javascript:` / `data:` URL、危険な外部リンク。
 - 対策: リンクは https + 許可リストドメインのみ。`noopener noreferrer`。
 - 脅威: URL パラメータ経由の注入。

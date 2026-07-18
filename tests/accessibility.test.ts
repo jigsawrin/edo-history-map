@@ -117,6 +117,24 @@ describe("アクセシビリティ(静的マークアップ)", () => {
     expect(doc.getElementById("place-search-close")?.tagName).toBe("BUTTON");
   });
 
+  it("歴史テーマ索引は標準コントロール、見出し、aria-liveを持つ", () => {
+    const open = doc.getElementById("historical-theme-open");
+    const panel = doc.getElementById("historical-theme-panel");
+    expect(open?.tagName).toBe("BUTTON");
+    expect(open?.getAttribute("aria-controls")).toBe("historical-theme-panel");
+    expect(open?.getAttribute("aria-expanded")).toBe("false");
+    expect(panel?.getAttribute("aria-labelledby")).toBe("historical-theme-heading");
+    expect(doc.querySelector('label[for="historical-theme-input"]')).not.toBeNull();
+    expect(doc.querySelector('label[for="historical-theme-type"]')).not.toBeNull();
+    expect(doc.getElementById("historical-theme-list")?.tagName).toBe("OL");
+    expect(doc.getElementById("historical-theme-status")?.getAttribute("aria-live")).toBe("polite");
+  });
+
+  it("地図版とnoscriptからJavaScript不要のテーマ索引へ到達できる", () => {
+    expect(doc.querySelector('a.toolbar-link[href="./themes/"]')?.textContent).toBe("静的テーマ索引");
+    expect(doc.querySelector('noscript a[href="./themes/"]')?.textContent).toBe("歴史テーマ索引");
+  });
+
   it("地図の代替操作説明が地域別検索一覧を案内する", () => {
     const help = doc.getElementById("map-help")?.textContent ?? "";
     expect(help).toContain("HTMLボタン");

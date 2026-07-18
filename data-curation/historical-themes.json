@@ -1,0 +1,320 @@
+[
+  {
+    "id": "concept-battlefields-and-representative-points",
+    "type": "concept",
+    "titleJa": "広域戦場と代表地点",
+    "titleEn": "Battlefields and representative points",
+    "aliasesJa": ["戦場の代表点"],
+    "periodDisplayJa": "戦国時代・幕末",
+    "summaryJa": "広い戦場を一点で断定せず、古戦場、陣地、後世の碑など性格の異なる代表地点から位置表現の限界を確認するテーマです。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu024","relationType":"memorial","relationSummaryJa":"鳥羽方面の広い戦場ではなく、大正元年建立の戦跡碑を表示しています。","sourceIds":["kyoto-city-ishibumi-hu024","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu025","relationType":"battle","relationSummaryJa":"小枝橋周辺で始まった戦闘を、現在の東詰石標で代表表示しています。","sourceIds":["kyoto-city-ishibumi-hu025","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-033","relationType":"battle","relationSummaryJa":"賤ヶ岳一帯の戦闘範囲ではなく、山頂を地名の代表点として表示しています。","sourceIds":["shiga-pref-north-omi-map-1","gsi-shizugatake"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-034","relationType":"battle","relationSummaryJa":"姉川の戦場全体とは区別し、朝倉軍本陣とされる館跡を表示しています。","sourceIds":["nagahama-cultural-assets","gsi-mitamura"]}
+    ]
+  },
+  {
+    "id": "concept-memorials-rebuilds-and-historical-sites",
+    "type": "concept",
+    "titleJa": "碑・再建建物と歴史位置",
+    "titleEn": "Memorials, reconstructions, and historical locations",
+    "aliasesJa": ["現存物と旧地"],
+    "periodDisplayJa": "戦国時代・幕末",
+    "summaryJa": "後世の碑、再建建物、現存遺構を、当時の建物や事件範囲そのものと混同しないための横断テーマです。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi026","relationType":"memorial","relationSummaryJa":"七卿が立ち寄った寺域に建つ後世の紀念碑で、移動経路全体ではありません。","sourceIds":["kyoto-city-ishibumi-hi026"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi149","relationType":"memorial","relationSummaryJa":"葬送経路全体ではなく、現在の参道に置かれた石碑を表示しています。","sourceIds":["kyoto-city-ishibumi-hi149"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-003","relationType":"temple-shrine","relationSummaryJa":"現在の根本中堂は戦国期焼失後の再建で、当時の寺域全体ではありません。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-027","relationType":"castle","relationSummaryJa":"城跡公園の模擬天守は後世の博物館建築で、戦国期天守の復元ではありません。","sourceIds":["shiga-pref-nobunaga-guide","nagahama-cultural-assets"]}
+    ]
+  },
+  {
+    "id": "concept-political-residences-and-headquarters",
+    "type": "concept",
+    "titleJa": "政治拠点となった屋敷と城",
+    "titleEn": "Residences and castles as political headquarters",
+    "aliasesJa": ["政治拠点"],
+    "periodDisplayJa": "戦国時代・幕末",
+    "summaryJa": "城、藩邸、役宅が軍事だけでなく統治や政局運営の足場になった例を、京都と滋賀からたどります。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"ka006","relationType":"politics","relationSummaryJa":"二本松薩摩藩邸は、政変や禁門の変で薩摩藩が京都政局へ関与する拠点でした。","sourceIds":["kyoto-city-ishibumi-ka006","doshisha-satsuma-domain"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"ka016","relationType":"politics","relationSummaryJa":"京都守護職の役宅は、幕末京都の政治と警備を担う拠点でした。","sourceIds":["kyoto-city-ishibumi-ka016","kyoto-pref-shugoshoku"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-010","relationType":"castle","relationSummaryJa":"安土城は信長が築いた天下統一の政治・軍事拠点でした。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-027","relationType":"castle","relationSummaryJa":"長浜城は秀吉による湖北統治と城下町整備の拠点でした。","sourceIds":["shiga-pref-nobunaga-guide","nagahama-cultural-assets"]}
+    ]
+  },
+  {
+    "id": "concept-religious-sites-and-political-power",
+    "type": "concept",
+    "titleJa": "寺社と政治権力",
+    "titleEn": "Religious sites and political power",
+    "aliasesJa": ["寺社の政治利用"],
+    "periodDisplayJa": "戦国時代・幕末",
+    "summaryJa": "寺社が信仰の場であると同時に、滞在、組織運営、政策、交通管理などの政治的役割を担った例を結びます。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi005","relationType":"activity","relationSummaryJa":"高台寺塔頭の月真院は御陵衛士の屯所として使われました。","sourceIds":["kyoto-city-ishibumi-hi005"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na039","relationType":"politics","relationSummaryJa":"移転前の妙満寺は、老中間部詮勝が朝廷対応のため滞在した場所でした。","sourceIds":["kyoto-city-ishibumi-na039","myomanji-history"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-011","relationType":"temple-shrine","relationSummaryJa":"浄厳院は信長のもとで宗論が行われ、安土城下の宗教政策を伝えます。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-036","relationType":"politics","relationSummaryJa":"芦浦観音寺は寺院であると同時に、湖上交通の管理を担う政治拠点でした。","sourceIds":["shiga-pref-temples-map","gsi-ashiura"]}
+    ]
+  },
+  {
+    "id": "concept-routes-ports-and-political-control",
+    "type": "concept",
+    "titleJa": "交通路・港と政治支配",
+    "titleEn": "Routes, ports, and political control",
+    "aliasesJa": ["交通と支配"],
+    "periodDisplayJa": "戦国時代・幕末",
+    "summaryJa": "湖上交通、街道、船宿、上陸地点が、軍事行動や政治支配を支えた関係を地域横断で確認します。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu040","relationType":"activity","relationSummaryJa":"伏見の船宿寺田屋は水運の町にあり、幕末の二事件の舞台となりました。","sourceIds":["kyoto-city-ishibumi-hu040","kyoto-travel-teradaya"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu158","relationType":"activity","relationSummaryJa":"会津藩先鋒隊は伏見京橋へ上陸し、伏見御堂を宿陣としました。","sourceIds":["kyoto-city-ishibumi-hu158","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-007","relationType":"castle","relationSummaryJa":"坂本城は湖上交通と京都への経路を押さえる城郭拠点でした。","sourceIds":["shiga-pref-nobunaga-guide","bunka-sakamoto"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-022","relationType":"associated","relationSummaryJa":"朝妻の港と城は琵琶湖の水運と陸路を結ぶ位置に置かれました。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]}
+    ]
+  },
+  {
+    "id": "event-ikedaya-incident",
+    "type": "event",
+    "titleJa": "池田屋事件",
+    "titleEn": "Ikedaya Incident",
+    "aliasesJa": ["池田屋騒動"],
+    "periodDisplayJa": "元治元年（1864年）",
+    "summaryJa": "池田屋での襲撃だけでなく、古高俊太郎の捕縛や関係者の寓居、後世の葬送記憶を既存地点から確認します。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi149","relationType":"memorial","relationSummaryJa":"池田屋事件の死者が霊明社へ葬送された記憶を伝える石碑です。","sourceIds":["kyoto-city-ishibumi-hi149"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na033","relationType":"incident","relationSummaryJa":"新選組が志士の会合を襲撃した池田屋旧地の公式石標です。","sourceIds":["kyoto-city-ishibumi-na033","kyoto-rekisaikan-shinsengumi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na172","relationType":"associated","relationSummaryJa":"池田屋事件で命を落とした吉田稔麿らが事件前に滞在した寓居跡です。","sourceIds":["kyoto-city-ishibumi-na172"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"si005","relationType":"incident","relationSummaryJa":"古高俊太郎の捕縛と取り調べが同日夜の事件へつながった起点です。","sourceIds":["kyoto-city-ishibumi-si005","shimogyo-meiji-course"]}
+    ]
+  },
+  {
+    "id": "event-shizugatake-battle",
+    "type": "event",
+    "titleJa": "賤ヶ岳の戦い",
+    "titleEn": "Battle of Shizugatake",
+    "aliasesJa": ["賤ヶ岳合戦"],
+    "periodDisplayJa": "天正11年（1583年）",
+    "summaryJa": "柴田勝家方の陣城と、広い戦場を代表する賤ヶ岳山頂を分けて確認するテーマです。",
+    "relatedPlaces": [
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-032","relationType":"battle","relationSummaryJa":"柴田勝家方の本陣として築かれた玄蕃尾城の遺構です。","sourceIds":["shiga-pref-north-omi-map-1","gsi-genbao"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-033","relationType":"battle","relationSummaryJa":"戦場全体ではなく、賤ヶ岳山頂を地名の代表点として表示しています。","sourceIds":["shiga-pref-north-omi-map-1","nagahama-cultural-assets"]}
+    ]
+  },
+  {
+    "id": "event-toba-fushimi-battle",
+    "type": "event",
+    "titleJa": "鳥羽・伏見の戦い",
+    "titleEn": "Battle of Toba-Fushimi",
+    "aliasesJa": ["鳥羽伏見の戦い"],
+    "periodDisplayJa": "慶応4年（1868年）",
+    "summaryJa": "鳥羽から伏見、納所へ広がった戦闘を、駐屯地、戦場代表点、後世の碑、墓所からたどります。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu024","relationType":"memorial","relationSummaryJa":"鳥羽方面の戦闘を後世へ伝える大正元年建立の戦跡碑です。","sourceIds":["kyoto-city-ishibumi-hu024","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu025","relationType":"battle","relationSummaryJa":"旧幕府軍と薩摩砲兵が衝突し、戦いが始まった小枝橋周辺です。","sourceIds":["kyoto-city-ishibumi-hu025","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu028","relationType":"battle","relationSummaryJa":"伏見奉行所側と御香宮側が対峙した伏見方面の代表地点です。","sourceIds":["kyoto-city-ishibumi-hu028","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu034","relationType":"memorial","relationSummaryJa":"納所付近の戦闘を伝える、後世に移設された石標です。","sourceIds":["kyoto-city-ishibumi-hu034","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu038","relationType":"battle","relationSummaryJa":"旧幕府軍の拠点となり、伏見の戦闘で焼失した奉行所跡です。","sourceIds":["kyoto-city-ishibumi-hu038","kyoto-travel-fushimi-magistrate"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu158","relationType":"activity","relationSummaryJa":"戦い前日に会津藩先鋒隊が宿陣した伏見御堂の旧地です。","sourceIds":["kyoto-city-ishibumi-hu158","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"sa010","relationType":"memorial","relationSummaryJa":"会津藩関係者と鳥羽・伏見の戦死者を葬る現存墓所です。","sourceIds":["kyoto-city-ishibumi-sa010","kurodani-aizu-graves"]}
+    ]
+  },
+  {
+    "id": "group-aizu-domain",
+    "type": "group",
+    "titleJa": "会津藩",
+    "titleEn": "Aizu Domain",
+    "aliasesJa": ["会津"],
+    "periodDisplayJa": "文久2年～慶応4年（1862～1868年）",
+    "summaryJa": "京都守護職就任後の政治・警備拠点、事件関係地、伏見の宿陣地、戦死者墓所を結ぶテーマです。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi018","relationType":"incident","relationSummaryJa":"会津藩士と新選組の探索が土佐藩士負傷へ至った事件関連地です。","sourceIds":["kyoto-city-ishibumi-hi018"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu028","relationType":"battle","relationSummaryJa":"会津藩・新選組など旧幕府軍が新政府軍と対峙した伏見の代表地点です。","sourceIds":["kyoto-city-ishibumi-hu028","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu158","relationType":"activity","relationSummaryJa":"会津藩先鋒隊が鳥羽・伏見の戦い前日に宿陣した場所です。","sourceIds":["kyoto-city-ishibumi-hu158","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"ka016","relationType":"politics","relationSummaryJa":"会津藩主松平容保が就任した京都守護職の役宅跡です。","sourceIds":["kyoto-city-ishibumi-ka016","kyoto-pref-shugoshoku"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"sa010","relationType":"memorial","relationSummaryJa":"在京中の会津藩関係者と戦死者を葬る墓所です。","sourceIds":["kyoto-city-ishibumi-sa010","kurodani-aizu-graves"]}
+    ]
+  },
+  {
+    "id": "group-azai-clan",
+    "type": "group",
+    "titleJa": "浅井氏",
+    "titleEn": "Azai clan",
+    "aliasesJa": ["浅井家"],
+    "periodDisplayJa": "16世紀～天正元年（1573年）",
+    "summaryJa": "小谷城を本拠とした浅井氏の支配、国境防衛、支城網、織田方との攻防を既存地点からたどります。",
+    "relatedPlaces": [
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-018","relationType":"battle","relationSummaryJa":"浅井長政と織田信長の攻撃で衰退した寺院遺跡です。","sourceIds":["shiga-pref-temples-map","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-019","relationType":"battle","relationSummaryJa":"六角氏と浅井氏の対立が野良田の戦いへ続いた城跡です。","sourceIds":["shiga-pref-rokkaku-map","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-026","relationType":"castle","relationSummaryJa":"浅井氏が江濃国境を守るため利用した山城です。","sourceIds":["shiga-pref-north-omi-map-2","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-028","relationType":"battle","relationSummaryJa":"織田方が浅井氏へ圧力をかける湖北攻略拠点となった支城です。","sourceIds":["shiga-pref-nobunaga-guide","nagahama-cultural-assets"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-029","relationType":"castle","relationSummaryJa":"浅井氏家臣阿閉氏の離反が小谷城包囲の転機となった山城です。","sourceIds":["shiga-pref-nobunaga-guide","nagahama-cultural-assets"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-030","relationType":"castle","relationSummaryJa":"浅井氏三代の本拠で、天正元年に織田軍の攻撃で落城しました。","sourceIds":["shiga-pref-nobunaga-guide","nagahama-cultural-assets"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-035","relationType":"residence","relationSummaryJa":"浅井氏に仕えた国人領主下坂氏の居館跡です。","sourceIds":["nagahama-cultural-assets","gsi-shimosaka"]}
+    ]
+  },
+  {
+    "id": "group-shinsengumi",
+    "type": "group",
+    "titleJa": "新選組",
+    "titleEn": "Shinsengumi",
+    "aliasesJa": ["新撰組"],
+    "periodDisplayJa": "文久3年～慶応4年（1863～1868年）",
+    "summaryJa": "結成初期の屯所、池田屋事件、分離した御陵衛士との対立、伏見での戦闘拠点を結びます。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi005","relationType":"associated","relationSummaryJa":"新選組を離れた伊東甲子太郎らが組織した御陵衛士の屯所跡です。","sourceIds":["kyoto-city-ishibumi-hi005"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi018","relationType":"incident","relationSummaryJa":"池田屋事件後、新選組と会津藩士の探索中に起きた事件の関連地です。","sourceIds":["kyoto-city-ishibumi-hi018"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu038","relationType":"activity","relationSummaryJa":"鳥羽・伏見の戦いで新選組など旧幕府軍の拠点となった奉行所跡です。","sourceIds":["kyoto-city-ishibumi-hu038","kyoto-travel-fushimi-magistrate"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na033","relationType":"incident","relationSummaryJa":"新選組が尊王攘夷派の会合を襲撃した池田屋旧地です。","sourceIds":["kyoto-city-ishibumi-na033","kyoto-rekisaikan-shinsengumi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na070","relationType":"activity","relationSummaryJa":"新選組結成初期に前川邸・八木邸が屯所として使われました。","sourceIds":["kyoto-city-ishibumi-na070","kyoto-rekisaikan-shinsengumi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"si035","relationType":"incident","relationSummaryJa":"御陵衛士を率いた伊東甲子太郎らが新選組に襲撃された場所です。","sourceIds":["kyoto-city-ishibumi-si035","shimogyo-meiji-course"]}
+    ]
+  },
+  {
+    "id": "person-akechi-mitsuhide",
+    "type": "person",
+    "titleJa": "明智光秀",
+    "titleEn": "Akechi Mitsuhide",
+    "aliasesJa": ["惟任光秀"],
+    "periodDisplayJa": "戦国時代",
+    "summaryJa": "坂本城による湖上・京都経路の掌握と、西教寺の保護・追善関係を、居城と寺院を区別して確認します。",
+    "relatedPlaces": [
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-005","relationType":"temple-shrine","relationSummaryJa":"光秀が復興を保護し、一族の墓所が伝わる寺院です。居城ではありません。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-007","relationType":"castle","relationSummaryJa":"光秀が琵琶湖岸に築き、湖上交通と京都への経路を押さえた城です。","sourceIds":["shiga-pref-nobunaga-guide","bunka-sakamoto"]}
+    ]
+  },
+  {
+    "id": "person-iwakura-tomomi",
+    "type": "person",
+    "titleJa": "岩倉具視",
+    "titleEn": "Iwakura Tomomi",
+    "aliasesJa": [],
+    "periodDisplayJa": "文久2年～慶応3年（1862～1867年）",
+    "summaryJa": "岩倉村での蟄居生活と政治活動を、旧宅と菩提寺の旧蹟という性格の異なる二地点から確認します。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"ki017","relationType":"associated","relationSummaryJa":"官を辞した岩倉具視が身を寄せ落飾した菩提寺前の旧蹟石標です。","sourceIds":["kyoto-city-ishibumi-ki017"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"sa018","relationType":"residence","relationSummaryJa":"約5年間の生活と政治活動の足場となった国史跡の旧宅です。","sourceIds":["kyoto-city-ishibumi-sa018","bunka-iwakura-home"]}
+    ]
+  },
+  {
+    "id": "person-ito-kashitaro",
+    "type": "person",
+    "titleJa": "伊東甲子太郎",
+    "titleEn": "Ito Kashitaro",
+    "aliasesJa": [],
+    "periodDisplayJa": "慶応3年（1867年）",
+    "summaryJa": "御陵衛士の屯所と油小路の殉難地を分け、組織の活動拠点と襲撃地点をたどります。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi005","relationType":"activity","relationSummaryJa":"伊東らが新選組を離れて組織した御陵衛士の屯所跡です。","sourceIds":["kyoto-city-ishibumi-hi005"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"si035","relationType":"incident","relationSummaryJa":"伊東と同志が新選組の襲撃を受けた油小路の殉難地です。","sourceIds":["kyoto-city-ishibumi-si035","shimogyo-meiji-course"]}
+    ]
+  },
+  {
+    "id": "person-kondo-isami",
+    "type": "person",
+    "titleJa": "近藤勇",
+    "titleEn": "Kondo Isami",
+    "aliasesJa": [],
+    "periodDisplayJa": "文久3年～慶応3年（1863～1867年）",
+    "summaryJa": "新選組結成初期の屯所と、鳥羽・伏見の戦い直前に狙撃された墨染周辺を結びます。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu153","relationType":"incident","relationSummaryJa":"近藤勇が二条城から伏見奉行所へ戻る途中で狙撃された周辺代表点です。","sourceIds":["kyoto-city-ishibumi-hu153","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na070","relationType":"activity","relationSummaryJa":"近藤らが壬生を拠点に新選組を組織した結成初期の屯所です。","sourceIds":["kyoto-city-ishibumi-na070","kyoto-rekisaikan-shinsengumi"]}
+    ]
+  },
+  {
+    "id": "person-matsudaira-katamori",
+    "type": "person",
+    "titleJa": "松平容保",
+    "titleEn": "Matsudaira Katamori",
+    "aliasesJa": [],
+    "periodDisplayJa": "文久2年～慶応3年（1862～1867年）",
+    "summaryJa": "会津藩主として京都守護職を担った政治拠点と、藩の本拠・殉難者墓所を結びます。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"ka016","relationType":"politics","relationSummaryJa":"松平容保が就任した京都守護職の役宅跡です。","sourceIds":["kyoto-city-ishibumi-ka016","kyoto-pref-shugoshoku"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"sa010","relationType":"memorial","relationSummaryJa":"容保の会津藩が本拠とした黒谷に残る藩関係者の墓所です。","sourceIds":["kyoto-city-ishibumi-sa010","kurodani-aizu-graves"]}
+    ]
+  },
+  {
+    "id": "person-nakaoka-shintaro",
+    "type": "person",
+    "titleJa": "中岡慎太郎",
+    "titleEn": "Nakaoka Shintaro",
+    "aliasesJa": [],
+    "periodDisplayJa": "慶応年間（1865～1867年）",
+    "summaryJa": "京都での寓居、近江屋での遭難、霊明社への葬送記憶を区別してたどります。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi149","relationType":"memorial","relationSummaryJa":"中岡らの遺体が霊明社へ運ばれた葬送の記憶を伝える石碑です。","sourceIds":["kyoto-city-ishibumi-hi149"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na011","relationType":"incident","relationSummaryJa":"中岡慎太郎と坂本龍馬が襲撃された近江屋旧地です。","sourceIds":["kyoto-city-ishibumi-na011","kyoto-travel-sanjo-shijo"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na012","relationType":"residence","relationSummaryJa":"中岡が京都で身を寄せた書林菊屋の寓居地を示す石標です。","sourceIds":["kyoto-city-ishibumi-na012"]}
+    ]
+  },
+  {
+    "id": "person-oda-nobunaga",
+    "type": "person",
+    "titleJa": "織田信長",
+    "titleEn": "Oda Nobunaga",
+    "aliasesJa": ["信長"],
+    "periodDisplayJa": "永禄11年～天正10年（1568～1582年）",
+    "summaryJa": "近江の交通路、城郭、寺社、宗教政策、小谷城包囲に関わる既存地点から信長の支配拡大をたどります。",
+    "relatedPlaces": [
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-002","relationType":"castle","relationSummaryJa":"京都と湖西の経路を押さえるため森可成を配置した山城です。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-003","relationType":"battle","relationSummaryJa":"元亀2年に信長軍の焼き討ちを受けた延暦寺の現代表地点です。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-009","relationType":"battle","relationSummaryJa":"元亀年間に信長方へ抵抗した寺内町の代表位置です。","sourceIds":["shiga-pref-temples-map","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-010","relationType":"castle","relationSummaryJa":"信長が天下統一の拠点として築いた安土城です。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-011","relationType":"politics","relationSummaryJa":"信長のもとで浄土宗と法華宗の宗論が行われた寺院です。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-013","relationType":"castle","relationSummaryJa":"信長の近江侵攻後に六角氏の本拠としての役割を失った山城です。","sourceIds":["shiga-pref-rokkaku-map","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-017","relationType":"battle","relationSummaryJa":"天正元年に信長軍の焼き討ちで大きな被害を受けた山岳寺院です。","sourceIds":["shiga-pref-temples-map","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-018","relationType":"battle","relationSummaryJa":"浅井長政と信長の攻撃で堂塔や坊舎を失った寺院遺跡です。","sourceIds":["shiga-pref-temples-map","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-026","relationType":"battle","relationSummaryJa":"信長の近江侵攻時に浅井氏の国境防衛へ関係した山城です。","sourceIds":["shiga-pref-north-omi-map-2","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-030","relationType":"battle","relationSummaryJa":"天正元年に信長軍が攻撃し、浅井氏滅亡へ至った本城です。","sourceIds":["shiga-pref-nobunaga-guide","nagahama-cultural-assets"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-031","relationType":"battle","relationSummaryJa":"信長が小谷城包囲のため築いた付城群です。","sourceIds":["shiga-pref-north-omi-map-2","nagahama-cultural-assets"]}
+    ]
+  },
+  {
+    "id": "person-sakamoto-ryoma",
+    "type": "person",
+    "titleJa": "坂本龍馬",
+    "titleEn": "Sakamoto Ryoma",
+    "aliasesJa": ["龍馬"],
+    "periodDisplayJa": "慶応年間（1865～1867年）",
+    "summaryJa": "京都と伏見における寓居、海援隊活動、寺田屋襲撃後の避難・救護、近江屋での遭難、葬送記憶をたどります。",
+    "relatedPlaces": [
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hi149","relationType":"memorial","relationSummaryJa":"龍馬らの遺体が霊明社へ運ばれた葬送の記憶を伝える石碑です。","sourceIds":["kyoto-city-ishibumi-hi149"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu040","relationType":"incident","relationSummaryJa":"慶応2年に龍馬が伏見奉行所の捕方に襲われた船宿です。現建物は再建です。","sourceIds":["kyoto-city-ishibumi-hu040","kyoto-travel-teradaya"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu150","relationType":"associated","relationSummaryJa":"寺田屋襲撃後に救出された龍馬が負傷の手当てを受けた薩摩藩邸跡です。","sourceIds":["kyoto-city-ishibumi-hu150","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"hu154","relationType":"incident","relationSummaryJa":"寺田屋から脱出した龍馬が一時身を隠した材木小屋の案内碑です。","sourceIds":["kyoto-city-ishibumi-hu154","kyoto-travel-toba-fushimi"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na009","relationType":"residence","relationSummaryJa":"京都滞在中の寓居であり、海援隊の活動拠点となった酢屋旧地です。","sourceIds":["kyoto-city-ishibumi-na009","kyoto-travel-sanjo-shijo"]},
+      {"datasetId":"project-kyoto-bakumatsu-places","placeId":"na011","relationType":"incident","relationSummaryJa":"龍馬と中岡慎太郎が襲撃された近江屋旧地です。","sourceIds":["kyoto-city-ishibumi-na011","kyoto-travel-sanjo-shijo"]}
+    ]
+  },
+  {
+    "id": "person-shibata-katsuie",
+    "type": "person",
+    "titleJa": "柴田勝家",
+    "titleEn": "Shibata Katsuie",
+    "aliasesJa": [],
+    "periodDisplayJa": "元亀元年～天正11年（1570～1583年）",
+    "summaryJa": "近江南部の配置先と、賤ヶ岳の戦いにおける本陣・広域戦場の関係をたどります。",
+    "relatedPlaces": [
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-015","relationType":"castle","relationSummaryJa":"浅井氏離反後に柴田勝家が配置されたとされる山城です。","sourceIds":["shiga-pref-nobunaga-guide","nii-shiga-place-index"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-032","relationType":"battle","relationSummaryJa":"賤ヶ岳の戦いで勝家方の本陣として築かれた陣城です。","sourceIds":["shiga-pref-north-omi-map-1","gsi-genbao"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-033","relationType":"battle","relationSummaryJa":"勝家と秀吉が争った戦場を示す賤ヶ岳山頂の代表点です。","sourceIds":["shiga-pref-north-omi-map-1","nagahama-cultural-assets"]}
+    ]
+  },
+  {
+    "id": "person-toyotomi-hideyoshi",
+    "type": "person",
+    "titleJa": "豊臣秀吉",
+    "titleEn": "Toyotomi Hideyoshi",
+    "aliasesJa": ["羽柴秀吉"],
+    "periodDisplayJa": "元亀年間～天正年間",
+    "summaryJa": "横山城での湖北攻略、長浜城での統治、賤ヶ岳の戦いを通じ、羽柴秀吉期からの近江での活動をたどります。",
+    "relatedPlaces": [
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-027","relationType":"castle","relationSummaryJa":"浅井氏旧領を与えられた秀吉が築き、湖北統治の拠点とした城です。","sourceIds":["shiga-pref-nobunaga-guide","nagahama-cultural-assets"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-028","relationType":"castle","relationSummaryJa":"羽柴秀吉が城番として入り、浅井氏攻略を進めた支城です。","sourceIds":["shiga-pref-nobunaga-guide","nagahama-cultural-assets"]},
+      {"datasetId":"project-shiga-sengoku-places","placeId":"shiga-sengoku-033","relationType":"battle","relationSummaryJa":"羽柴秀吉と柴田勝家が織田政権の後継を争った広域戦場の代表点です。","sourceIds":["shiga-pref-north-omi-map-1","nagahama-cultural-assets"]}
+    ]
+  }
+]

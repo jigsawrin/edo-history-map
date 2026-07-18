@@ -23,6 +23,7 @@ import { URL } from "node:url";
 import { buildKyotoGeoJson } from "./build-kyoto-bakumatsu-places.mjs";
 import { buildShigaGeoJson } from "./build-shiga-sengoku-places.mjs";
 import { auditStaticPlaceLinks } from "./audit-static-place-links.mjs";
+import { validateHistoricalThemeData } from "./build-static-theme-pages.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -195,6 +196,7 @@ const EDO_PACK_FILE = "src/regions/edo-pack.json";
 const SHIGA_DATASET_ID = "project-shiga-sengoku-places";
 const SHIGA_CURATION_FILE = "data-curation/shiga-sengoku-places.json";
 const SHIGA_PUBLIC_FILE = "public/data/shiga-sengoku-places.geojson";
+const HISTORICAL_THEME_CURATION_FILE = "data-curation/historical-themes.json";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -1167,7 +1169,7 @@ for (const file of allFiles) {
   if (lower.endsWith(".map")) {
     addFinding("error", "ソースマップ露出", file.rel, 0, "source mapは公開・追跡禁止です");
   }
-  if (lower.startsWith("data-curation/") && ![KYOTO_CURATION_FILE, SHIGA_CURATION_FILE].includes(file.rel)) {
+  if (lower.startsWith("data-curation/") && ![KYOTO_CURATION_FILE, SHIGA_CURATION_FILE, HISTORICAL_THEME_CURATION_FILE].includes(file.rel)) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
   }
   if (
@@ -1339,6 +1341,61 @@ for (const file of searchSourceFiles) {
 }
 infos.push(`地域別地点検索: UI・50件上限・固定アダプター・保存/送信禁止を確認`);
 
+// ---- 3.7 歴史テーマ索引の公開ゲート ---------------------------------------
+
+const themeMarkupPath = join(ROOT, "index.html");
+const themeRegistryPath = join(ROOT, "src/historical-theme-registry.ts");
+const themeControllerPath = join(ROOT, "src/historical-theme-controller.ts");
+const themeCurationPath = join(ROOT, HISTORICAL_THEME_CURATION_FILE);
+for (const [path, label] of [
+  [themeRegistryPath, "テーマレジストリ"],
+  [themeControllerPath, "テーマUIコントローラー"],
+  [themeCurationPath, "テーマ固定データ"],
+]) {
+  if (!existsSync(path)) addFinding("error", "歴史テーマ索引", relative(ROOT, path), 0, `${label}がありません`);
+}
+if (existsSync(themeMarkupPath)) {
+  const html = readFileSync(themeMarkupPath, "utf8");
+  for (const [needle, label] of [
+    ['id="historical-theme-open"', "開くボタン"],
+    ['aria-controls="historical-theme-panel"', "aria-controls"],
+    ['id="historical-theme-panel"', "テーマパネル"],
+    ['id="historical-theme-input"', "テーマ検索入力"],
+    ['id="historical-theme-type"', "種別select"],
+    ['id="historical-theme-list"', "結果一覧"],
+    ['id="historical-theme-status"', "aria-live status"],
+  ]) {
+    if (!html.includes(needle)) addFinding("error", "歴史テーマUI", "index.html", 0, `${label}がありません`);
+  }
+}
+try {
+  const validatedThemes = validateHistoricalThemeData(
+    JSON.parse(readFileSync(themeCurationPath, "utf8")),
+    {
+      kyotoPlaces: JSON.parse(readFileSync(join(ROOT, KYOTO_CURATION_FILE), "utf8")),
+      shigaPlaces: JSON.parse(readFileSync(join(ROOT, SHIGA_CURATION_FILE), "utf8")),
+      kyotoSources: JSON.parse(readFileSync(join(ROOT, KYOTO_SOURCE_REGISTRY_FILE), "utf8")),
+      shigaSources: JSON.parse(readFileSync(join(ROOT, "src/shiga-source-registry.json"), "utf8")),
+    },
+  );
+  const relations = validatedThemes.flatMap((theme) => theme.relatedPlaces);
+  if (validatedThemes.length !== 21 || relations.length !== 87) {
+    addFinding("error", "歴史テーマ件数", HISTORICAL_THEME_CURATION_FILE, 0, "承認済み21テーマ・87関係と一致しません");
+  }
+  if (relations.some((reference) => reference.datasetId === "codh-edo-maps-places")) {
+    addFinding("error", "歴史テーマ対象", HISTORICAL_THEME_CURATION_FILE, 0, "構造化関係を持たないEDO地名が含まれています");
+  }
+  infos.push(`歴史テーマ索引: ${validatedThemes.length}テーマ・${relations.length}関係を固定ID・地点所属出典で検証`);
+} catch (error) {
+  addFinding("error", "歴史テーマ検証", HISTORICAL_THEME_CURATION_FILE, 0, error instanceof Error ? error.message : "検証に失敗しました");
+}
+for (const file of allFiles.filter((item) => item.rel.startsWith("src/historical-theme") && item.rel.endsWith(".ts"))) {
+  const source = readFileSync(join(ROOT, file.rel), "utf8");
+  for (const forbidden of ["fetch(", "localStorage", "sessionStorage", "document.cookie", "console.log", "innerHTML", "insertAdjacentHTML"]) {
+    if (source.includes(forbidden)) addFinding("error", "歴史テーマセキュリティ", file.rel, 0, `${forbidden}は禁止です`);
+  }
+}
+
 // ---- 4. 出典表示の確認 -------------------------------------------------------
 
 const attrChecks = [
@@ -1506,7 +1563,7 @@ if (historyNames !== null) {
 
 // 追跡ファイルと .gitignore の整合(追跡中の除外対象がないか)
 for (const t of tracked) {
-  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && t !== "audit/shiga-sengoku-place-review.md")) {
+  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && !["audit/shiga-sengoku-place-review.md", "audit/historical-theme-review.md"].includes(t))) {
     addFinding("error", "追跡対象違反", t, 0, "公開対象外ファイルが Git 追跡されています");
   }
 }
