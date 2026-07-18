@@ -186,8 +186,17 @@
           江戸地名を検索
         </button>
       </div>
+      <button
+        id="historical-theme-open"
+        type="button"
+        aria-controls="historical-theme-panel"
+        aria-expanded="false"
+      >
+        歴史テーマ
+      </button>
       <button type="button" id="locate-button">現在地を表示</button>
       <a class="toolbar-link" href="./places/">歴史地点一覧</a>
+      <a class="toolbar-link" href="./themes/">静的テーマ索引</a>
       <button type="button" id="attribution-button">出典・ライセンス</button>
       <button type="button" id="privacy-button">プライバシー</button>
     </div>
@@ -243,6 +252,48 @@
         <button id="place-search-close" type="button">検索を閉じる</button>
       </section>
 
+      <section
+        id="historical-theme-panel"
+        class="historical-theme-panel"
+        aria-labelledby="historical-theme-heading"
+        hidden
+      >
+        <h2 id="historical-theme-heading">歴史テーマ索引</h2>
+        <p class="historical-theme-note">
+          主に京都・幕末と滋賀・戦国のキュレーション地点を、確認済みの関係から探します。現代表示中でも、地点を選ぶと対象の歴史年代へ切り替わります。
+        </p>
+        <label for="historical-theme-type">種別</label>
+        <select id="historical-theme-type">
+          <option value="">すべて</option>
+          <option value="person">人物</option>
+          <option value="event">事件・戦い</option>
+          <option value="group">勢力・組織</option>
+          <option value="concept">歴史テーマ</option>
+        </select>
+        <label for="historical-theme-input">テーマ名</label>
+        <input
+          id="historical-theme-input"
+          type="search"
+          maxlength="100"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <p
+          id="historical-theme-status"
+          class="historical-theme-status"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        ></p>
+        <h3 id="historical-theme-list-heading">テーマ一覧</h3>
+        <ol id="historical-theme-list" aria-labelledby="historical-theme-list-heading"></ol>
+        <div id="historical-theme-detail"></div>
+        <nav aria-label="静的テーマ索引">
+          <a href="./themes/">JavaScript不要の歴史テーマ索引</a>
+        </nav>
+        <button id="historical-theme-close" type="button">歴史テーマを閉じる</button>
+      </section>
+
       <div
         id="map"
         tabindex="-1"
@@ -253,13 +304,13 @@
     </div>
 
     <p id="map-help" class="visually-hidden">
-      地図はキーボードでも移動とズームができます。地図を直接操作しにくい場合やCanvas上の地点を直接選びにくい場合は、「江戸地名を検索」または「幕末史跡を検索」から通常のHTMLボタンによる地点一覧を利用できます。
+      地図はキーボードでも移動とズームができます。地図を直接操作しにくい場合やCanvas上の地点を直接選びにくい場合は、「江戸地名を検索」「幕末史跡を検索」または「歴史テーマ」から通常のHTMLボタンによる地点一覧を利用できます。
     </p>
 
     <noscript>
       <p class="noscript-note">
         このアプリの地図表示にはJavaScriptが必要です。歴史地点と出典は、
-        JavaScript不要の<a href="./places/">歴史地点一覧</a>から確認できます。
+        JavaScript不要の<a href="./places/">歴史地点一覧</a>または<a href="./themes/">歴史テーマ索引</a>から確認できます。
       </p>
     </noscript>
 

@@ -9,6 +9,8 @@
 - `/places/edo/`: 東京・江戸の1ページ目
 - `/places/edo/page-2.html` ～ `page-88.html`: 東京・江戸の続き
 - `/places/kyoto/`: 京都・幕末36件
+- `/places/shiga/`: 滋賀・戦国36件
+- `/themes/`: JavaScript不要の歴史テーマ索引
 
 地図本体のツールバーと`noscript`から`/places/`へリンクする。一覧から地図へ戻る
 リンクも各ページに置く。
@@ -24,6 +26,7 @@ JavaScriptなしでもHTMLの転送量とナビゲーション量を抑えつつ
 
 ```bash
 npm run build:static-places
+npm run build:static-themes
 npm run audit:static-links
 ```
 
@@ -32,7 +35,8 @@ npm run audit:static-links
 生成前に4データのSHA-256、Feature数、必須属性、座標範囲、出典IDを検証する。
 入力、並び順、テンプレートが同じなら出力も同じで、時刻を埋め込まない。
 
-`dist/places/manifest.json`には入力SHA、件数、ページ数、各HTML/CSSのSHA-256を記録する。
+`dist/places/manifest.json` schema 2には入力SHA、件数、ページ数、各HTML/CSSのSHA-256に加え、
+テーマ21件、関係87件、地域横断5件、テーマHTML/CSS、地点逆リンク追加後のSHA-256を記録する。
 生成物はビルド成果物でありGit管理しない。`npm run build`はViteビルド後に静的一覧を
 生成し、リンク監査まで実行する。
 
@@ -51,9 +55,9 @@ npm run audit:static-links
 `target="_blank" rel="noopener noreferrer"`と「外部サイト」の可視文言を持つ。
 
 静的ページのCSPはスクリプト、画像、フォント、外部接続を禁止する。`script`、フォーム、
-画像、iframe、インラインイベント属性を生成しない。監査はさらに、内部リンクとアンカー、
+画像、iframe、インラインイベント属性を生成しない。テーマ索引も同じ制約を持つ。監査はさらに、内部リンクとアンカー、
 重複ID、空リンク、見出し順、現在ページ、前後ページ、件数、CSS、manifestの全ハッシュを
-検査する。CI、CodeQL、Pagesデプロイ、公開前監査の各経路でこの監査を実行する。
+検査する。地点91ページとテーマ26ページの計117 HTMLを一括監査する。
 
 ## アクセシビリティとプライバシー
 

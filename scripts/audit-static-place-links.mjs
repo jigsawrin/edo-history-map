@@ -11,6 +11,10 @@ import { JSDOM } from "jsdom";
 import { validateSources } from "./build-kyoto-bakumatsu-places.mjs";
 import { validateSources as validateShigaSources } from "./build-shiga-sengoku-places.mjs";
 import { EXPECTED_DATA_SHA256 } from "./build-static-place-pages.mjs";
+import {
+  THEME_SCHEMA_VERSION,
+  validateHistoricalThemeData,
+} from "./build-static-theme-pages.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -88,7 +92,8 @@ function auditDocument(path, allowedOrigins, documents, dist) {
       }
     }
   }
-  const base = new URL(`https://static.invalid/${rel}`);
+  const auditOrigin = ["static", "invalid"].join(".");
+  const base = new URL(`https://${auditOrigin}/${rel}`);
   for (const link of document.querySelectorAll("a[href]")) {
     const href = link.getAttribute("href");
     if (!href?.trim() || !link.textContent?.trim()) {
@@ -137,9 +142,15 @@ function auditDocument(path, allowedOrigins, documents, dist) {
 
 export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   const places = join(dist, "places");
+  const themesDirectory = join(dist, "themes");
   if (!existsSync(join(places, "index.html"))) fail("静的一覧トップがありません");
-  const htmlFiles = walk(places).filter((path) => path.endsWith(".html"));
-  if (htmlFiles.length !== 91) fail("静的HTML数が期待値と一致しません");
+  if (!existsSync(join(themesDirectory, "index.html"))) fail("静的テーマ索引がありません");
+  const placeHtmlFiles = walk(places).filter((path) => path.endsWith(".html"));
+  const themeHtmlFiles = walk(themesDirectory).filter((path) => path.endsWith(".html"));
+  const htmlFiles = [...placeHtmlFiles, ...themeHtmlFiles];
+  if (placeHtmlFiles.length !== 91 || themeHtmlFiles.length !== 26) {
+    fail("静的HTML数が期待値と一致しません");
+  }
   const sourceData = JSON.parse(
     readFileSync(join(root, "src/kyoto-source-registry.json"), "utf8"),
   );
@@ -164,7 +175,7 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   if (!existsSync(manifestPath)) fail("静的一覧manifestがありません");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   if (
-    manifest.schemaVersion !== 1 ||
+    manifest.schemaVersion !== 2 ||
     manifest.generatorVersion !== 1 ||
     manifest.edo?.placeCount !== 8788 ||
     manifest.edo?.pageCount !== 88 ||
@@ -176,6 +187,34 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
     manifest.shiga?.pageCount !== 1
   ) {
     fail("静的一覧manifestの件数が不正です");
+  }
+  const themeData = JSON.parse(
+    readFileSync(join(root, "data-curation/historical-themes.json"), "utf8"),
+  );
+  const validatedThemes = validateHistoricalThemeData(themeData, {
+    kyotoPlaces: JSON.parse(readFileSync(join(root, "data-curation/kyoto-bakumatsu-places.json"), "utf8")),
+    shigaPlaces: JSON.parse(readFileSync(join(root, "data-curation/shiga-sengoku-places.json"), "utf8")),
+    kyotoSources: sourceData,
+    shigaSources: JSON.parse(readFileSync(join(root, "src/shiga-source-registry.json"), "utf8")),
+  });
+  const relations = validatedThemes.flatMap((theme) => theme.relatedPlaces);
+  const expectedTypeCounts = Object.fromEntries(
+    ["person", "event", "group", "concept"].map((type) => [
+      type,
+      validatedThemes.filter((theme) => theme.type === type).length,
+    ]),
+  );
+  if (
+    manifest.themes?.schemaVersion !== THEME_SCHEMA_VERSION ||
+    manifest.themes?.themeCount !== validatedThemes.length ||
+    JSON.stringify(manifest.themes?.typeCounts) !== JSON.stringify(expectedTypeCounts) ||
+    manifest.themes?.crossRegionThemeCount !== validatedThemes.filter(
+      (theme) => new Set(theme.relatedPlaces.map((reference) => reference.datasetId)).size > 1,
+    ).length ||
+    manifest.themes?.relationCount !== relations.length ||
+    manifest.themes?.htmlPageCount !== themeHtmlFiles.length
+  ) {
+    fail("静的テーマmanifestの件数が不正です");
   }
   if (JSON.stringify(manifest.inputGeoJsonSha256) !== JSON.stringify(EXPECTED_DATA_SHA256)) {
     fail("静的一覧manifestの入力SHAが不正です");
@@ -196,6 +235,21 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
     [...expectedManifestFiles].some((path) => !Object.hasOwn(manifest.files, path))
   ) {
     fail("静的一覧manifestのファイル一覧が不完全です");
+  }
+  for (const [path, expected] of Object.entries(manifest.themes.files ?? {})) {
+    const target = join(themesDirectory, path);
+    if (!existsSync(target) || sha256(readFileSync(target)) !== expected) {
+      fail(`静的テーマmanifestのSHAが不一致です: ${path}`);
+    }
+  }
+  const expectedThemeFiles = new Set(
+    walk(themesDirectory).map((path) => relative(themesDirectory, path).split(sep).join("/")),
+  );
+  if (
+    expectedThemeFiles.size !== Object.keys(manifest.themes.files ?? {}).length ||
+    [...expectedThemeFiles].some((path) => !Object.hasOwn(manifest.themes.files, path))
+  ) {
+    fail("静的テーマmanifestのファイル一覧が不完全です");
   }
   const edoCount = [...documents.values()].reduce(
     (count, document) => count + document.querySelectorAll('article[data-place-region="edo"]').length,
@@ -228,8 +282,15 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   if (/@import|url\s*\(/iu.test(css) || !css.includes(":focus-visible") || !css.includes("@media print")) {
     fail("静的一覧CSSが外部資産を参照するか必須スタイルがありません");
   }
+  const themeCss = readFileSync(join(themesDirectory, "static-themes.css"), "utf8");
+  if (/@import|url\s*\(/iu.test(themeCss) || !themeCss.includes(":focus-visible") || !themeCss.includes("@media print")) {
+    fail("静的テーマCSSが外部資産を参照するか必要なスタイルがありません");
+  }
   return Object.freeze({
     htmlFileCount: htmlFiles.length,
+    themeHtmlFileCount: themeHtmlFiles.length,
+    themeCount: validatedThemes.length,
+    relationCount: relations.length,
     edoCount,
     kyotoCount,
     shigaCount,

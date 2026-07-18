@@ -1,0 +1,27 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #202020; background: #fffdf7; }
+* { box-sizing: border-box; }
+body { margin: 0; overflow-wrap: anywhere; line-height: 1.65; }
+a { color: #0645ad; text-underline-offset: 0.18em; }
+a:focus-visible { outline: 3px solid #005fcc; outline-offset: 3px; }
+.skip-link { position: absolute; left: 0.5rem; top: -5rem; padding: 0.75rem; background: #fff; z-index: 2; }
+.skip-link:focus { top: 0.5rem; }
+.site-header, main, .site-footer { width: min(72rem, 100%); margin-inline: auto; padding: 1rem; }
+.site-header { border-bottom: 1px solid #5d4037; }
+.site-title { margin: 0; font-size: 1.25rem; font-weight: 700; }
+.global-nav, .theme-nav { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
+.global-nav a[aria-current="page"] { border-bottom: 0.2rem solid currentColor; font-weight: 700; }
+.lead { font-size: 1.1rem; }
+.notice { padding: 0.75rem; border-left: 0.35rem solid #8a5a00; background: #fff4d6; }
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); gap: 1rem; }
+.theme-card, .relation-card { padding: 1rem; border: 1px solid #5d4037; border-radius: 0.35rem; background: #fff; break-inside: avoid; }
+.theme-card h3, .relation-card h3 { margin-top: 0; }
+.theme-type { display: inline-block; padding: 0.1rem 0.4rem; border: 2px solid currentColor; font-weight: 700; }
+.relation-list { padding-left: 1.5rem; }
+.relation-list > li { margin-block: 1rem; }
+dt { font-weight: 700; }
+dd { margin-left: 0; margin-bottom: 0.4rem; }
+.external-link::after { content: " ↗"; }
+.site-footer { margin-top: 2rem; border-top: 1px solid #5d4037; font-size: 0.9rem; }
+@media (max-width: 30rem) { .site-header, main, .site-footer { padding: 0.75rem; } .global-nav { flex-direction: column; } }
+@media (prefers-contrast: more) { .theme-card, .relation-card, .notice { border: 2px solid currentColor; } a { text-decoration-thickness: 0.15em; } }
+@media print { .skip-link, .global-nav, .theme-nav { display: none; } body { color: #000; background: #fff; font-size: 11pt; } a { color: #000; text-decoration: none; } .theme-card, .relation-card { border-color: #000; } }
