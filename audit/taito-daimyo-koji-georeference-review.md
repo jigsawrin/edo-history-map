@@ -1,7 +1,7 @@
 # 御大名小路辰之口辺図・位置合わせ技術監査
 
-監査日: 2026-07-18  
-candidateId: `taito-2017-chi-009-daimyo-koji`  
+監査日: 2026-07-18
+candidateId: `taito-2017-chi-009-daimyo-koji`
 判定: **品質ゲート不合格 / 本番公開なし**
 
 ## raw画像とIIIF

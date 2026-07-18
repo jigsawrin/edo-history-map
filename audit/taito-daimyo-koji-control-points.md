@@ -1,7 +1,7 @@
 # 御大名小路辰之口辺図・基準点候補監査
 
-監査日: 2026-07-18  
-candidateId: `taito-2017-chi-009-daimyo-koji`  
+監査日: 2026-07-18
+candidateId: `taito-2017-chi-009-daimyo-koji`
 結論: **transform 0点、独立validation 0点。必須8+4点を満たさないため本番control points metadataは作成しない。**
 
 ## 判定方法
