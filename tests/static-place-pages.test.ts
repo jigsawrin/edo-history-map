@@ -19,6 +19,7 @@ import {
   type StaticPlaceGeneration,
 } from "../scripts/build-static-place-pages.mjs";
 import { generateStaticThemeFiles } from "../scripts/build-static-theme-pages.mjs";
+import { generateStaticTimelineFiles } from "../scripts/build-static-timeline-pages.mjs";
 
 const ROOT = join(__dirname, "..");
 let generated: StaticPlaceGeneration;
@@ -245,13 +246,37 @@ describe("静的地点一覧生成", () => {
       mkdirSync(dirname(output), { recursive: true });
       writeFileSync(output, content, "utf8");
     }
-    writeFileSync(join(temporaryDist, "places/kyoto/index.html"), themeGenerated.updatedKyotoHtml, "utf8");
-    writeFileSync(join(temporaryDist, "places/shiga/index.html"), themeGenerated.updatedShigaHtml, "utf8");
-    writeFileSync(join(temporaryDist, "places/manifest.json"), `${JSON.stringify(themeGenerated.manifest, null, 2)}\n`, "utf8");
+    const timelineGenerated = generateStaticTimelineFiles({
+      timelineInput: readFileSync(join(ROOT, "data-curation/historical-timeline.json"), "utf8"),
+      themes: JSON.parse(themeInput),
+      kyotoPlaces: JSON.parse(readFileSync(join(ROOT, "data-curation/kyoto-bakumatsu-places.json"), "utf8")),
+      shigaPlaces: JSON.parse(readFileSync(join(ROOT, "data-curation/shiga-sengoku-places.json"), "utf8")),
+      kyotoSources: JSON.parse(readFileSync(join(ROOT, "src/kyoto-source-registry.json"), "utf8")),
+      shigaSources: JSON.parse(readFileSync(join(ROOT, "src/shiga-source-registry.json"), "utf8")),
+      css: readFileSync(join(ROOT, "src/static-timeline.css"), "utf8"),
+      placeManifest: themeGenerated.manifest,
+      kyotoPlaceHtml: themeGenerated.updatedKyotoHtml,
+      shigaPlaceHtml: themeGenerated.updatedShigaHtml,
+      themeFiles: themeGenerated.files,
+    });
+    for (const [path, content] of timelineGenerated.files) {
+      const output = join(temporaryDist, "timeline", path);
+      mkdirSync(dirname(output), { recursive: true });
+      writeFileSync(output, content, "utf8");
+    }
+    for (const [path, content] of timelineGenerated.themeUpdates) {
+      writeFileSync(join(temporaryDist, "themes", path), content, "utf8");
+    }
+    for (const [path, content] of Object.entries(timelineGenerated.placeUpdates)) {
+      writeFileSync(join(temporaryDist, "places", path), content, "utf8");
+    }
+    writeFileSync(join(temporaryDist, "places/manifest.json"), `${JSON.stringify(timelineGenerated.manifest, null, 2)}\n`, "utf8");
     const result = auditStaticPlaceLinks(ROOT, temporaryDist);
     expect(result).toMatchObject({
-      htmlFileCount: 117,
+      htmlFileCount: 120,
       themeHtmlFileCount: 26,
+      timelineHtmlFileCount: 3,
+      timelineEntryCount: 35,
       themeCount: 21,
       relationCount: 87,
       edoCount: 8788,

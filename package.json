@@ -7,9 +7,10 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build && npm run build:static-places && npm run build:static-themes && npm run audit:static-links",
+    "build": "tsc --noEmit && vite build && npm run build:static-places && npm run build:static-themes && npm run build:static-timeline && npm run audit:static-links",
     "build:static-places": "node scripts/build-static-place-pages.mjs",
     "build:static-themes": "node scripts/build-static-theme-pages.mjs",
+    "build:static-timeline": "node scripts/build-static-timeline-pages.mjs",
     "audit:static-links": "node scripts/audit-static-place-links.mjs",
     "preview": "vite preview",
     "test": "vitest run",

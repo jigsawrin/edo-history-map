@@ -40,6 +40,8 @@ audit/
 !audit/
 audit/*
 !audit/shiga-sengoku-place-review.md
+!audit/historical-theme-review.md
+!audit/historical-timeline-review.md
 
 # 原データ(公式配布元から取得する。リポジトリで再配布しない)
 data-raw/

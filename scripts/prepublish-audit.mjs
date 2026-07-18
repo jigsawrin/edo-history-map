@@ -24,6 +24,7 @@ import { buildKyotoGeoJson } from "./build-kyoto-bakumatsu-places.mjs";
 import { buildShigaGeoJson } from "./build-shiga-sengoku-places.mjs";
 import { auditStaticPlaceLinks } from "./audit-static-place-links.mjs";
 import { validateHistoricalThemeData } from "./build-static-theme-pages.mjs";
+import { validateTimelineData } from "./build-static-timeline-pages.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -197,6 +198,7 @@ const SHIGA_DATASET_ID = "project-shiga-sengoku-places";
 const SHIGA_CURATION_FILE = "data-curation/shiga-sengoku-places.json";
 const SHIGA_PUBLIC_FILE = "public/data/shiga-sengoku-places.geojson";
 const HISTORICAL_THEME_CURATION_FILE = "data-curation/historical-themes.json";
+const HISTORICAL_TIMELINE_CURATION_FILE = "data-curation/historical-timeline.json";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -1169,13 +1171,14 @@ for (const file of allFiles) {
   if (lower.endsWith(".map")) {
     addFinding("error", "ソースマップ露出", file.rel, 0, "source mapは公開・追跡禁止です");
   }
-  if (lower.startsWith("data-curation/") && ![KYOTO_CURATION_FILE, SHIGA_CURATION_FILE, HISTORICAL_THEME_CURATION_FILE].includes(file.rel)) {
+  if (lower.startsWith("data-curation/") && ![KYOTO_CURATION_FILE, SHIGA_CURATION_FILE, HISTORICAL_THEME_CURATION_FILE, HISTORICAL_TIMELINE_CURATION_FILE].includes(file.rel)) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
   }
   if (
     (lower.includes("kyoto") || lower.includes("shiga") || lower.startsWith("data-curation/")) &&
     forbiddenKyotoAssetExtensions.has(extension) &&
-    !generatedKyotoStaticPages.has(file.rel)
+    !generatedKyotoStaticPages.has(file.rel) &&
+    !lower.startsWith("dist/timeline/")
   ) {
     addFinding("error", "京都原画像", file.rel, 0, "京都の原画像・PDF・HTMLコピーは公開禁止です");
   }
@@ -1393,6 +1396,61 @@ for (const file of allFiles.filter((item) => item.rel.startsWith("src/historical
   const source = readFileSync(join(ROOT, file.rel), "utf8");
   for (const forbidden of ["fetch(", "localStorage", "sessionStorage", "document.cookie", "console.log", "innerHTML", "insertAdjacentHTML"]) {
     if (source.includes(forbidden)) addFinding("error", "歴史テーマセキュリティ", file.rel, 0, `${forbidden}は禁止です`);
+  }
+}
+
+// ---- 3.8 歴史年表の公開ゲート ---------------------------------------------
+
+for (const [rel, label] of [
+  [HISTORICAL_TIMELINE_CURATION_FILE, "年表キュレーション"],
+  ["src/historical-timeline-registry.ts", "年表レジストリ"],
+  ["src/historical-timeline-search.ts", "年表検索"],
+  ["src/historical-timeline-controller.ts", "年表UIコントローラー"],
+  ["scripts/build-static-timeline-pages.mjs", "静的年表生成器"],
+  ["audit/historical-timeline-review.md", "年表採否監査"],
+  ["docs/HISTORICAL_TIMELINE.md", "年表設計文書"],
+]) {
+  if (!existsSync(join(ROOT, rel))) addFinding("error", "歴史年表", rel, 0, `${label}がありません`);
+}
+if (existsSync(join(ROOT, "index.html"))) {
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  for (const [needle, label] of [
+    ['id="historical-timeline-open"', "開くbutton"],
+    ['aria-controls="historical-timeline-panel"', "aria-controls"],
+    ['id="historical-timeline-panel"', "年表パネル"],
+    ['id="historical-timeline-track"', "時代区分select"],
+    ['id="historical-timeline-type"', "出来事種別select"],
+    ['id="historical-timeline-input"', "検索input"],
+    ['id="historical-timeline-list"', "年表一覧"],
+    ['id="historical-timeline-detail"', "年表詳細"],
+    ['id="historical-timeline-status"', "aria-live status"],
+    ['id="historical-timeline-close"', "閉じるbutton"],
+    ['href="./timeline/"', "静的年表リンク"],
+  ]) if (!html.includes(needle)) addFinding("error", "歴史年表UI", "index.html", 0, `${label}がありません`);
+}
+try {
+  const timelineInput = readFileSync(join(ROOT, HISTORICAL_TIMELINE_CURATION_FILE), "utf8");
+  const timeline = validateTimelineData(JSON.parse(timelineInput), {
+    themes: JSON.parse(readFileSync(join(ROOT, HISTORICAL_THEME_CURATION_FILE), "utf8")),
+    kyotoPlaces: JSON.parse(readFileSync(join(ROOT, KYOTO_CURATION_FILE), "utf8")),
+    shigaPlaces: JSON.parse(readFileSync(join(ROOT, SHIGA_CURATION_FILE), "utf8")),
+    kyotoSources: JSON.parse(readFileSync(join(ROOT, KYOTO_SOURCE_REGISTRY_FILE), "utf8")),
+    shigaSources: JSON.parse(readFileSync(join(ROOT, "src/shiga-source-registry.json"), "utf8")),
+  });
+  const placeRelations = timeline.flatMap((entry) => entry.relatedPlaces);
+  const themeRelations = timeline.flatMap((entry) => entry.relatedThemeIds);
+  if (timeline.length !== 35 || timeline.filter((entry) => entry.track === "shiga-sengoku").length !== 17 || timeline.filter((entry) => entry.track === "kyoto-bakumatsu").length !== 18) addFinding("error", "歴史年表件数", HISTORICAL_TIMELINE_CURATION_FILE, 0, "承認済み35項目・滋賀17・京都18と一致しません");
+  if (placeRelations.some((reference) => reference.datasetId === "codh-edo-maps-places")) addFinding("error", "歴史年表対象", HISTORICAL_TIMELINE_CURATION_FILE, 0, "EDO地名参照があります");
+  if (new Set(themeRelations).size !== 21) addFinding("error", "歴史年表テーマ", HISTORICAL_TIMELINE_CURATION_FILE, 0, "関連テーマが承認済み21件と一致しません");
+  infos.push(`歴史年表: ${timeline.length}項目・${placeRelations.length}地点関係・${themeRelations.length}テーマ関係を固定ID・地点所属出典・明示日付で検証`);
+} catch (error) {
+  addFinding("error", "歴史年表検証", HISTORICAL_TIMELINE_CURATION_FILE, 0, error instanceof Error ? error.message : "検証に失敗しました");
+}
+for (const rel of ["src/historical-timeline-registry.ts", "src/historical-timeline-search.ts", "src/historical-timeline-controller.ts"]) {
+  if (!existsSync(join(ROOT, rel))) continue;
+  const source = readFileSync(join(ROOT, rel), "utf8");
+  for (const forbidden of ["fetch(", "localStorage", "sessionStorage", "indexedDB", "document.cookie", "history.pushState", "new Date(", "Date.parse(", "innerHTML", "insertAdjacentHTML"]) {
+    if (source.includes(forbidden)) addFinding("error", "歴史年表セキュリティ", rel, 0, `${forbidden}は禁止です`);
   }
 }
 

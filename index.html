@@ -194,9 +194,18 @@
       >
         歴史テーマ
       </button>
+      <button
+        id="historical-timeline-open"
+        type="button"
+        aria-controls="historical-timeline-panel"
+        aria-expanded="false"
+      >
+        歴史年表
+      </button>
       <button type="button" id="locate-button">現在地を表示</button>
       <a class="toolbar-link" href="./places/">歴史地点一覧</a>
       <a class="toolbar-link" href="./themes/">静的テーマ索引</a>
+      <a class="toolbar-link" href="./timeline/">静的歴史年表</a>
       <button type="button" id="attribution-button">出典・ライセンス</button>
       <button type="button" id="privacy-button">プライバシー</button>
     </div>
@@ -294,6 +303,59 @@
         <button id="historical-theme-close" type="button">歴史テーマを閉じる</button>
       </section>
 
+      <section
+        id="historical-timeline-panel"
+        class="historical-timeline-panel"
+        aria-labelledby="historical-timeline-heading"
+        hidden
+      >
+        <h2 id="historical-timeline-heading">歴史年表</h2>
+        <p class="historical-timeline-note">
+          本アプリが収録する滋賀・戦国と京都・幕末の地点から確認できる出来事を掲載しています。両時代の間には大きな空白があり、日本史全体を連続的・網羅的に示すものではありません。
+        </p>
+        <label for="historical-timeline-track">時代区分</label>
+        <select id="historical-timeline-track">
+          <option value="">すべて</option>
+          <option value="shiga-sengoku">滋賀・戦国</option>
+          <option value="kyoto-bakumatsu">京都・幕末</option>
+        </select>
+        <label for="historical-timeline-type">出来事種別</label>
+        <select id="historical-timeline-type">
+          <option value="">すべて</option>
+          <option value="battle">戦い</option>
+          <option value="politics">政治</option>
+          <option value="construction">築城・建設</option>
+          <option value="religion">宗教</option>
+          <option value="incident">事件</option>
+          <option value="movement">活動・移動</option>
+          <option value="death">死去・襲撃</option>
+          <option value="transition">転換</option>
+          <option value="other">その他</option>
+        </select>
+        <label for="historical-timeline-input">年表を検索</label>
+        <input
+          id="historical-timeline-input"
+          type="search"
+          maxlength="100"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <p
+          id="historical-timeline-status"
+          class="historical-timeline-status"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        ></p>
+        <h3 id="historical-timeline-list-heading">年表一覧</h3>
+        <ol id="historical-timeline-list" aria-labelledby="historical-timeline-list-heading"></ol>
+        <div id="historical-timeline-detail"></div>
+        <nav aria-label="静的歴史年表">
+          <a href="./timeline/">JavaScript不要の歴史年表</a>
+        </nav>
+        <button id="historical-timeline-close" type="button">歴史年表を閉じる</button>
+      </section>
+
       <div
         id="map"
         tabindex="-1"
@@ -304,13 +366,13 @@
     </div>
 
     <p id="map-help" class="visually-hidden">
-      地図はキーボードでも移動とズームができます。地図を直接操作しにくい場合やCanvas上の地点を直接選びにくい場合は、「江戸地名を検索」「幕末史跡を検索」または「歴史テーマ」から通常のHTMLボタンによる地点一覧を利用できます。
+      地図はキーボードでも移動とズームができます。地図を直接操作しにくい場合やCanvas上の地点を直接選びにくい場合は、「江戸地名を検索」「幕末史跡を検索」「歴史テーマ」または「歴史年表」から通常のHTMLボタンによる地点一覧を利用できます。
     </p>
 
     <noscript>
       <p class="noscript-note">
         このアプリの地図表示にはJavaScriptが必要です。歴史地点と出典は、
-        JavaScript不要の<a href="./places/">歴史地点一覧</a>または<a href="./themes/">歴史テーマ索引</a>から確認できます。
+        JavaScript不要の<a href="./places/">歴史地点一覧</a>、<a href="./themes/">歴史テーマ索引</a>または<a href="./timeline/">歴史年表</a>から確認できます。
       </p>
     </noscript>
 

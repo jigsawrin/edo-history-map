@@ -170,6 +170,7 @@ npm run typecheck         # TypeScript strict
 npm run build             # 本番ビルド(dist/)
 npm run build:static-places # 承認済みGeoJSONから静的地点一覧を生成
 npm run build:static-themes # 固定テーマ定義から静的テーマ索引と地点逆リンクを生成
+npm run build:static-timeline # 監査済み年表と地点・テーマ逆リンクを生成
 npm run audit:static-links  # 静的一覧のリンク・HTML・manifestを監査
 npm run audit:prepublish  # 公開前監査(秘密情報・ライセンス・出典検査)
 ```
@@ -181,6 +182,16 @@ TypeScript / Vite / Leaflet / Vitest / ESLint。
 アクセス解析・LLM 機能は使用していません。
 実行時の外部通信先は地理院タイル(cyberjapandata.gsi.go.jp)のみで、
 Content Security Policy で制限しています。
+
+## 歴史年表
+
+地図版の「歴史年表」とJavaScript不要の`/timeline/`は、滋賀・戦国17件と
+京都・幕末18件、合計35件の出来事を監査済みの`order`順で表示します。
+21テーマすべてと42件の地点関係を、名称一致ではなく固定IDで参照します。
+戦国期と幕末期の間には大きな空白があり、日本史全体を連続的・網羅的に
+示すものではありません。日付は独立キュレーションへ明示登録し、不明な月日を
+補わず、旧暦日を根拠なくグレゴリオ暦へ換算しません。年表の検索・絞り込み状態は
+URL、Cookie、ブラウザストレージへ保存しません。
 
 地域パックは年代カタログと地域固有の年代バインディングを分離し、承認済みデータセットIDを固定ローカルパスへ解決します。新地域の追加には、データセットごとの公式出典、個別ライセンス、再配布・改変可否、位置精度、CRS、SHAの確認が必要です。既存地域のデータや出典を別地域へ無断で流用してはいけません。
 
@@ -197,6 +208,7 @@ Content Security Policy で制限しています。
 - [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) — アクセシビリティ設計と今後の代替操作
 - [docs/STATIC_PLACE_PAGES.md](docs/STATIC_PLACE_PAGES.md) — JavaScript不要の静的地点一覧の生成・監査仕様
 - [docs/HISTORICAL_THEMES.md](docs/HISTORICAL_THEMES.md) — 歴史テーマの採用原則、地図UI、静的索引、更新手順
+- [docs/HISTORICAL_TIMELINE.md](docs/HISTORICAL_TIMELINE.md) — 歴史年表の日付モデル、採用原則、地図UI、静的ページ
 - [docs/HISTORICAL_BASEMAP.md](docs/HISTORICAL_BASEMAP.md) — 年代・pane・歴史画像の安全な拡張設計
 - [docs/REGION_PACKS.md](docs/REGION_PACKS.md) — 地域パックの構造と安全な追加手順
 - [docs/BROWSER_QA.md](docs/BROWSER_QA.md) — Canvas操作とPagesキャッシュの実ブラウザ確認手順

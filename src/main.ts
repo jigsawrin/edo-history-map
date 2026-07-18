@@ -40,6 +40,8 @@ import type { RegionPack } from "./regions/types";
 import { PlaceSearchController } from "./place-search/controller";
 import { HistoricalThemeController } from "./historical-theme-controller";
 import type { HistoricalThemePlaceReference } from "./historical-theme-registry";
+import { HistoricalTimelineController } from "./historical-timeline-controller";
+import type { HistoricalTimelinePlaceReference } from "./historical-timeline-registry";
 import kyotoThemePlaces from "../data-curation/kyoto-bakumatsu-places.json";
 import shigaThemePlaces from "../data-curation/shiga-sengoku-places.json";
 import { placeSearchModelCache } from "./place-search/model-cache";
@@ -192,6 +194,15 @@ function main(): void {
   const historicalThemeDetail = byId<HTMLElement>("historical-theme-detail");
   const historicalThemeStatus = byId<HTMLElement>("historical-theme-status");
   const historicalThemeClose = byId<HTMLButtonElement>("historical-theme-close");
+  const historicalTimelineOpen = byId<HTMLButtonElement>("historical-timeline-open");
+  const historicalTimelinePanel = byId<HTMLElement>("historical-timeline-panel");
+  const historicalTimelineInput = byId<HTMLInputElement>("historical-timeline-input");
+  const historicalTimelineTrack = byId<HTMLSelectElement>("historical-timeline-track");
+  const historicalTimelineType = byId<HTMLSelectElement>("historical-timeline-type");
+  const historicalTimelineList = byId<HTMLOListElement>("historical-timeline-list");
+  const historicalTimelineDetail = byId<HTMLElement>("historical-timeline-detail");
+  const historicalTimelineStatus = byId<HTMLElement>("historical-timeline-status");
+  const historicalTimelineClose = byId<HTMLButtonElement>("historical-timeline-close");
   let historicalPointsLayer: TransitionLayer | null = null;
   let machiyaLayer: MachiyaAreaTransitionLayer | null = null;
   let coastlineLayer: CoastlineTransitionLayer | null = null;
@@ -199,7 +210,7 @@ function main(): void {
   const visibleLeafletAttributions = new Set<string>();
   const loadCoordinator = new RegionLoadCoordinator();
   let regionToken = loadCoordinator.begin(currentRegion.region.id);
-  let themeSelectionGeneration = 0;
+  let curatedSelectionGeneration = 0;
 
   const reconstructedLayer = createReconstructedBackground();
   const reconstructedTransition = new LeafletTransitionLayer(
@@ -306,15 +317,51 @@ function main(): void {
         locationCaution: place.locationNoteJa,
       };
     },
-    onSelectPlace: (reference, trigger) => selectThemePlace(reference, trigger),
+    onSelectPlace: (reference, trigger) => navigateToCuratedHistoricalPlace(reference, trigger, "theme"),
     onVisibilityChange: (open) => {
       if (open && placeSearchController.isOpen()) placeSearchController.close(false);
+      if (open && historicalTimelineController.isOpen()) historicalTimelineController.close(false);
       window.requestAnimationFrame(() => {
         if (open && window.matchMedia("(max-width: 600px)").matches) historicalThemePanel.scrollIntoView({ block: "start", behavior: "auto" });
         map.invalidateSize({ pan: false });
       });
     },
-    onClose: () => { themeSelectionGeneration += 1; },
+    onClose: () => { curatedSelectionGeneration += 1; },
+  });
+
+  const historicalTimelineController = new HistoricalTimelineController({
+    elements: {
+      openButton: historicalTimelineOpen,
+      panel: historicalTimelinePanel,
+      input: historicalTimelineInput,
+      track: historicalTimelineTrack,
+      type: historicalTimelineType,
+      list: historicalTimelineList,
+      detail: historicalTimelineDetail,
+      status: historicalTimelineStatus,
+      closeButton: historicalTimelineClose,
+    },
+    resolvePlace: (reference) => {
+      const place = reference.datasetId === "project-kyoto-bakumatsu-places"
+        ? kyotoThemePlaceMap.get(reference.placeId)
+        : shigaThemePlaceMap.get(reference.placeId);
+      if (!place) throw new Error("年表の関連地点が見つかりません");
+      return {
+        name: place.nameJa,
+        coordinateConfidence: place.coordinateConfidence === "high" ? "高" : place.coordinateConfidence === "medium" ? "中" : "低",
+        locationCaution: place.locationNoteJa,
+      };
+    },
+    onSelectPlace: (reference, trigger) => navigateToCuratedHistoricalPlace(reference, trigger, "timeline"),
+    onVisibilityChange: (open) => {
+      if (open && placeSearchController.isOpen()) placeSearchController.close(false);
+      if (open && historicalThemeController.isOpen()) historicalThemeController.close(false);
+      window.requestAnimationFrame(() => {
+        if (open && window.matchMedia("(max-width: 600px)").matches) historicalTimelinePanel.scrollIntoView({ block: "start", behavior: "auto" });
+        map.invalidateSize({ pan: false });
+      });
+    },
+    onClose: () => { curatedSelectionGeneration += 1; },
   });
 
   function searchableDatasetId(
@@ -642,9 +689,9 @@ function main(): void {
     readonly datasetId: PointDatasetId;
     readonly record: HistoricalPlaceSource;
     readonly searchable?: SearchableHistoricalPlace;
-    readonly source: "map" | "search" | "theme";
+    readonly source: "map" | "search" | "theme" | "timeline";
     readonly returnFocus: HTMLElement;
-    readonly themeGeneration?: number;
+    readonly curatedGeneration?: number;
   }
 
   async function selectHistoricalPlace(
@@ -661,7 +708,7 @@ function main(): void {
       return;
     }
     const token = regionToken;
-    if (selection.source === "search" || selection.source === "theme") {
+    if (selection.source === "search" || selection.source === "theme" || selection.source === "timeline") {
       const layer = await cachedPointsLayer(selection.datasetId);
       const latestBinding = regionRegistry.getEraBinding(
         currentRegion.region.id,
@@ -669,7 +716,7 @@ function main(): void {
       );
       if (
         !loadCoordinator.isCurrent(token) ||
-        (selection.themeGeneration !== undefined && selection.themeGeneration !== themeSelectionGeneration) ||
+        (selection.curatedGeneration !== undefined && selection.curatedGeneration !== curatedSelectionGeneration) ||
         latestBinding?.placeDatasetId !== selection.datasetId
       ) {
         return;
@@ -690,7 +737,7 @@ function main(): void {
       return;
     }
 
-    if (selection.themeGeneration !== undefined && selection.themeGeneration !== themeSelectionGeneration) return;
+    if (selection.curatedGeneration !== undefined && selection.curatedGeneration !== curatedSelectionGeneration) return;
 
     if (selection.record.datasetId === "codh-edo-maps-places") {
       renderPlaceCard(
@@ -706,6 +753,14 @@ function main(): void {
       );
     } else {
       renderShigaPlaceCard(infoCard, selection.record.record, selection.returnFocus);
+    }
+
+    if (selection.source === "theme" || selection.source === "timeline") {
+      const heading = infoCard.querySelector<HTMLElement>("h2");
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus();
+      }
     }
 
     const searchable =
@@ -729,17 +784,20 @@ function main(): void {
     }
   }
 
-  async function selectThemePlace(
-    reference: HistoricalThemePlaceReference,
+  async function navigateToCuratedHistoricalPlace(
+    reference: HistoricalThemePlaceReference | HistoricalTimelinePlaceReference,
     trigger: HTMLButtonElement,
+    source: "theme" | "timeline",
   ): Promise<void> {
-    const generation = ++themeSelectionGeneration;
+    const generation = ++curatedSelectionGeneration;
+    const controller = source === "theme" ? historicalThemeController : historicalTimelineController;
+    const opener = source === "theme" ? historicalThemeOpen : historicalTimelineOpen;
     const destination = reference.datasetId === "project-kyoto-bakumatsu-places"
       ? { regionId: "kyoto", eraId: "bakumatsu" }
       : { regionId: "shiga", eraId: "sengoku" };
     const pack = regionRegistry.get(destination.regionId);
     if (!pack) {
-      historicalThemeController.announce("対象地域を利用できません。別の地点を選んでください。");
+      controller.announce("対象地域を利用できません。別の地点を選んでください。");
       return;
     }
     if (currentRegion.region.id !== destination.regionId) {
@@ -752,7 +810,7 @@ function main(): void {
     }
     try {
       const records = await placeSearchModelCache.load(reference.datasetId);
-      if (generation !== themeSelectionGeneration) return;
+      if (generation !== curatedSelectionGeneration) return;
       const expectedKey = `${reference.datasetId === "project-kyoto-bakumatsu-places" ? "kyoto" : "shiga"}:${reference.placeId}`;
       const searchable = records.find((record) => record.key === expectedKey);
       if (!searchable) throw new Error("関連地点が見つかりません");
@@ -760,16 +818,16 @@ function main(): void {
         datasetId: reference.datasetId,
         record: searchable.sourceRecord,
         searchable,
-        source: "theme",
-        returnFocus: trigger,
-        themeGeneration: generation,
+        source,
+        returnFocus: window.matchMedia("(max-width: 600px)").matches ? opener : trigger,
+        curatedGeneration: generation,
       });
-      if (generation !== themeSelectionGeneration) return;
-      historicalThemeController.announce(`${destination.regionId === "kyoto" ? "京都・幕末" : "滋賀・戦国"}へ切り替え、${searchable.name}を表示しました。`);
-      if (window.matchMedia("(max-width: 600px)").matches) historicalThemeController.close(false);
+      if (generation !== curatedSelectionGeneration) return;
+      controller.announce(`${destination.regionId === "kyoto" ? "京都・幕末" : "滋賀・戦国"}へ切り替え、${searchable.name}を表示しました。`);
+      if (window.matchMedia("(max-width: 600px)").matches) controller.close(false);
     } catch {
-      if (generation !== themeSelectionGeneration) return;
-      historicalThemeController.announce("関連地点を読み込めませんでした。再読み込みすると回復する場合があります。");
+      if (generation !== curatedSelectionGeneration) return;
+      controller.announce("関連地点を読み込めませんでした。再読み込みすると回復する場合があります。");
     }
   }
 
@@ -905,7 +963,7 @@ function main(): void {
   loadRegionLayers(currentRegion);
 
   regionSelect.addEventListener("change", () => {
-    themeSelectionGeneration += 1;
+    curatedSelectionGeneration += 1;
     const next = regionRegistry.get(regionSelect.value);
     if (!next) {
       regionSelect.value = currentRegion.region.id;
@@ -915,7 +973,7 @@ function main(): void {
   });
 
   eraSelect.addEventListener("change", () => {
-    themeSelectionGeneration += 1;
+    curatedSelectionGeneration += 1;
     applyEra(true);
   });
   historyViewSelect.addEventListener("change", () => {

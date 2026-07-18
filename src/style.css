@@ -314,7 +314,8 @@ a:focus-visible,
 }
 
 .place-search-panel,
-.historical-theme-panel {
+.historical-theme-panel,
+.historical-timeline-panel {
   display: flex;
   flex: 0 0 min(22rem, 36vw);
   flex-direction: column;
@@ -334,7 +335,11 @@ a:focus-visible,
 .historical-theme-panel h2,
 .historical-theme-panel h3,
 .historical-theme-panel h4,
-.historical-theme-panel p {
+.historical-theme-panel p,
+.historical-timeline-panel h2,
+.historical-timeline-panel h3,
+.historical-timeline-panel h4,
+.historical-timeline-panel p {
   margin: 0;
 }
 
@@ -344,23 +349,42 @@ a:focus-visible,
 
 .historical-theme-panel h2 { font-size: 1.1rem; }
 .historical-theme-panel h3,
-.historical-theme-panel h4 { font-size: 0.95rem; }
-.historical-theme-panel > label { font-size: 0.85rem; font-weight: 700; }
+.historical-theme-panel h4,
+.historical-timeline-panel h3,
+.historical-timeline-panel h4 { font-size: 0.95rem; }
+.historical-timeline-panel h2 { font-size: 1.1rem; }
+.historical-theme-panel > label,
+.historical-timeline-panel > label { font-size: 0.85rem; font-weight: 700; }
 .historical-theme-note,
-.historical-theme-status { font-size: 0.8rem; }
+.historical-theme-status,
+.historical-timeline-note,
+.historical-timeline-status,
+.historical-timeline-date-note { font-size: 0.8rem; }
 #historical-theme-input,
-#historical-theme-type { width: 100%; min-height: 44px; font: inherit; }
-#historical-theme-close { min-height: 44px; }
+#historical-theme-type,
+#historical-timeline-input,
+#historical-timeline-track,
+#historical-timeline-type { width: 100%; min-height: 44px; font: inherit; }
+#historical-theme-close,
+#historical-timeline-close { min-height: 44px; }
 #historical-theme-list,
-.historical-theme-detail ol {
+#historical-timeline-list,
+.historical-theme-detail ol,
+.historical-timeline-detail ol,
+.historical-timeline-detail ul {
   margin: 0;
   padding-left: 1.65rem;
 }
-#historical-theme-list { max-height: 13rem; overflow-y: auto; overscroll-behavior: contain; }
+#historical-theme-list,
+#historical-timeline-list { max-height: 13rem; overflow-y: auto; overscroll-behavior: contain; }
 #historical-theme-list > li,
-.historical-theme-detail li { margin-bottom: 0.35rem; }
+#historical-timeline-list > li,
+.historical-theme-detail li,
+.historical-timeline-detail li { margin-bottom: 0.35rem; }
 .historical-theme-button,
-.historical-theme-place-button {
+.historical-theme-place-button,
+.historical-timeline-button,
+.historical-timeline-place-button {
   display: flex;
   width: 100%;
   min-height: 44px;
@@ -370,10 +394,15 @@ a:focus-visible,
   text-align: left;
 }
 .historical-theme-button span,
-.historical-theme-place-button span { font-size: 0.75rem; color: #444; }
-.historical-theme-button[aria-current="true"] { border: 3px solid var(--accent); background: #e3f2fd; }
-.historical-theme-button[aria-current="true"]::before { content: "選択中"; font-size: 0.72rem; font-weight: 700; }
-#historical-theme-detail { flex: 1; min-height: 5rem; overflow-y: auto; overscroll-behavior: contain; }
+.historical-theme-place-button span,
+.historical-timeline-button span,
+.historical-timeline-place-button span { font-size: 0.75rem; color: #444; }
+.historical-theme-button[aria-current="true"],
+.historical-timeline-button[aria-current="true"] { border: 3px solid var(--accent); background: #e3f2fd; }
+.historical-theme-button[aria-current="true"]::before,
+.historical-timeline-button[aria-current="true"]::before { content: "選択中"; font-size: 0.72rem; font-weight: 700; }
+#historical-theme-detail,
+#historical-timeline-detail { flex: 1; min-height: 5rem; overflow-y: auto; overscroll-behavior: contain; }
 
 .place-search-panel h3 {
   font-size: 0.95rem;
@@ -547,9 +576,10 @@ dialog::backdrop {
   }
 
   .place-search-panel,
-  .historical-theme-panel {
+  .historical-theme-panel,
+  .historical-timeline-panel {
     position: absolute;
-    z-index: 1000;
+    z-index: 1200;
     top: 0;
     right: 0;
     left: 0;
@@ -572,7 +602,13 @@ dialog::backdrop {
   }
 
   body:has(#info-card:not([hidden])) .historical-theme-panel:not([hidden]) { max-height: 34dvh; }
+  body:has(#info-card:not([hidden])) .historical-timeline-panel:not([hidden]) { max-height: 34dvh; }
   body:has(#historical-theme-panel:not([hidden])) .info-card:not([hidden]) {
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    max-height: 30dvh;
+  }
+
+  body:has(#historical-timeline-panel:not([hidden])) .info-card:not([hidden]) {
     bottom: max(0.5rem, env(safe-area-inset-bottom));
     max-height: 30dvh;
   }

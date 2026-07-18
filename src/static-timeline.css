@@ -1,0 +1,32 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #202020; background: #fffdf7; }
+* { box-sizing: border-box; }
+html { overflow-x: hidden; }
+body { margin: 0; overflow-wrap: anywhere; line-height: 1.65; }
+a { color: #0645ad; text-underline-offset: 0.18em; min-height: 44px; }
+a:focus-visible { outline: 3px solid #005fcc; outline-offset: 3px; }
+.skip-link { position: absolute; left: 0.5rem; top: -5rem; padding: 0.75rem; background: #fff; z-index: 2; }
+.skip-link:focus { top: 0.5rem; }
+.site-header, main, .site-footer { width: min(72rem, 100%); margin-inline: auto; padding: 1rem; }
+.site-header { border-bottom: 1px solid #5d4037; }
+.site-title { margin: 0; font-size: 1.25rem; font-weight: 700; }
+.global-nav, .timeline-nav { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
+.global-nav a { display: inline-flex; align-items: center; }
+.global-nav a[aria-current="page"] { border-bottom: 0.2rem solid currentColor; font-weight: 700; }
+.lead { font-size: 1.1rem; }
+.notice, .date-note { padding: 0.75rem; border-left: 0.35rem solid #8a5a00; background: #fff4d6; }
+.track-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr)); gap: 1rem; }
+.track-card, .timeline-entry { padding: 1rem; border: 1px solid #5d4037; border-radius: 0.35rem; background: #fff; break-inside: avoid; }
+.timeline-entry { margin-block: 1.25rem; }
+.timeline-entry h2, .track-card h2 { margin-top: 0; }
+.timeline-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.timeline-tag { display: inline-block; padding: 0.1rem 0.4rem; border: 2px solid currentColor; font-weight: 700; }
+.relation-list { padding-left: 1.5rem; }
+.relation-list > li { margin-block: 0.75rem; }
+dt { font-weight: 700; }
+dd { margin-left: 0; margin-bottom: 0.4rem; }
+.external-link::after { content: " ↗"; }
+.site-footer { margin-top: 2rem; border-top: 1px solid #5d4037; font-size: 0.9rem; }
+@media (max-width: 30rem) { .site-header, main, .site-footer { padding: 0.75rem; } .global-nav { flex-direction: column; } }
+@media (prefers-contrast: more) { .track-card, .timeline-entry, .notice, .date-note { border: 2px solid currentColor; } a { text-decoration-thickness: 0.15em; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+@media print { .skip-link, .global-nav, .timeline-nav { display: none; } body { color: #000; background: #fff; font-size: 11pt; } a { color: #000; text-decoration: none; } .timeline-entry, .track-card { border-color: #000; } }

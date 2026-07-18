@@ -1,0 +1,410 @@
+[
+  {
+    "id": "timeline-shiga-1560-noradabattle",
+    "order": 1,
+    "track": "shiga-sengoku",
+    "type": "battle",
+    "titleJa": "野良田の戦い",
+    "aliasesJa": ["肥田城周辺の戦い"],
+    "date": { "displayJa": "永禄3年（1560年）頃", "startYear": 1560, "precision": "circa", "calendarBasis": "mixed", "noteJa": "地点資料から年頃まで確認し、月日は補っていません。" },
+    "summaryJa": "浅井長政が六角方と戦った野良田の戦いを、肥田城跡という既存の代表地点からたどります。戦場全体を一点で示すものではありません。",
+    "relatedThemeIds": ["group-azai-clan"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-019", "relationSummaryJa": "肥田城跡は戦いの舞台となった周辺地域を示す代表地点です。", "sourceIds": ["shiga-pref-rokkaku-map"] }]
+  },
+  {
+    "id": "timeline-shiga-1562-bimmanji-conflict",
+    "order": 2,
+    "track": "shiga-sengoku",
+    "type": "religion",
+    "titleJa": "敏満寺と浅井・織田勢力の攻防",
+    "date": { "displayJa": "永禄5年～元亀3年（1562～1572年）", "startYear": 1562, "endYear": 1572, "precision": "range", "calendarBasis": "mixed" },
+    "summaryJa": "敏満寺が浅井氏と織田方の攻撃を受けた期間を示します。寺域の活動と複数回の攻防を含むため、単日の出来事ではありません。",
+    "relatedThemeIds": ["group-azai-clan", "person-oda-nobunaga"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-018", "relationSummaryJa": "敏満寺遺跡は寺院勢力と戦国大名の攻防を伝える遺跡です。", "sourceIds": ["shiga-pref-temples-map"] }]
+  },
+  {
+    "id": "timeline-shiga-1568-kannonji-fall",
+    "order": 3,
+    "track": "shiga-sengoku",
+    "type": "battle",
+    "titleJa": "観音寺城の軍事的役割の終わり",
+    "date": { "displayJa": "永禄11年（1568年）", "startYear": 1568, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "織田信長の近江侵攻により、六角氏の本拠であった観音寺城が軍事拠点としての役割を失った時期を示します。",
+    "relatedThemeIds": ["person-oda-nobunaga"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-013", "relationSummaryJa": "観音寺城跡は六角氏の本拠と織田方の侵攻を伝える城跡です。", "sourceIds": ["shiga-pref-rokkaku-map"] }]
+  },
+  {
+    "id": "timeline-shiga-1570-usayama-campaign",
+    "order": 4,
+    "track": "shiga-sengoku",
+    "type": "battle",
+    "titleJa": "宇佐山城と志賀の陣",
+    "date": { "displayJa": "元亀元年（1570年）頃", "startYear": 1570, "precision": "circa", "calendarBasis": "mixed" },
+    "summaryJa": "京都と湖西を結ぶ経路を押さえた宇佐山城が、浅井・朝倉方との攻防の拠点となった時期を示します。",
+    "relatedThemeIds": ["person-oda-nobunaga", "concept-routes-ports-and-political-control"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-002", "relationSummaryJa": "宇佐山城跡は志賀の陣に関わる山城全体の代表地点です。", "sourceIds": ["shiga-pref-nobunaga-guide"] }]
+  },
+  {
+    "id": "timeline-shiga-1570-chokoji-position",
+    "order": 5,
+    "track": "shiga-sengoku",
+    "type": "movement",
+    "titleJa": "長光寺城への柴田勝家の配置",
+    "date": { "displayJa": "元亀元年（1570年）頃", "startYear": 1570, "precision": "circa", "calendarBasis": "mixed" },
+    "summaryJa": "織田方の近江支配の一環として柴田勝家が長光寺城に配置された時期を示します。城域全体の代表地点です。",
+    "relatedThemeIds": ["person-shibata-katsuie"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-015", "relationSummaryJa": "長光寺城跡は柴田勝家が配置された織田方の拠点です。", "sourceIds": ["shiga-pref-nobunaga-guide"] }]
+  },
+  {
+    "id": "timeline-shiga-1570-anegawa",
+    "order": 6,
+    "track": "shiga-sengoku",
+    "type": "battle",
+    "titleJa": "姉川の戦い",
+    "date": { "displayJa": "元亀元年（1570年）", "startYear": 1570, "precision": "year", "calendarBasis": "mixed", "noteJa": "地点資料から年まで確認し、月日は補っていません。" },
+    "summaryJa": "織田・徳川方と浅井・朝倉方が戦った姉川の戦いを、三田村氏館跡という既存地点からたどります。戦場全体を一点で示しません。",
+    "relatedThemeIds": ["concept-battlefields-and-representative-points"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-034", "relationSummaryJa": "三田村氏館跡は姉川の戦いに関わる周辺の代表地点です。", "sourceIds": ["nagahama-cultural-assets"] }]
+  },
+  {
+    "id": "timeline-shiga-1571-hieizan",
+    "order": 7,
+    "track": "shiga-sengoku",
+    "type": "religion",
+    "titleJa": "比叡山焼き討ち",
+    "aliasesJa": ["ヒエイザン焼き討ち"],
+    "date": { "displayJa": "元亀2年（1571年）", "startYear": 1571, "precision": "year", "calendarBasis": "mixed", "noteJa": "地点資料から年まで確認し、月日は補っていません。" },
+    "summaryJa": "織田信長軍による延暦寺焼き討ちを、現在の根本中堂からたどります。現在の建物は再建であり、当時の建物や焼き討ち範囲そのものではありません。",
+    "relatedThemeIds": ["person-oda-nobunaga", "concept-memorials-rebuilds-and-historical-sites"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-003", "relationSummaryJa": "現在の根本中堂は再建建物で、戦国期の寺域を一点で示すものではありません。", "sourceIds": ["shiga-pref-nobunaga-guide"] }]
+  },
+  {
+    "id": "timeline-shiga-1571-sakamoto-castle",
+    "order": 8,
+    "track": "shiga-sengoku",
+    "type": "construction",
+    "titleJa": "坂本城築城と明智光秀の支配",
+    "date": { "displayJa": "元亀2年（1571年）から", "startYear": 1571, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "明智光秀が近江支配の拠点として坂本城を築いた開始年を示します。表示地点は失われた城域の代表位置です。",
+    "relatedThemeIds": ["person-akechi-mitsuhide", "concept-routes-ports-and-political-control"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-007", "relationSummaryJa": "坂本城跡は湖上交通と近江支配に関わる失われた城域の代表地点です。", "sourceIds": ["bunka-sakamoto"] }]
+  },
+  {
+    "id": "timeline-shiga-1572-kanamori-conflict",
+    "order": 9,
+    "track": "shiga-sengoku",
+    "type": "religion",
+    "titleJa": "金森寺内町と織田方の対立",
+    "date": { "displayJa": "元亀3年（1572年）頃", "startYear": 1572, "precision": "circa", "calendarBasis": "mixed" },
+    "summaryJa": "金森の寺内町が織田方と対立した時期を示します。表示地点は善立寺・因宗寺付近で、寺内町全域の境界を示すものではありません。",
+    "relatedThemeIds": ["person-oda-nobunaga"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-009", "relationSummaryJa": "寺内町跡の代表位置から宗教自治と織田方の対立をたどります。", "sourceIds": ["shiga-pref-temples-map"] }]
+  },
+  {
+    "id": "timeline-shiga-1572-toragozen-siege",
+    "order": 10,
+    "track": "shiga-sengoku",
+    "type": "battle",
+    "titleJa": "虎御前山からの小谷城包囲",
+    "date": { "displayJa": "元亀3年～天正元年（1572～1573年）", "startYear": 1572, "endYear": 1573, "precision": "range", "calendarBasis": "mixed" },
+    "summaryJa": "織田方が虎御前山を陣城として小谷城を包囲した期間を示します。単日の戦闘ではなく、継続した包囲活動です。",
+    "relatedThemeIds": ["person-oda-nobunaga"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-031", "relationSummaryJa": "虎御前山城跡は小谷城包囲のために整備された陣城の代表地点です。", "sourceIds": ["shiga-pref-north-omi-map-2"] }]
+  },
+  {
+    "id": "timeline-shiga-1573-odani-fall",
+    "order": 11,
+    "track": "shiga-sengoku",
+    "type": "battle",
+    "titleJa": "小谷城落城と浅井氏の滅亡",
+    "date": { "displayJa": "天正元年（1573年）", "startYear": 1573, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "小谷城の落城と浅井氏滅亡を、山城全体の代表地点からたどります。座標は城域や攻防範囲の中心を断定するものではありません。",
+    "relatedThemeIds": ["group-azai-clan", "person-oda-nobunaga"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-030", "relationSummaryJa": "小谷城跡は浅井氏の本拠と落城を伝える山城全体の代表地点です。", "sourceIds": ["nagahama-cultural-assets"] }]
+  },
+  {
+    "id": "timeline-shiga-1573-hyakusaiji-burning",
+    "order": 12,
+    "track": "shiga-sengoku",
+    "type": "religion",
+    "titleJa": "百済寺焼き討ち",
+    "date": { "displayJa": "天正元年（1573年）", "startYear": 1573, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "織田信長軍による百済寺焼き討ちを、現在の寺院からたどります。現存建物を戦国期の建物そのものとは扱いません。",
+    "relatedThemeIds": ["person-oda-nobunaga"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-017", "relationSummaryJa": "現在の百済寺は焼失後の再興を経た寺院で、当時の建物そのものではありません。", "sourceIds": ["shiga-pref-temples-map"] }]
+  },
+  {
+    "id": "timeline-shiga-1574-nagahama-rule",
+    "order": 13,
+    "track": "shiga-sengoku",
+    "type": "construction",
+    "titleJa": "長浜城と羽柴秀吉の湖北支配",
+    "date": { "displayJa": "天正2年（1574年）頃以降", "startYear": 1574, "precision": "circa", "calendarBasis": "mixed" },
+    "summaryJa": "羽柴秀吉が長浜城を拠点に湖北支配を進めた時期を示します。現在の模擬天守は当時の建物ではありません。",
+    "relatedThemeIds": ["person-toyotomi-hideyoshi", "concept-political-residences-and-headquarters"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-027", "relationSummaryJa": "長浜城跡は湖北支配の拠点を示しますが、現天守は後世の模擬天守です。", "sourceIds": ["nagahama-cultural-assets"] }]
+  },
+  {
+    "id": "timeline-shiga-1576-azuchi-construction",
+    "order": 14,
+    "track": "shiga-sengoku",
+    "type": "construction",
+    "titleJa": "安土城の築城と政治拠点化",
+    "date": { "displayJa": "天正4～10年（1576～1582年）", "startYear": 1576, "endYear": 1582, "precision": "range", "calendarBasis": "mixed" },
+    "summaryJa": "織田信長が安土城を築き政治拠点とした期間を示します。城跡全体の代表地点で、現存建物を示す座標ではありません。",
+    "relatedThemeIds": ["person-oda-nobunaga", "concept-political-residences-and-headquarters"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-010", "relationSummaryJa": "安土城跡は築城と政治拠点化を伝える城域全体の代表地点です。", "sourceIds": ["shiga-pref-nobunaga-guide"] }]
+  },
+  {
+    "id": "timeline-shiga-1579-azuchi-debate",
+    "order": 15,
+    "track": "shiga-sengoku",
+    "type": "religion",
+    "titleJa": "安土宗論",
+    "date": { "displayJa": "天正7年（1579年）", "startYear": 1579, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "浄土宗と法華宗の宗論が浄厳院で行われた年を示します。資料から年まで確認し、月日は補っていません。",
+    "relatedThemeIds": ["person-oda-nobunaga", "concept-religious-sites-and-political-power"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-011", "relationSummaryJa": "浄厳院は安土宗論の会場として伝わる既存地点です。", "sourceIds": ["shiga-pref-nobunaga-guide"] }]
+  },
+  {
+    "id": "timeline-shiga-1582-azuchi-loss",
+    "order": 16,
+    "track": "shiga-sengoku",
+    "type": "transition",
+    "titleJa": "安土城の焼失",
+    "date": { "displayJa": "天正10年（1582年）", "startYear": 1582, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "本能寺の変後に安土城の主要部が焼失した年を示します。現在は城跡で、当時の建物は残っていません。",
+    "relatedThemeIds": ["person-oda-nobunaga", "concept-memorials-rebuilds-and-historical-sites"],
+    "relatedPlaces": [{ "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-010", "relationSummaryJa": "安土城跡は焼失した城の遺構を示し、当時建物そのものではありません。", "sourceIds": ["shiga-pref-nobunaga-guide"] }]
+  },
+  {
+    "id": "timeline-shiga-1583-shizugatake",
+    "order": 17,
+    "track": "shiga-sengoku",
+    "type": "battle",
+    "titleJa": "賤ヶ岳の戦い",
+    "date": { "displayJa": "天正11年（1583年）", "startYear": 1583, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "羽柴秀吉方と柴田勝家方の戦いを、賤ヶ岳山頂と玄蕃尾城跡からたどります。両地点とも戦域全体を一点で示しません。",
+    "relatedThemeIds": ["event-shizugatake-battle", "person-shibata-katsuie", "person-toyotomi-hideyoshi", "concept-battlefields-and-representative-points"],
+    "relatedPlaces": [
+      { "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-032", "relationSummaryJa": "玄蕃尾城跡は柴田方の本陣として整備された山城全体の代表地点です。", "sourceIds": ["shiga-pref-north-omi-map-1"] },
+      { "datasetId": "project-shiga-sengoku-places", "placeId": "shiga-sengoku-033", "relationSummaryJa": "賤ヶ岳山頂は戦場周辺をたどる代表地点で、戦域全体の中心を断定しません。", "sourceIds": ["nagahama-cultural-assets"] }
+    ]
+  },
+  {
+    "id": "timeline-kyoto-1858-manabe-stay",
+    "order": 18,
+    "track": "kyoto-bakumatsu",
+    "type": "politics",
+    "titleJa": "間部詮勝の妙満寺滞在",
+    "date": { "displayJa": "安政5年（1858年）", "startYear": 1858, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "幕府要人の間部詮勝が京都で妙満寺を寓居とした年を示します。表示地点は旧寺地を伝える石標で、当時の建物は残っていません。",
+    "relatedThemeIds": ["concept-religious-sites-and-political-power"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "na039", "relationSummaryJa": "石標は妙満寺旧地での間部詮勝の滞在を伝え、当時建物そのものではありません。", "sourceIds": ["kyoto-city-ishibumi-na039"] }]
+  },
+  {
+    "id": "timeline-kyoto-1862-shugoshoku",
+    "order": 19,
+    "track": "kyoto-bakumatsu",
+    "type": "politics",
+    "titleJa": "京都守護職の設置",
+    "date": { "displayJa": "文久2年（1862年）", "startYear": 1862, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "京都の治安維持を担う京都守護職が設けられ、会津藩主松平容保が就任した年を示します。屋敷址は後に整備された役宅の旧地です。",
+    "relatedThemeIds": ["group-aizu-domain", "person-matsudaira-katamori", "concept-political-residences-and-headquarters"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "ka016", "relationSummaryJa": "京都守護職屋敷址は制度の政治・警備拠点を伝える旧地です。", "sourceIds": ["kyoto-pref-shugoshoku"] }]
+  },
+  {
+    "id": "timeline-kyoto-1862-iwakura-seclusion",
+    "order": 20,
+    "track": "kyoto-bakumatsu",
+    "type": "movement",
+    "titleJa": "岩倉具視の幽棲開始",
+    "date": { "displayJa": "文久2年（1862年）", "startYear": 1862, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "岩倉具視が洛中を離れ、岩倉で幽棲を始めた年を示します。旧宅と霊源寺はいずれも活動をたどる関連地点です。",
+    "relatedThemeIds": ["person-iwakura-tomomi"],
+    "relatedPlaces": [
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "sa018", "relationSummaryJa": "岩倉具視幽棲旧宅は幽棲期の居所を伝える既存地点です。", "sourceIds": ["bunka-iwakura-home"] },
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "ki017", "relationSummaryJa": "霊源寺は幽棲期の岩倉具視に関わる旧蹟として伝わります。", "sourceIds": ["kyoto-city-ishibumi-ki017"] }
+    ]
+  },
+  {
+    "id": "timeline-kyoto-1862-teradaya-incident",
+    "order": 21,
+    "track": "kyoto-bakumatsu",
+    "type": "incident",
+    "titleJa": "寺田屋騒動",
+    "date": { "displayJa": "文久2年（1862年）", "startYear": 1862, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "薩摩藩尊王派が寺田屋で鎮撫された事件を示します。現在の建物を事件当時の建物そのものと断定しません。",
+    "relatedThemeIds": ["concept-routes-ports-and-political-control"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hu040", "relationSummaryJa": "寺田屋は事件の旧地を伝える関連地点で、現建物の同一性には注意が必要です。", "sourceIds": ["kyoto-city-ishibumi-hu040"] }]
+  },
+  {
+    "id": "timeline-kyoto-1863-shinsengumi-mibu",
+    "order": 22,
+    "track": "kyoto-bakumatsu",
+    "type": "movement",
+    "titleJa": "壬生浪士組から新選組へ",
+    "date": { "displayJa": "文久3年（1863年）", "startYear": 1863, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "壬生浪士組が壬生を拠点に活動し、新選組へつながった年を示します。八木邸は屯所として伝わる既存地点です。",
+    "relatedThemeIds": ["group-shinsengumi", "person-kondo-isami"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "na070", "relationSummaryJa": "八木邸は壬生浪士組・新選組の屯所として伝わる既存地点です。", "sourceIds": ["kyoto-rekisaikan-shinsengumi"] }]
+  },
+  {
+    "id": "timeline-kyoto-1863-august-coup",
+    "order": 23,
+    "track": "kyoto-bakumatsu",
+    "type": "politics",
+    "titleJa": "八月十八日の政変と七卿西走",
+    "date": { "displayJa": "文久3年8月18日から19日（1863年）", "startYear": 1863, "startMonth": 8, "startDay": 18, "endYear": 1863, "endMonth": 8, "endDay": 19, "precision": "range", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "政変後に尊攘派公卿が京都を離れた経過を、後世の紀念碑と薩摩藩邸跡からたどります。碑を当時の出来事地点そのものとは扱いません。",
+    "relatedThemeIds": ["concept-memorials-rebuilds-and-historical-sites", "concept-political-residences-and-headquarters"],
+    "relatedPlaces": [
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hi026", "relationSummaryJa": "紀念碑は七卿西走を後世に記念するもので、当時の出来事地点そのものではありません。", "sourceIds": ["kyoto-city-ishibumi-hi026"] },
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "ka006", "relationSummaryJa": "薩摩藩邸跡は政変に関与した薩摩藩の政治拠点を伝えます。", "sourceIds": ["kyoto-city-ishibumi-ka006"] }
+    ]
+  },
+  {
+    "id": "timeline-kyoto-1864-ikedaya",
+    "order": 24,
+    "track": "kyoto-bakumatsu",
+    "type": "incident",
+    "titleJa": "池田屋事件",
+    "aliasesJa": ["池田屋騒動"],
+    "date": { "displayJa": "元治元年6月5日（1864年）", "startYear": 1864, "startMonth": 6, "startDay": 5, "precision": "day", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "新選組が池田屋を襲撃した事件を、池田屋騒動址と古高俊太郎邸址からたどります。石標は旧地を示し、当時建物ではありません。",
+    "relatedThemeIds": ["event-ikedaya-incident", "group-shinsengumi"],
+    "relatedPlaces": [
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "na033", "relationSummaryJa": "石標は池田屋旧地を示し、事件当時の建物そのものではありません。", "sourceIds": ["kyoto-city-ishibumi-na033"] },
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "si005", "relationSummaryJa": "古高俊太郎邸址は事件前の探索と連行に関わる旧地です。", "sourceIds": ["kyoto-city-ishibumi-si005"] }
+    ]
+  },
+  {
+    "id": "timeline-kyoto-1864-akebonotei",
+    "order": 25,
+    "track": "kyoto-bakumatsu",
+    "type": "incident",
+    "titleJa": "明保野亭事件",
+    "date": { "displayJa": "元治元年6月10日（1864年）", "startYear": 1864, "startMonth": 6, "startDay": 10, "precision": "day", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "会津藩と新選組の探索に端を発した明保野亭事件を、失われた料亭跡の代表位置からたどります。",
+    "relatedThemeIds": ["group-aizu-domain", "group-shinsengumi"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hi018", "relationSummaryJa": "明保野亭跡は事件の旧地を示し、当時建物は残っていません。", "sourceIds": ["kyoto-city-ishibumi-hi018"] }]
+  },
+  {
+    "id": "timeline-kyoto-1865-ryoma-suya",
+    "order": 26,
+    "track": "kyoto-bakumatsu",
+    "type": "movement",
+    "titleJa": "坂本龍馬の酢屋滞在",
+    "date": { "displayJa": "慶応年間（1865～1867年）", "startYear": 1865, "endYear": 1867, "precision": "range", "calendarBasis": "mixed" },
+    "summaryJa": "坂本龍馬が材木商酢屋を京都での活動拠点とした期間を示します。単一日の出来事ではなく継続した滞在です。",
+    "relatedThemeIds": ["person-sakamoto-ryoma"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "na009", "relationSummaryJa": "酢屋は龍馬の寓居と活動拠点を伝える既存地点です。", "sourceIds": ["kyoto-city-ishibumi-na009"] }]
+  },
+  {
+    "id": "timeline-kyoto-1865-nakaoka-lodging",
+    "order": 27,
+    "track": "kyoto-bakumatsu",
+    "type": "movement",
+    "titleJa": "中岡慎太郎の京都寓居",
+    "date": { "displayJa": "慶応年間（1865～1867年）", "startYear": 1865, "endYear": 1867, "precision": "range", "calendarBasis": "mixed" },
+    "summaryJa": "中岡慎太郎が京都で寓居し活動した期間を示します。表示地点は後世の石標が伝える旧地です。",
+    "relatedThemeIds": ["person-nakaoka-shintaro"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "na012", "relationSummaryJa": "石標は中岡慎太郎の寓居旧地を伝え、当時建物そのものではありません。", "sourceIds": ["kyoto-city-ishibumi-na012"] }]
+  },
+  {
+    "id": "timeline-kyoto-1866-teradaya-escape",
+    "order": 28,
+    "track": "kyoto-bakumatsu",
+    "type": "incident",
+    "titleJa": "寺田屋遭難と坂本龍馬の避難",
+    "date": { "displayJa": "慶応2年1月24日（1866年）", "startYear": 1866, "startMonth": 1, "startDay": 24, "precision": "day", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "伏見奉行所の捕方に襲われた坂本龍馬が寺田屋から脱出し、材木小屋を経て薩摩藩邸へ避難した経路をたどります。",
+    "relatedThemeIds": ["person-sakamoto-ryoma", "concept-routes-ports-and-political-control"],
+    "relatedPlaces": [
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hu040", "relationSummaryJa": "寺田屋は襲撃の旧地を伝えますが、現建物を当時建物と断定しません。", "sourceIds": ["kyoto-travel-teradaya"] },
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hu154", "relationSummaryJa": "材木小屋跡は寺田屋から脱出した龍馬の一時避難地を伝えます。", "sourceIds": ["kyoto-city-ishibumi-hu154"] },
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hu150", "relationSummaryJa": "薩摩藩邸跡は龍馬が保護を受けた旧地を示します。", "sourceIds": ["kyoto-city-ishibumi-hu150"] }
+    ]
+  },
+  {
+    "id": "timeline-kyoto-1867-goryoeji",
+    "order": 29,
+    "track": "kyoto-bakumatsu",
+    "type": "movement",
+    "titleJa": "御陵衛士の結成と屯所",
+    "date": { "displayJa": "慶応3年（1867年）", "startYear": 1867, "precision": "year", "calendarBasis": "mixed" },
+    "summaryJa": "伊東甲子太郎らが新選組を離れて御陵衛士を結成し、高台寺月真院を屯所とした年を示します。",
+    "relatedThemeIds": ["person-ito-kashitaro", "group-shinsengumi", "concept-religious-sites-and-political-power"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hi005", "relationSummaryJa": "月真院は御陵衛士が屯所とした寺院として伝わる既存地点です。", "sourceIds": ["kyoto-city-ishibumi-hi005"] }]
+  },
+  {
+    "id": "timeline-kyoto-1867-ryoma-assassination",
+    "order": 30,
+    "track": "kyoto-bakumatsu",
+    "type": "death",
+    "titleJa": "近江屋事件",
+    "aliasesJa": ["坂本龍馬・中岡慎太郎遭難"],
+    "date": { "displayJa": "慶応3年11月15日（1867年）", "startYear": 1867, "startMonth": 11, "startDay": 15, "precision": "day", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "坂本龍馬と中岡慎太郎が近江屋で襲撃された事件を、後世の石標が示す旧地からたどります。石標を当時建物そのものとは扱いません。",
+    "relatedThemeIds": ["person-sakamoto-ryoma", "person-nakaoka-shintaro"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "na011", "relationSummaryJa": "石標は近江屋旧地を伝え、当時の建物そのものではありません。", "sourceIds": ["kyoto-city-ishibumi-na011"] }]
+  },
+  {
+    "id": "timeline-kyoto-1867-ito-assault",
+    "order": 31,
+    "track": "kyoto-bakumatsu",
+    "type": "death",
+    "titleJa": "伊東甲子太郎襲撃",
+    "date": { "displayJa": "慶応3年11月18日（1867年）", "startYear": 1867, "startMonth": 11, "startDay": 18, "precision": "day", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "伊東甲子太郎と御陵衛士が襲撃された事件を、後世の石標が伝える旧地からたどります。石標は事件時の建物ではありません。",
+    "relatedThemeIds": ["person-ito-kashitaro", "group-shinsengumi"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "si035", "relationSummaryJa": "石標は襲撃と遺体収容に関わる旧地を伝え、当時建物ではありません。", "sourceIds": ["kyoto-city-ishibumi-si035"] }]
+  },
+  {
+    "id": "timeline-kyoto-1867-kondo-shooting",
+    "order": 32,
+    "track": "kyoto-bakumatsu",
+    "type": "incident",
+    "titleJa": "近藤勇狙撃",
+    "date": { "displayJa": "慶応3年12月18日（1867年）", "startYear": 1867, "startMonth": 12, "startDay": 18, "precision": "day", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "近藤勇が伏見街道で狙撃され負傷した事件を、後世の石標が伝える地点からたどります。",
+    "relatedThemeIds": ["person-kondo-isami"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hu153", "relationSummaryJa": "石標は近藤勇が狙撃された旧地を伝え、当時の施設ではありません。", "sourceIds": ["kyoto-city-ishibumi-hu153"] }]
+  },
+  {
+    "id": "timeline-kyoto-1868-aizu-fushimi",
+    "order": 33,
+    "track": "kyoto-bakumatsu",
+    "type": "movement",
+    "titleJa": "会津藩先鋒隊の伏見宿陣",
+    "date": { "displayJa": "慶応4年1月2日から3日（1868年）", "startYear": 1868, "startMonth": 1, "startDay": 2, "endYear": 1868, "endMonth": 1, "endDay": 3, "precision": "range", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "鳥羽・伏見の戦い直前に会津藩先鋒隊が伏見御堂へ宿陣した期間を示します。現寺院境内を当時の布陣範囲そのものとは扱いません。",
+    "relatedThemeIds": ["group-aizu-domain", "event-toba-fushimi-battle", "concept-routes-ports-and-political-control"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hu158", "relationSummaryJa": "伏見御堂は会津藩先鋒隊の宿陣地を伝える代表地点です。", "sourceIds": ["kyoto-city-ishibumi-hu158"] }]
+  },
+  {
+    "id": "timeline-kyoto-1868-toba-fushimi",
+    "order": 34,
+    "track": "kyoto-bakumatsu",
+    "type": "battle",
+    "titleJa": "鳥羽・伏見の戦い開戦",
+    "date": { "displayJa": "慶応4年1月3日（1868年）", "startYear": 1868, "startMonth": 1, "startDay": 3, "precision": "day", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "鳥羽・伏見の戦いの開戦を、小枝橋東詰と伏見奉行所周辺の既存地点からたどります。各座標は広い戦場全体を一点で示しません。",
+    "relatedThemeIds": ["event-toba-fushimi-battle", "concept-battlefields-and-representative-points", "person-matsudaira-katamori"],
+    "relatedPlaces": [
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hu025", "relationSummaryJa": "小枝橋東詰は鳥羽方面での開戦を伝える代表地点です。", "sourceIds": ["kyoto-travel-toba-fushimi"] },
+      { "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hu028", "relationSummaryJa": "伏見奉行所周辺は伏見方面の戦闘を伝える代表地点です。", "sourceIds": ["kyoto-travel-toba-fushimi"] }
+    ]
+  },
+  {
+    "id": "timeline-kyoto-1868-nosho-battle",
+    "order": 35,
+    "track": "kyoto-bakumatsu",
+    "type": "battle",
+    "titleJa": "納所での戦闘",
+    "date": { "displayJa": "慶応4年1月5日（1868年）", "startYear": 1868, "startMonth": 1, "startDay": 5, "precision": "day", "calendarBasis": "japanese-lunisolar", "noteJa": "日付は当時の日本の暦による表記で、グレゴリオ暦へ換算していません。" },
+    "summaryJa": "鳥羽・伏見の戦いで納所付近へ戦闘が移った日を、後世の戦場址碑からたどります。碑は戦場範囲全体を一点で示しません。",
+    "relatedThemeIds": ["event-toba-fushimi-battle"],
+    "relatedPlaces": [{ "datasetId": "project-kyoto-bakumatsu-places", "placeId": "hu034", "relationSummaryJa": "戦場址碑は納所付近の戦闘を後世に伝える代表地点です。", "sourceIds": ["kyoto-city-ishibumi-hu034"] }]
+  }
+]
