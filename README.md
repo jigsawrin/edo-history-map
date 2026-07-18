@@ -84,10 +84,10 @@
 
 ### 古地図画像について
 
-江戸切絵図などの古地図「画像」そのものは、画像単位の利用条件確認が
-完了していないため **本アプリには含まれていません**。コードは画像レイヤーの
-追加に対応した設計ですが、現在は無効です。今後、権利確認済み
-(DATA_SOURCES.yml で `review_status: approved`)の画像のみ追加できます。
+江戸切絵図などの古地図「画像」そのものは、**本アプリには含まれていません**。
+公式一次ソース15候補のうち13件は商用利用を含む権利条件を確認しましたが、
+十分に分散した基準点と独立誤差評価を終えた本番ラスタはまだ0件です。コードは
+画像レイヤーに対応していますが、権利・位置精度・manifestの全ゲートを通るまで無効です。
 
 現在表示できる「歴史背景＋江戸地名」は、プロジェクト独自の装飾的な
 和紙風CSS背景、承認済み町家領域、承認済み江戸末期海岸線、承認済み地名ポイントで
@@ -211,6 +211,7 @@ URL、Cookie、ブラウザストレージへ保存しません。
 - [docs/HISTORICAL_TIMELINE.md](docs/HISTORICAL_TIMELINE.md) — 歴史年表の日付モデル、採用原則、地図UI、静的ページ
 - [docs/HISTORICAL_BASEMAP.md](docs/HISTORICAL_BASEMAP.md) — 年代・pane・歴史画像の安全な拡張設計
 - [docs/HISTORICAL_RASTER_PACKS.md](docs/HISTORICAL_RASTER_PACKS.md) — 1シート単位の古地図ラスターパック、権利・manifest・位置誤差監査
+- [docs/HISTORICAL_RASTER_SOURCES.md](docs/HISTORICAL_RASTER_SOURCES.md) — 候補台帳、商用利用ゲート、同題別所蔵の分離
 - [docs/REGION_PACKS.md](docs/REGION_PACKS.md) — 地域パックの構造と安全な追加手順
 - [docs/BROWSER_QA.md](docs/BROWSER_QA.md) — Canvas操作とPagesキャッシュの実ブラウザ確認手順
 
@@ -228,8 +229,9 @@ URL、Cookie、ブラウザストレージへ保存しません。
 出典、加工履歴を固定metadataとmanifestで監査します。複数シートを見た目だけで
 一枚に接続したり、隙間をAI画像や推定道路で補完したりしません。
 
-2026-07-18時点では候補画像の画像単位の取得・再配布・加工・タイル化条件を確認できず、
-公開画像は0件です。承認source一覧と実行時レジストリは空で、既存の江戸後期、京都、
+2026-07-18時点では15候補・4所蔵機関を調査し、13件で画像単位の商用・再配布・加工・
+タイル化条件を確認しました。1件をGit除外の`data-raw/`で技術検査しましたが、基準点と
+誤差評価が未完のため公開画像は0件です。本番承認source一覧と実行時レジストリは空で、既存の江戸後期、京都、
 滋賀のUIに空の古地図操作は表示されません。検証にはプロジェクトが決定的に生成する
 テスト専用格子PNGを使い、fixtureは`dist/`やPages artifactへ含めません。古地図選択、
 不透明度、読込状態はURL、Cookie、localStorage、sessionStorage、IndexedDBへ保存しません。

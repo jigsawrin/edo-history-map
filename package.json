@@ -23,6 +23,7 @@
     "data:build:shiga": "node scripts/build-shiga-sengoku-places.mjs",
     "audit:prepublish": "node scripts/prepublish-audit.mjs",
     "audit:historical-rasters": "node scripts/audit-historical-rasters.mjs",
+    "audit:historical-raster-candidates": "node scripts/historical-raster-candidates.mjs",
     "verify:historical-raster-package": "node scripts/historical-raster-package.mjs"
   },
   "dependencies": {
