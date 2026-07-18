@@ -15,6 +15,10 @@ import {
   THEME_SCHEMA_VERSION,
   validateHistoricalThemeData,
 } from "./build-static-theme-pages.mjs";
+import {
+  TIMELINE_SCHEMA_VERSION,
+  validateTimelineData,
+} from "./build-static-timeline-pages.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -143,12 +147,15 @@ function auditDocument(path, allowedOrigins, documents, dist) {
 export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   const places = join(dist, "places");
   const themesDirectory = join(dist, "themes");
+  const timelineDirectory = join(dist, "timeline");
   if (!existsSync(join(places, "index.html"))) fail("静的一覧トップがありません");
   if (!existsSync(join(themesDirectory, "index.html"))) fail("静的テーマ索引がありません");
+  if (!existsSync(join(timelineDirectory, "index.html"))) fail("静的歴史年表がありません");
   const placeHtmlFiles = walk(places).filter((path) => path.endsWith(".html"));
   const themeHtmlFiles = walk(themesDirectory).filter((path) => path.endsWith(".html"));
-  const htmlFiles = [...placeHtmlFiles, ...themeHtmlFiles];
-  if (placeHtmlFiles.length !== 91 || themeHtmlFiles.length !== 26) {
+  const timelineHtmlFiles = walk(timelineDirectory).filter((path) => path.endsWith(".html"));
+  const htmlFiles = [...placeHtmlFiles, ...themeHtmlFiles, ...timelineHtmlFiles];
+  if (placeHtmlFiles.length !== 91 || themeHtmlFiles.length !== 26 || timelineHtmlFiles.length !== 3) {
     fail("静的HTML数が期待値と一致しません");
   }
   const sourceData = JSON.parse(
@@ -169,13 +176,14 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
       return [normalizedRelative(path, dist), dom.window.document];
     }),
   );
+  documents.set("index.html", new JSDOM(readFileSync(join(dist, "index.html"), "utf8")).window.document);
   for (const path of htmlFiles) auditDocument(path, allowedOrigins, documents, dist);
 
   const manifestPath = join(places, "manifest.json");
   if (!existsSync(manifestPath)) fail("静的一覧manifestがありません");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   if (
-    manifest.schemaVersion !== 2 ||
+    manifest.schemaVersion !== 3 ||
     manifest.generatorVersion !== 1 ||
     manifest.edo?.placeCount !== 8788 ||
     manifest.edo?.pageCount !== 88 ||
@@ -198,6 +206,14 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
     shigaSources: JSON.parse(readFileSync(join(root, "src/shiga-source-registry.json"), "utf8")),
   });
   const relations = validatedThemes.flatMap((theme) => theme.relatedPlaces);
+  const timelineData = JSON.parse(readFileSync(join(root, "data-curation/historical-timeline.json"), "utf8"));
+  const validatedTimeline = validateTimelineData(timelineData, {
+    themes: themeData,
+    kyotoPlaces: JSON.parse(readFileSync(join(root, "data-curation/kyoto-bakumatsu-places.json"), "utf8")),
+    shigaPlaces: JSON.parse(readFileSync(join(root, "data-curation/shiga-sengoku-places.json"), "utf8")),
+    kyotoSources: sourceData,
+    shigaSources: JSON.parse(readFileSync(join(root, "src/shiga-source-registry.json"), "utf8")),
+  });
   const expectedTypeCounts = Object.fromEntries(
     ["person", "event", "group", "concept"].map((type) => [
       type,
@@ -215,6 +231,20 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
     manifest.themes?.htmlPageCount !== themeHtmlFiles.length
   ) {
     fail("静的テーマmanifestの件数が不正です");
+  }
+  const timelineRelations = validatedTimeline.flatMap((entry) => entry.relatedPlaces);
+  const timelineThemeRelations = validatedTimeline.flatMap((entry) => entry.relatedThemeIds);
+  if (
+    manifest.timeline?.schemaVersion !== TIMELINE_SCHEMA_VERSION ||
+    manifest.timeline?.entryCount !== validatedTimeline.length ||
+    manifest.timeline?.trackCounts?.["shiga-sengoku"] !== 17 ||
+    manifest.timeline?.trackCounts?.["kyoto-bakumatsu"] !== 18 ||
+    manifest.timeline?.placeRelationCount !== timelineRelations.length ||
+    manifest.timeline?.themeRelationCount !== timelineThemeRelations.length ||
+    manifest.timeline?.relatedThemeCount !== new Set(timelineThemeRelations).size ||
+    manifest.timeline?.htmlPageCount !== timelineHtmlFiles.length
+  ) {
+    fail("静的年表manifestの件数が不正です");
   }
   if (JSON.stringify(manifest.inputGeoJsonSha256) !== JSON.stringify(EXPECTED_DATA_SHA256)) {
     fail("静的一覧manifestの入力SHAが不正です");
@@ -251,6 +281,19 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   ) {
     fail("静的テーマmanifestのファイル一覧が不完全です");
   }
+  for (const [path, expected] of Object.entries(manifest.timeline.files ?? {})) {
+    const target = join(timelineDirectory, path);
+    if (!existsSync(target) || sha256(readFileSync(target)) !== expected) fail(`静的年表manifestのSHAが不一致です: ${path}`);
+  }
+  const expectedTimelineFiles = new Set(walk(timelineDirectory).map((path) => relative(timelineDirectory, path).split(sep).join("/")));
+  if (expectedTimelineFiles.size !== Object.keys(manifest.timeline.files ?? {}).length || [...expectedTimelineFiles].some((path) => !Object.hasOwn(manifest.timeline.files, path))) fail("静的年表manifestのファイル一覧が不完全です");
+  const timelineAnchors = [...documents.values()].flatMap((document) => [...document.querySelectorAll("article.timeline-entry[id]")].map((article) => article.id));
+  if (timelineAnchors.length !== validatedTimeline.length || new Set(timelineAnchors).size !== timelineAnchors.length) fail("年表アンカーが不正です");
+  for (const entry of validatedTimeline) {
+    const document = documents.get(`timeline/${entry.track}/index.html`);
+    if (!document?.getElementById(entry.id)) fail(`年表項目アンカーがありません: ${entry.id}`);
+  }
+  if (manifest.timeline.placeBacklinkCount !== [...documents.values()].reduce((count, document) => count + document.querySelectorAll("section.related-timeline li").length, 0) - manifest.timeline.themeBacklinkCount) fail("地点逆リンク数が一致しません");
   const edoCount = [...documents.values()].reduce(
     (count, document) => count + document.querySelectorAll('article[data-place-region="edo"]').length,
     0,
@@ -286,9 +329,13 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   if (/@import|url\s*\(/iu.test(themeCss) || !themeCss.includes(":focus-visible") || !themeCss.includes("@media print")) {
     fail("静的テーマCSSが外部資産を参照するか必要なスタイルがありません");
   }
+  const timelineCss = readFileSync(join(timelineDirectory, "static-timeline.css"), "utf8");
+  if (/@import|url\s*\(/iu.test(timelineCss) || !timelineCss.includes(":focus-visible") || !timelineCss.includes("@media print") || !timelineCss.includes("prefers-reduced-motion")) fail("静的年表CSSが外部資産を参照するか必要なスタイルがありません");
   return Object.freeze({
     htmlFileCount: htmlFiles.length,
     themeHtmlFileCount: themeHtmlFiles.length,
+    timelineHtmlFileCount: timelineHtmlFiles.length,
+    timelineEntryCount: validatedTimeline.length,
     themeCount: validatedThemes.length,
     relationCount: relations.length,
     edoCount,
@@ -301,6 +348,6 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
 const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (isDirectRun) {
   const result = auditStaticPlaceLinks();
-  console.log(`静的リンク監査: HTML ${result.htmlFileCount}、EDO ${result.edoCount}件、京都 ${result.kyotoCount}件、滋賀 ${result.shigaCount}件、エラー0`);
+  console.log(`静的リンク監査: HTML ${result.htmlFileCount}、EDO ${result.edoCount}件、京都 ${result.kyotoCount}件、滋賀 ${result.shigaCount}件、年表 ${result.timelineEntryCount}件、エラー0`);
   console.log(`manifest SHA-256: ${result.manifestSha256}`);
 }

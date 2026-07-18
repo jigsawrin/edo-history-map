@@ -92,6 +92,10 @@ flowchart LR
 - 対策: 固定JSONを通常オブジェクト・許可enum・既存地点ID・地点所属source IDで厳格検証し、
   危険キー、HTML、Markdownリンク、制御文字を拒否する。静的出典URLはHTTPSかつ固定origin許可リスト、
   全文字列をHTMLエスケープし、テーマ静的CSPはscript/connect/image/fontを禁止する。
+- 脅威: 表示文字列からの誤った日付推測、不明月日の補完、旧暦の無根拠変換、年表からの任意URL注入。
+- 対策: 年表日付は独立JSONへ明示登録し、`Date`や正規表現で生成しない。precisionとcalendarBasis、
+  月日範囲、order、既存地点・テーマ・地点所属source IDを検証する。URLフィールドを許可せず、
+  静的リンクは固定内部経路と既存出典レジストリだけから生成する。
 - 脅威: `javascript:` / `data:` URL、危険な外部リンク。
 - 対策: リンクは https + 許可リストドメインのみ。`noopener noreferrer`。
 - 脅威: URL パラメータ経由の注入。
