@@ -45,8 +45,20 @@ AIによる座標生成は行っていない。歴史地点データは後続の
 - `coordinateAccuracy: approximate` または `unknown`
 - `sourceIds` / `evidenceUrls` の欠落
 
-`validation-only-candidate`は`uncertain`、`moved`、`unknown`座標を拒否する。
-`rejected`には`rejectionReason`が必須である。
+`validation-only-candidate`は独立validation点として、transform候補と同等以上の固定性と
+座標精度を要求する。次を拒否する。
+
+- `currentExistence: uncertain`
+- `movedStatus: moved` / `possibly-moved` / `unknown`
+- `coordinateAccuracy: approximate` / `unknown`
+- `sourceIds` / `evidenceUrls` の欠落
+
+validation-onlyで許可する`movedStatus`は原則`not-moved`のみである。
+許可する`coordinateAccuracy`は`surveyed`、`official-gis`、
+`official-published-coordinate`、`official-map-derived`のみである。
+
+不確実な地点（`uncertain`、移設疑い、近似・不明座標など）は、候補へ押し上げず
+`hold`へ分類する。`rejected`には`rejectionReason`が必須である。
 
 ## 日本語正本と英語任意
 
@@ -63,5 +75,7 @@ AIによる座標生成は行っていない。歴史地点データは後続の
 - 検証: `npm run audit:historical-control-points`
 - 公開前監査: `npm run audit:prepublish` から呼び出す
 
-カタログはruntime（`src/main.ts`）へ接続せず、public JSONとしても配信しない。
+カタログはruntime（`src/`配下の`.ts` / `.mts` / `.js`）へ接続せず、public JSONとしても配信しない。
+監査は`src/`を再帰走査し、シンボリックリンクは追跡しない。`scripts/`、`tests/`、`docs/`、
+`data-curation/`内の正当な参照は失敗対象にしない。
 テストfixtureはテストコード内だけに置き、`dist/`やPagesへ含めない。

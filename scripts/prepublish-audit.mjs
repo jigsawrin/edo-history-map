@@ -109,7 +109,7 @@ const SECRET_PATTERNS = [
  * - ツールの定型 Co-Authored-By アドレス
  */
 const ALLOWED_EMAILS = P(
-  "([A-Za-z0-9._%+-]+@users\\.noreply\\.github\\.com|dependabot\\[bot\\]@users\\.noreply\\.github\\.com|support@github\\.com|noreply@anthropic\\.com)",
+  "([A-Za-z0-9._%+-]+@users\\.noreply\\.github\\.com|dependabot\\[bot\\]@users\\.noreply\\.github\\.com|support@github\\.com|noreply@anthropic\\.com|cursoragent@cursor\\.com)",
 );
 
 const PII_PATTERNS = [

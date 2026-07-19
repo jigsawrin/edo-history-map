@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   auditHistoricalControlPointCatalogRepository,
+  findRuntimeHistoricalControlPointCatalogReferences,
   loadHistoricalControlPointCatalog,
   summarizeHistoricalControlPointCatalog,
   validateHistoricalControlPointCatalog,
@@ -50,7 +52,7 @@ function validationOnlyFixture(overrides: Record<string, unknown> = {}) {
     id: "test-fixture-control-point-b",
     name: { ja: "試験用基準点B", en: "Test control point B" },
     eligibility: "validation-only-candidate",
-    movedStatus: "possibly-moved",
+    movedStatus: "not-moved",
     coordinateAccuracy: "official-map-derived",
     ...overrides,
   });
@@ -63,6 +65,54 @@ function catalogWithEntries(entries: Record<string, unknown>[], reviewedAt = "20
     catalogStatus: "reviewed",
     entries,
   };
+}
+
+const tempRoots: string[] = [];
+afterEach(() => {
+  while (tempRoots.length > 0) {
+    const root = tempRoots.pop();
+    if (root) rmSync(root, { recursive: true, force: true });
+  }
+});
+
+function createAuditFixtureRoot(options: {
+  runtimeSource?: { relativePath: string; content: string };
+  scriptReference?: boolean;
+  testReference?: boolean;
+} = {}) {
+  const root = mkdtempSync(join(tmpdir(), "historical-control-point-catalog-"));
+  tempRoots.push(root);
+  mkdirSync(join(root, "data-curation"), { recursive: true });
+  mkdirSync(join(root, "src"), { recursive: true });
+  writeFileSync(
+    join(root, "data-curation", "historical-control-point-catalog.json"),
+    `${JSON.stringify(EMPTY_CATALOG, null, 2)}\n`,
+    "utf8",
+  );
+  writeFileSync(join(root, "src", "historical-raster-registry.json"), "[]\n", "utf8");
+  writeFileSync(join(root, "src", "main.ts"), "export {};\n", "utf8");
+  if (options.runtimeSource) {
+    const full = join(root, options.runtimeSource.relativePath);
+    mkdirSync(dirname(full), { recursive: true });
+    writeFileSync(full, options.runtimeSource.content, "utf8");
+  }
+  if (options.scriptReference) {
+    mkdirSync(join(root, "scripts"), { recursive: true });
+    writeFileSync(
+      join(root, "scripts", "helper.mjs"),
+      'import { loadHistoricalControlPointCatalog } from "./historical-control-point-catalog.mjs";\n',
+      "utf8",
+    );
+  }
+  if (options.testReference) {
+    mkdirSync(join(root, "tests"), { recursive: true });
+    writeFileSync(
+      join(root, "tests", "sample.test.ts"),
+      'import { validateHistoricalControlPointCatalog } from "../scripts/historical-control-point-catalog.mjs";\n',
+      "utf8",
+    );
+  }
+  return root;
 }
 
 describe("歴史基準点カタログ基盤", () => {
@@ -202,7 +252,56 @@ describe("歴史基準点カタログ基盤", () => {
       catalogWithEntries([validationOnlyFixture()]),
     );
     expect(catalog.entries[0]?.eligibility).toBe("validation-only-candidate");
-    expect(catalog.entries[0]?.movedStatus).toBe("possibly-moved");
+    expect(catalog.entries[0]?.movedStatus).toBe("not-moved");
+    expect(catalog.entries[0]?.coordinateAccuracy).toBe("official-map-derived");
+  });
+
+  it("validation-only + possibly-movedを拒否する", () => {
+    expect(() =>
+      validateHistoricalControlPointCatalog(
+        catalogWithEntries([validationOnlyFixture({ movedStatus: "possibly-moved" })]),
+      ),
+    ).toThrow(/not-moved/u);
+  });
+
+  it("validation-only + unknown movedStatusを拒否する", () => {
+    expect(() =>
+      validateHistoricalControlPointCatalog(
+        catalogWithEntries([validationOnlyFixture({ movedStatus: "unknown" })]),
+      ),
+    ).toThrow(/not-moved/u);
+  });
+
+  it("validation-only + approximateを拒否する", () => {
+    expect(() =>
+      validateHistoricalControlPointCatalog(
+        catalogWithEntries([validationOnlyFixture({ coordinateAccuracy: "approximate" })]),
+      ),
+    ).toThrow(/coordinateAccuracy/u);
+  });
+
+  it("validation-only + unknown座標を拒否する", () => {
+    expect(() =>
+      validateHistoricalControlPointCatalog(
+        catalogWithEntries([validationOnlyFixture({ coordinateAccuracy: "unknown" })]),
+      ),
+    ).toThrow(/coordinateAccuracy/u);
+  });
+
+  it("validation-only + not-moved + official-map-derivedを受理する", () => {
+    const catalog = validateHistoricalControlPointCatalog(
+      catalogWithEntries([
+        validationOnlyFixture({
+          movedStatus: "not-moved",
+          coordinateAccuracy: "official-map-derived",
+        }),
+      ]),
+    );
+    expect(catalog.entries[0]).toMatchObject({
+      eligibility: "validation-only-candidate",
+      movedStatus: "not-moved",
+      coordinateAccuracy: "official-map-derived",
+    });
   });
 
   it("日本語必須・英語空文字を拒否する", () => {
@@ -223,14 +322,41 @@ describe("歴史基準点カタログ基盤", () => {
       false,
     );
     expect(existsSync(join(ROOT, "public", "data", "historical-rasters"))).toBe(false);
-    const main = readFileSync(join(ROOT, "src", "main.ts"), "utf8");
-    expect(main).not.toMatch(/historical-control-point-catalog/u);
+    expect(findRuntimeHistoricalControlPointCatalogReferences(ROOT)).toEqual([]);
     expect(JSON.parse(readFileSync(join(ROOT, "src", "historical-raster-registry.json"), "utf8"))).toEqual(
       [],
     );
     const audit = auditHistoricalControlPointCatalogRepository(ROOT);
     expect(audit.errors).toEqual([]);
     expect(audit.catalog?.entries).toHaveLength(0);
+  });
+
+  it("src/main.ts以外のruntime source参照を監査失敗にする", () => {
+    const root = createAuditFixtureRoot({
+      runtimeSource: {
+        relativePath: "src/layers/helper.ts",
+        content: 'export const path = "data-curation/historical-control-point-catalog.json";\n',
+      },
+    });
+    const audit = auditHistoricalControlPointCatalogRepository(root);
+    expect(audit.errors.some((message) => message.includes("src/layers/helper.ts"))).toBe(true);
+  });
+
+  it("runtime sourceに参照がないfixtureでは監査成功する", () => {
+    const root = createAuditFixtureRoot();
+    const audit = auditHistoricalControlPointCatalogRepository(root);
+    expect(audit.errors).toEqual([]);
+    expect(findRuntimeHistoricalControlPointCatalogReferences(root)).toEqual([]);
+  });
+
+  it("scripts/tests内の正当な参照はruntime監査の失敗対象にしない", () => {
+    const root = createAuditFixtureRoot({
+      scriptReference: true,
+      testReference: true,
+    });
+    const audit = auditHistoricalControlPointCatalogRepository(root);
+    expect(audit.errors).toEqual([]);
+    expect(findRuntimeHistoricalControlPointCatalogReferences(root)).toEqual([]);
   });
 
   it("既存公開データSHAを変更しない", () => {

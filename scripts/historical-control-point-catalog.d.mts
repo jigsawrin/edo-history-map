@@ -94,12 +94,18 @@ export interface HistoricalControlPointCatalogSummary {
   readonly transformPromotionCount: 0;
 }
 
+export const RUNTIME_CATALOG_REFERENCE_NEEDLES: readonly string[];
+
 export function validateCatalogLocalizedText(value: unknown, label: string): LocalizedText;
 export function validateHistoricalControlPointCatalog(value: unknown): HistoricalControlPointCatalog;
 export function loadHistoricalControlPointCatalog(root: string): HistoricalControlPointCatalog;
 export function summarizeHistoricalControlPointCatalog(
   catalog: HistoricalControlPointCatalog,
 ): HistoricalControlPointCatalogSummary;
+export function findRuntimeHistoricalControlPointCatalogReferences(root: string): readonly {
+  readonly file: string;
+  readonly needle: string;
+}[];
 export function auditHistoricalControlPointCatalogRepository(root: string): {
   readonly errors: readonly string[];
   readonly catalog: HistoricalControlPointCatalog | null;

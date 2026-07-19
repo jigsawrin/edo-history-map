@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 
 export const HISTORICAL_CONTROL_POINT_CATALOG_SCHEMA_VERSION = 1;
@@ -75,6 +75,22 @@ const ENTRY_KEYS = Object.freeze([
   "rejectionReason",
 ]);
 const CATALOG_RELATIVE_PATH = "data-curation/historical-control-point-catalog.json";
+const RUNTIME_SOURCE_EXTENSIONS = Object.freeze([".ts", ".mts", ".js"]);
+export const RUNTIME_CATALOG_REFERENCE_NEEDLES = Object.freeze([
+  "historical-control-point-catalog",
+  "data-curation/historical-control-point-catalog.json",
+  "loadHistoricalControlPointCatalog",
+  "validateHistoricalControlPointCatalog",
+  "summarizeHistoricalControlPointCatalog",
+  "auditHistoricalControlPointCatalogRepository",
+]);
+const VALIDATION_ONLY_MOVED_STATUSES = Object.freeze(["not-moved"]);
+const VALIDATION_ONLY_COORDINATE_ACCURACY = Object.freeze([
+  "surveyed",
+  "official-gis",
+  "official-published-coordinate",
+  "official-map-derived",
+]);
 
 function fail(message) {
   throw new Error(message);
@@ -169,8 +185,14 @@ function assertEligibilityGates(entry, label) {
 
   if (eligibility === "validation-only-candidate") {
     assert(currentExistence !== "uncertain", `${label}: uncertainはvalidation-only-candidateにできません`);
-    assert(movedStatus !== "moved", `${label}: movedはvalidation-only-candidateにできません`);
-    assert(coordinateAccuracy !== "unknown", `${label}: unknown座標はvalidation-only-candidateにできません`);
+    assert(
+      VALIDATION_ONLY_MOVED_STATUSES.includes(movedStatus),
+      `${label}: validation-only-candidateのmovedStatusはnot-movedである必要があります`,
+    );
+    assert(
+      VALIDATION_ONLY_COORDINATE_ACCURACY.includes(coordinateAccuracy),
+      `${label}: validation-only-candidateのcoordinateAccuracyが不正です`,
+    );
     assert(sourceIds.length > 0, `${label}: validation-only-candidateにはsourceIdsが必要です`);
     assert(evidenceUrls.length > 0, `${label}: validation-only-candidateにはevidenceUrlsが必要です`);
   }
@@ -308,12 +330,52 @@ export function summarizeHistoricalControlPointCatalog(catalog) {
 
 function collectFiles(dir, out = []) {
   if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, name.name);
-    if (name.isDirectory()) collectFiles(full, out);
-    else out.push(full);
+  let rootStat;
+  try {
+    rootStat = lstatSync(dir);
+  } catch {
+    return out;
+  }
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) return out;
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name);
+    let entryStat;
+    try {
+      entryStat = lstatSync(full);
+    } catch {
+      continue;
+    }
+    if (entryStat.isSymbolicLink()) continue;
+    if (entryStat.isDirectory()) collectFiles(full, out);
+    else if (entryStat.isFile()) out.push(full);
   }
   return out;
+}
+
+function hasRuntimeSourceExtension(filePath) {
+  return RUNTIME_SOURCE_EXTENSIONS.some((extension) => filePath.endsWith(extension));
+}
+
+export function findRuntimeHistoricalControlPointCatalogReferences(root) {
+  const srcRoot = join(root, "src");
+  const hits = [];
+  for (const file of collectFiles(srcRoot)) {
+    const normalized = relative(root, file).replace(/\\/gu, "/");
+    if (!normalized.startsWith("src/") || !hasRuntimeSourceExtension(normalized)) continue;
+    let content;
+    try {
+      content = readFileSync(file, "utf8");
+    } catch {
+      continue;
+    }
+    for (const needle of RUNTIME_CATALOG_REFERENCE_NEEDLES) {
+      if (content.includes(needle)) {
+        hits.push(Object.freeze({ file: normalized, needle }));
+        break;
+      }
+    }
+  }
+  return Object.freeze(hits);
 }
 
 export function auditHistoricalControlPointCatalogRepository(root) {
@@ -344,13 +406,9 @@ export function auditHistoricalControlPointCatalogRepository(root) {
     errors.push("本番ラスターレジストリを確認できません");
   }
 
-  const mainSource = readFileSync(join(root, "src", "main.ts"), "utf8");
-  if (
-    mainSource.includes("historical-control-point-catalog") ||
-    mainSource.includes("loadHistoricalControlPointCatalog") ||
-    mainSource.includes("validateHistoricalControlPointCatalog")
-  ) {
-    errors.push("runtime(main.ts)が歴史基準点カタログを参照しています");
+  const runtimeHits = findRuntimeHistoricalControlPointCatalogReferences(root);
+  for (const hit of runtimeHits) {
+    errors.push(`runtime(${hit.file})が歴史基準点カタログを参照しています: ${hit.needle}`);
   }
 
   const distPath = join(root, "dist");
