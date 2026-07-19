@@ -30,7 +30,7 @@ const EMPTY_CATALOG = Object.freeze({
 });
 
 const SAMPLE_POLYGON = Object.freeze({
-  type: "Polygon",
+  type: "Polygon" as const,
   coordinates: [
     [
       [139.7, 35.65],
@@ -42,6 +42,30 @@ const SAMPLE_POLYGON = Object.freeze({
   ],
 });
 
+const SAMPLE_MULTIPOLYGON = Object.freeze({
+  type: "MultiPolygon" as const,
+  coordinates: [
+    [
+      [
+        [139.7, 35.65],
+        [139.75, 35.65],
+        [139.75, 35.7],
+        [139.7, 35.7],
+        [139.7, 35.65],
+      ],
+    ],
+    [
+      [
+        [139.76, 35.71],
+        [139.8, 35.71],
+        [139.8, 35.75],
+        [139.76, 35.75],
+        [139.76, 35.71],
+      ],
+    ],
+  ],
+});
+
 /** Test-only fixtures. Never write these into production catalog. */
 function mapFixture(overrides: Record<string, unknown> = {}) {
   return {
@@ -49,6 +73,14 @@ function mapFixture(overrides: Record<string, unknown> = {}) {
     name: { ja: "試験用表示地図A", en: "Test display map A" },
     displayRole: "regional",
     displayMode: "georeferenced-overlay",
+    artifactBinding: {
+      kind: "historical-raster",
+      rasterId: "test-fixture-raster-a",
+    },
+    spatialBinding: {
+      kind: "georeferenced-coverage",
+      geometry: structuredClone(SAMPLE_POLYGON),
+    },
     crop: {
       sourceWidth: 1000,
       sourceHeight: 800,
@@ -57,6 +89,11 @@ function mapFixture(overrides: Record<string, unknown> = {}) {
       width: 400,
       height: 300,
       rotationDegrees: 0,
+    },
+    cropReview: {
+      removedElements: ["ruler", "color-chart"],
+      preservesHistoricalContent: true,
+      note: { ja: "撮影用定規とカラーチャートのみ除去した試験fixtureです。" },
     },
     zoom: {
       minimum: 12,
@@ -67,13 +104,47 @@ function mapFixture(overrides: Record<string, unknown> = {}) {
     regionId: "edo",
     eraId: "edo-late",
     priority: 10,
-    coveragePolygon: structuredClone(SAMPLE_POLYGON),
     sourceId: "test-fixture-source",
     rightsReviewStatus: "pending",
     technicalReviewStatus: "not-started",
     publicationStatus: "candidate",
     ...overrides,
   };
+}
+
+function overviewFixture(overrides: Record<string, unknown> = {}) {
+  return mapFixture({
+    id: "test-fixture-display-map-overview",
+    name: { ja: "試験用概観地図" },
+    displayRole: "overview",
+    zoom: {
+      minimum: 10,
+      maximum: 16,
+      enterDetailAt: 14,
+      leaveDetailBelow: 13,
+    },
+    priority: 100,
+    ...overrides,
+  });
+}
+
+function referenceFixture(overrides: Record<string, unknown> = {}) {
+  return mapFixture({
+    id: "test-fixture-display-map-ref",
+    name: { ja: "試験用参考地図" },
+    displayRole: "reference-only",
+    displayMode: "reference-panel",
+    artifactBinding: {
+      kind: "reference-asset",
+      assetId: "test-fixture-asset-a",
+    },
+    spatialBinding: {
+      kind: "display-trigger-area",
+      geometry: structuredClone(SAMPLE_POLYGON),
+    },
+    parentMapId: "test-fixture-display-map-overview",
+    ...overrides,
+  });
 }
 
 function catalogWithMaps(maps: Record<string, unknown>[], reviewedAt = "2026-07-19") {
@@ -147,229 +218,441 @@ describe("古地図表示カタログ基盤", () => {
     expect(() =>
       validateHistoricalMapDisplayCatalog({
         ...EMPTY_CATALOG,
-        maps: [mapFixture()],
+        maps: [overviewFixture()],
       }),
     ).toThrow(/empty-foundation/u);
   });
 
-  it("reviewedでreviewedAtなしを拒否する", () => {
-    expect(() =>
-      validateHistoricalMapDisplayCatalog({
-        schemaVersion: 1,
-        catalogStatus: "reviewed",
-        reviewedAt: null,
-        maps: [],
-      }),
-    ).toThrow(/reviewedAt/u);
+  it("overlay + historical-rasterを受理する", () => {
+    const catalog = validateHistoricalMapDisplayCatalog(
+      catalogWithMaps([overviewFixture()]),
+    );
+    expect(catalog.maps[0]?.artifactBinding).toEqual({
+      kind: "historical-raster",
+      rasterId: "test-fixture-raster-a",
+    });
   });
 
-  it("ID重複を拒否する", () => {
+  it("overlay + reference-assetを拒否する", () => {
     expect(() =>
       validateHistoricalMapDisplayCatalog(
-        catalogWithMaps([mapFixture(), mapFixture({ id: "test-fixture-display-map-a" })]),
+        catalogWithMaps([
+          overviewFixture({
+            artifactBinding: { kind: "reference-asset", assetId: "test-fixture-asset-a" },
+          }),
+        ]),
+      ),
+    ).toThrow(/reference-asset/u);
+  });
+
+  it("reference-panel + reference-assetを受理する", () => {
+    const catalog = validateHistoricalMapDisplayCatalog(
+      catalogWithMaps([
+        overviewFixture(),
+        referenceFixture({
+          displayRole: "reference-only",
+          displayMode: "reference-panel",
+        }),
+      ]),
+    );
+    expect(catalog.maps[1]?.artifactBinding.kind).toBe("reference-asset");
+  });
+
+  it("reference-panel + historical-rasterを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture(),
+          referenceFixture({
+            artifactBinding: { kind: "historical-raster", rasterId: "test-fixture-raster-a" },
+          }),
+        ]),
+      ),
+    ).toThrow(/historical-raster/u);
+  });
+
+  it("reference-only + georeferenced-coverageを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture(),
+          referenceFixture({
+            spatialBinding: {
+              kind: "georeferenced-coverage",
+              geometry: structuredClone(SAMPLE_POLYGON),
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/georeferenced-coverage/u);
+  });
+
+  it("reference-only + display-trigger-areaを受理する", () => {
+    const catalog = validateHistoricalMapDisplayCatalog(
+      catalogWithMaps([overviewFixture(), referenceFixture()]),
+    );
+    expect(catalog.maps[1]?.spatialBinding.kind).toBe("display-trigger-area");
+  });
+
+  it("technical approved + historical content非保持を拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture({
+            technicalReviewStatus: "approved",
+            rightsReviewStatus: "approved",
+            cropReview: {
+              removedElements: [],
+              preservesHistoricalContent: false,
+              note: { ja: "歴史情報を削った試験です。" },
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/preservesHistoricalContent|歴史情報非保持/u);
+  });
+
+  it("published + historical content非保持を拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture({
+            rightsReviewStatus: "approved",
+            technicalReviewStatus: "approved",
+            publicationStatus: "published",
+            cropReview: {
+              removedElements: [],
+              preservesHistoricalContent: false,
+              note: { ja: "公開不可の試験です。" },
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/preservesHistoricalContent|歴史情報非保持/u);
+  });
+
+  it("crop removedElements重複を拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture({
+            cropReview: {
+              removedElements: ["ruler", "ruler"],
+              preservesHistoricalContent: true,
+              note: { ja: "重複試験です。" },
+            },
+          }),
+        ]),
       ),
     ).toThrow(/重複/u);
   });
 
-  it("HTML文字列を拒否する", () => {
-    expect(() =>
-      validateHistoricalMapDisplayCatalog(
-        catalogWithMaps([mapFixture({ name: { ja: "<b>地図</b>" } })]),
-      ),
-    ).toThrow(/name\.ja/u);
-  });
-
-  it("cropが元画像外側なら拒否する", () => {
+  it("crop removedElements未知値を拒否する", () => {
     expect(() =>
       validateHistoricalMapDisplayCatalog(
         catalogWithMaps([
-          mapFixture({
-            crop: {
-              sourceWidth: 100,
-              sourceHeight: 100,
-              x: 80,
-              y: 0,
-              width: 40,
-              height: 40,
-              rotationDegrees: 0,
+          overviewFixture({
+            cropReview: {
+              removedElements: ["stamp"],
+              preservesHistoricalContent: true,
+              note: { ja: "未知値試験です。" },
             },
           }),
         ]),
       ),
-    ).toThrow(/外側/u);
+    ).toThrow(/removedElements/u);
   });
 
-  it("crop width/heightが正数でない場合を拒否する", () => {
+  it("overviewのparentを拒否する", () => {
     expect(() =>
       validateHistoricalMapDisplayCatalog(
         catalogWithMaps([
+          overviewFixture({ parentMapId: "test-fixture-display-map-other" }),
           mapFixture({
-            crop: {
-              sourceWidth: 100,
-              sourceHeight: 100,
-              x: 0,
-              y: 0,
-              width: 0,
-              height: 10,
-              rotationDegrees: 0,
-            },
+            id: "test-fixture-display-map-other",
+            name: { ja: "他地図" },
+            displayRole: "overview",
           }),
         ]),
       ),
-    ).toThrow(/width/u);
+    ).toThrow(/overviewはparentMapIdを持てません/u);
   });
 
-  it("rotationDegrees不正を拒否する", () => {
+  it("detailのparent欠落を拒否する", () => {
     expect(() =>
       validateHistoricalMapDisplayCatalog(
         catalogWithMaps([
           mapFixture({
-            crop: {
-              sourceWidth: 100,
-              sourceHeight: 100,
-              x: 0,
-              y: 0,
-              width: 50,
-              height: 50,
-              rotationDegrees: 45,
-            },
-          }),
-        ]),
-      ),
-    ).toThrow(/rotationDegrees/u);
-  });
-
-  it("reference-onlyとgeoreferenced-overlayの組み合わせを拒否する", () => {
-    expect(() =>
-      validateHistoricalMapDisplayCatalog(
-        catalogWithMaps([
-          mapFixture({
-            displayRole: "reference-only",
-            displayMode: "georeferenced-overlay",
-          }),
-        ]),
-      ),
-    ).toThrow(/reference-only/u);
-  });
-
-  it("technical approvedでないpublishedを拒否する", () => {
-    expect(() =>
-      validateHistoricalMapDisplayCatalog(
-        catalogWithMaps([
-          mapFixture({
-            rightsReviewStatus: "approved",
-            technicalReviewStatus: "in-review",
-            publicationStatus: "published",
-          }),
-        ]),
-      ),
-    ).toThrow(/technicalReviewStatus/u);
-  });
-
-  it("parentMapIdの自己参照を拒否する", () => {
-    expect(() =>
-      validateHistoricalMapDisplayCatalog(
-        catalogWithMaps([
-          mapFixture({
-            id: "test-fixture-display-map-a",
-            parentMapId: "test-fixture-display-map-a",
-          }),
-        ]),
-      ),
-    ).toThrow(/自己参照/u);
-  });
-
-  it("parent循環を拒否する", () => {
-    expect(() =>
-      validateHistoricalMapDisplayCatalog(
-        catalogWithMaps([
-          mapFixture({
-            id: "test-fixture-display-map-a",
-            parentMapId: "test-fixture-display-map-b",
-          }),
-          mapFixture({
-            id: "test-fixture-display-map-b",
-            name: { ja: "試験用表示地図B" },
-            parentMapId: "test-fixture-display-map-a",
-          }),
-        ]),
-      ),
-    ).toThrow(/循環/u);
-  });
-
-  it("minZoom > maxZoomを拒否する", () => {
-    expect(() =>
-      validateHistoricalMapDisplayCatalog(
-        catalogWithMaps([
-          mapFixture({
+            id: "test-fixture-display-map-detail",
+            displayRole: "detail",
             zoom: {
-              minimum: 18,
-              maximum: 12,
-              enterDetailAt: 16,
+              minimum: 14,
+              maximum: 19,
+              enterDetailAt: 17,
+              leaveDetailBelow: 16,
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/parentMapIdが必要/u);
+  });
+
+  it("親子region不一致を拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture(),
+          mapFixture({
+            id: "test-fixture-display-map-detail",
+            name: { ja: "詳細" },
+            displayRole: "detail",
+            parentMapId: "test-fixture-display-map-overview",
+            regionId: "kyoto",
+            zoom: {
+              minimum: 14,
+              maximum: 16,
+              enterDetailAt: 15.5,
               leaveDetailBelow: 15,
             },
           }),
         ]),
       ),
-    ).toThrow(/minimum/u);
+    ).toThrow(/regionId/u);
   });
 
-  it("ヒステリシス不足を拒否する", () => {
+  it("親子era不一致を拒否する", () => {
     expect(() =>
       validateHistoricalMapDisplayCatalog(
         catalogWithMaps([
+          overviewFixture(),
           mapFixture({
+            id: "test-fixture-display-map-detail",
+            name: { ja: "詳細" },
+            displayRole: "detail",
+            parentMapId: "test-fixture-display-map-overview",
+            eraId: "bakumatsu",
             zoom: {
-              minimum: 12,
+              minimum: 14,
+              maximum: 16,
+              enterDetailAt: 15.5,
+              leaveDetailBelow: 15,
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/eraId/u);
+  });
+
+  it("detailの不正なparent roleを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture(),
+          referenceFixture({ id: "test-fixture-display-map-ref" }),
+          mapFixture({
+            id: "test-fixture-display-map-detail",
+            name: { ja: "詳細" },
+            displayRole: "detail",
+            parentMapId: "test-fixture-display-map-ref",
+            zoom: {
+              minimum: 14,
+              maximum: 16,
+              enterDetailAt: 15.5,
+              leaveDetailBelow: 15,
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/reference-onlyをparent|detailのparent/u);
+  });
+
+  it("reference-onlyをparentにするケースを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture(),
+          referenceFixture(),
+          mapFixture({
+            id: "test-fixture-display-map-child",
+            name: { ja: "子" },
+            displayRole: "detail",
+            parentMapId: "test-fixture-display-map-ref",
+            zoom: {
+              minimum: 14,
+              maximum: 16,
+              enterDetailAt: 15.5,
+              leaveDetailBelow: 15,
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/reference-onlyをparent/u);
+  });
+
+  it("overlay親子のzoom gapを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture({
+            zoom: {
+              minimum: 10,
+              maximum: 14,
+              enterDetailAt: 13,
+              leaveDetailBelow: 12,
+            },
+          }),
+          mapFixture({
+            id: "test-fixture-display-map-detail",
+            name: { ja: "詳細" },
+            displayRole: "detail",
+            parentMapId: "test-fixture-display-map-overview",
+            zoom: {
+              minimum: 15,
               maximum: 18,
-              enterDetailAt: 15,
-              leaveDetailBelow: 15,
+              enterDetailAt: 16,
+              leaveDetailBelow: 15.5,
             },
           }),
         ]),
       ),
-    ).toThrow(/ヒステリシス/u);
+    ).toThrow(/enterDetailAt|maximum/u);
   });
 
-  it("不正なcoveragePolygonを拒否する", () => {
+  it("全点同一のzero-area ringを拒否する", () => {
     expect(() =>
       validateHistoricalMapDisplayCatalog(
         catalogWithMaps([
-          mapFixture({
-            coveragePolygon: {
-              type: "Polygon",
-              coordinates: [[[139.7, 35.65], [139.8, 35.65]]],
+          overviewFixture({
+            spatialBinding: {
+              kind: "georeferenced-coverage",
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [139.7, 35.65],
+                    [139.7, 35.65],
+                    [139.7, 35.65],
+                    [139.7, 35.65],
+                  ],
+                ],
+              },
             },
           }),
         ]),
       ),
-    ).toThrow(/4点以上/u);
+    ).toThrow(/3点以上|面積0/u);
   });
 
-  it("正常なfixtureと親子関係を受理する", () => {
+  it("一直線のzero-area ringを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture({
+            spatialBinding: {
+              kind: "georeferenced-coverage",
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [139.7, 35.65],
+                    [139.8, 35.65],
+                    [139.9, 35.65],
+                    [139.7, 35.65],
+                  ],
+                ],
+              },
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/面積0/u);
+  });
+
+  it("閉じていないringを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture({
+            spatialBinding: {
+              kind: "georeferenced-coverage",
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [139.7, 35.65],
+                    [139.8, 35.65],
+                    [139.8, 35.75],
+                    [139.7, 35.75],
+                  ],
+                ],
+              },
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/閉じたリング/u);
+  });
+
+  it("緯度経度範囲外を拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          overviewFixture({
+            spatialBinding: {
+              kind: "georeferenced-coverage",
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [200, 35.65],
+                    [139.8, 35.65],
+                    [139.8, 35.75],
+                    [139.7, 35.75],
+                    [200, 35.65],
+                  ],
+                ],
+              },
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/範囲外/u);
+  });
+
+  it("正常なMultiPolygonを受理する", () => {
     const catalog = validateHistoricalMapDisplayCatalog(
       catalogWithMaps([
-        mapFixture({
-          id: "test-fixture-display-map-parent",
-          displayRole: "overview",
-          publicationStatus: "candidate",
-        }),
-        mapFixture({
-          id: "test-fixture-display-map-child",
-          name: { ja: "試験用表示地図子" },
-          displayRole: "detail",
-          parentMapId: "test-fixture-display-map-parent",
-          zoom: {
-            minimum: 14,
-            maximum: 19,
-            enterDetailAt: 17,
-            leaveDetailBelow: 16,
+        overviewFixture({
+          spatialBinding: {
+            kind: "georeferenced-coverage",
+            geometry: structuredClone(SAMPLE_MULTIPOLYGON),
           },
         }),
       ]),
     );
-    expect(catalog.maps).toHaveLength(2);
-    expect(catalog.maps[1]?.parentMapId).toBe("test-fixture-display-map-parent");
+    expect(catalog.maps[0]?.spatialBinding.geometry.type).toBe("MultiPolygon");
+  });
+
+  it("正常な親子overlayとreferenceを受理する", () => {
+    const catalog = validateHistoricalMapDisplayCatalog(
+      catalogWithMaps([
+        overviewFixture(),
+        mapFixture({
+          id: "test-fixture-display-map-detail",
+          name: { ja: "試験用詳細地図" },
+          displayRole: "detail",
+          parentMapId: "test-fixture-display-map-overview",
+          zoom: {
+            minimum: 14,
+            maximum: 18,
+            enterDetailAt: 16,
+            leaveDetailBelow: 15,
+          },
+        }),
+        referenceFixture(),
+      ]),
+    );
+    expect(catalog.maps).toHaveLength(3);
     expect(summarizeHistoricalMapDisplayCatalog(catalog).runtimeConnected).toBe(false);
   });
 

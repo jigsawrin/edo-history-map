@@ -11,6 +11,19 @@ export const HISTORICAL_MAP_DISPLAY_MODES: readonly [
   "reference-panel",
 ];
 export const HISTORICAL_MAP_DISPLAY_ROTATIONS: readonly [0, 90, 180, 270];
+export const HISTORICAL_MAP_ARTIFACT_KINDS: readonly ["historical-raster", "reference-asset"];
+export const HISTORICAL_MAP_SPATIAL_KINDS: readonly [
+  "georeferenced-coverage",
+  "display-trigger-area",
+];
+export const HISTORICAL_MAP_CROP_REMOVED_ELEMENTS: readonly [
+  "capture-background",
+  "ruler",
+  "color-chart",
+  "shelfmark-label",
+  "mounting-border",
+  "non-content-margin",
+];
 export const HISTORICAL_MAP_RIGHTS_REVIEW_STATUSES: readonly ["approved", "pending", "rejected"];
 export const HISTORICAL_MAP_TECHNICAL_REVIEW_STATUSES: readonly [
   "not-started",
@@ -33,6 +46,10 @@ export interface LocalizedText {
 export type HistoricalMapDisplayRole = (typeof HISTORICAL_MAP_DISPLAY_ROLES)[number];
 export type HistoricalMapDisplayMode = (typeof HISTORICAL_MAP_DISPLAY_MODES)[number];
 export type HistoricalMapDisplayRotation = (typeof HISTORICAL_MAP_DISPLAY_ROTATIONS)[number];
+export type HistoricalMapArtifactKind = (typeof HISTORICAL_MAP_ARTIFACT_KINDS)[number];
+export type HistoricalMapSpatialKind = (typeof HISTORICAL_MAP_SPATIAL_KINDS)[number];
+export type HistoricalMapCropRemovedElement =
+  (typeof HISTORICAL_MAP_CROP_REMOVED_ELEMENTS)[number];
 export type HistoricalMapRightsReviewStatus =
   (typeof HISTORICAL_MAP_RIGHTS_REVIEW_STATUSES)[number];
 export type HistoricalMapTechnicalReviewStatus =
@@ -41,6 +58,41 @@ export type HistoricalMapPublicationStatus =
   (typeof HISTORICAL_MAP_PUBLICATION_STATUSES)[number];
 export type HistoricalMapDisplayCatalogStatus =
   (typeof HISTORICAL_MAP_DISPLAY_CATALOG_STATUSES)[number];
+
+export type HistoricalMapPosition = readonly [number, number];
+export type HistoricalMapLinearRing = readonly HistoricalMapPosition[];
+export type HistoricalMapPolygonCoordinates = readonly HistoricalMapLinearRing[];
+export type HistoricalMapMultiPolygonCoordinates = readonly HistoricalMapPolygonCoordinates[];
+
+export type HistoricalMapCoverageGeometry =
+  | {
+      readonly type: "Polygon";
+      readonly coordinates: HistoricalMapPolygonCoordinates;
+    }
+  | {
+      readonly type: "MultiPolygon";
+      readonly coordinates: HistoricalMapMultiPolygonCoordinates;
+    };
+
+export type HistoricalMapArtifactBinding =
+  | {
+      readonly kind: "historical-raster";
+      readonly rasterId: string;
+    }
+  | {
+      readonly kind: "reference-asset";
+      readonly assetId: string;
+    };
+
+export type HistoricalMapSpatialBinding =
+  | {
+      readonly kind: "georeferenced-coverage";
+      readonly geometry: HistoricalMapCoverageGeometry;
+    }
+  | {
+      readonly kind: "display-trigger-area";
+      readonly geometry: HistoricalMapCoverageGeometry;
+    };
 
 export interface HistoricalMapDisplayCrop {
   readonly sourceWidth: number;
@@ -52,6 +104,12 @@ export interface HistoricalMapDisplayCrop {
   readonly rotationDegrees: HistoricalMapDisplayRotation;
 }
 
+export interface HistoricalMapCropReview {
+  readonly removedElements: readonly HistoricalMapCropRemovedElement[];
+  readonly preservesHistoricalContent: boolean;
+  readonly note: LocalizedText;
+}
+
 export interface HistoricalMapDisplayZoom {
   readonly minimum: number;
   readonly maximum: number;
@@ -59,23 +117,20 @@ export interface HistoricalMapDisplayZoom {
   readonly leaveDetailBelow: number;
 }
 
-export interface HistoricalMapCoveragePolygon {
-  readonly type: "Polygon" | "MultiPolygon";
-  readonly coordinates: readonly unknown[];
-}
-
 export interface HistoricalMapDisplayEntry {
   readonly id: string;
   readonly name: LocalizedText;
   readonly displayRole: HistoricalMapDisplayRole;
   readonly displayMode: HistoricalMapDisplayMode;
+  readonly artifactBinding: HistoricalMapArtifactBinding;
+  readonly spatialBinding: HistoricalMapSpatialBinding;
   readonly crop: HistoricalMapDisplayCrop;
+  readonly cropReview: HistoricalMapCropReview;
   readonly zoom: HistoricalMapDisplayZoom;
   readonly regionId: string;
   readonly eraId: string;
   readonly parentMapId?: string;
   readonly priority: number;
-  readonly coveragePolygon: HistoricalMapCoveragePolygon;
   readonly sourceId: string;
   readonly rightsReviewStatus: HistoricalMapRightsReviewStatus;
   readonly technicalReviewStatus: HistoricalMapTechnicalReviewStatus;

@@ -18,6 +18,22 @@ export const HISTORICAL_MAP_DISPLAY_MODES = Object.freeze([
   "reference-panel",
 ]);
 export const HISTORICAL_MAP_DISPLAY_ROTATIONS = Object.freeze([0, 90, 180, 270]);
+export const HISTORICAL_MAP_ARTIFACT_KINDS = Object.freeze([
+  "historical-raster",
+  "reference-asset",
+]);
+export const HISTORICAL_MAP_SPATIAL_KINDS = Object.freeze([
+  "georeferenced-coverage",
+  "display-trigger-area",
+]);
+export const HISTORICAL_MAP_CROP_REMOVED_ELEMENTS = Object.freeze([
+  "capture-background",
+  "ruler",
+  "color-chart",
+  "shelfmark-label",
+  "mounting-border",
+  "non-content-margin",
+]);
 export const HISTORICAL_MAP_RIGHTS_REVIEW_STATUSES = Object.freeze([
   "approved",
   "pending",
@@ -50,13 +66,15 @@ const MAP_KEYS = Object.freeze([
   "name",
   "displayRole",
   "displayMode",
+  "artifactBinding",
+  "spatialBinding",
   "crop",
+  "cropReview",
   "zoom",
   "regionId",
   "eraId",
   "parentMapId",
   "priority",
-  "coveragePolygon",
   "sourceId",
   "rightsReviewStatus",
   "technicalReviewStatus",
@@ -71,12 +89,18 @@ const CROP_KEYS = Object.freeze([
   "height",
   "rotationDegrees",
 ]);
+const CROP_REVIEW_KEYS = Object.freeze([
+  "removedElements",
+  "preservesHistoricalContent",
+  "note",
+]);
 const ZOOM_KEYS = Object.freeze([
   "minimum",
   "maximum",
   "enterDetailAt",
   "leaveDetailBelow",
 ]);
+const GEOMETRY_KEYS = Object.freeze(["type", "coordinates"]);
 const CATALOG_RELATIVE_PATH = "data-curation/historical-map-display-catalog.json";
 const RUNTIME_SOURCE_EXTENSIONS = Object.freeze([".ts", ".mts", ".js"]);
 export const RUNTIME_MAP_DISPLAY_REFERENCE_NEEDLES = Object.freeze([
@@ -173,6 +197,30 @@ function validateCrop(raw, label) {
   });
 }
 
+function validateCropReview(raw, label) {
+  const review = assertObject(raw, label, CROP_REVIEW_KEYS);
+  for (const key of CROP_REVIEW_KEYS) assert(Object.hasOwn(review, key), `${label}.${key}がありません`);
+  assert(Array.isArray(review.removedElements), `${label}.removedElementsは配列である必要があります`);
+  const removedElements = review.removedElements.map((element, index) => {
+    assert(
+      HISTORICAL_MAP_CROP_REMOVED_ELEMENTS.includes(element),
+      `${label}.removedElements[${index}]が不正です`,
+    );
+    return element;
+  });
+  assert(new Set(removedElements).size === removedElements.length, `${label}.removedElementsに重複があります`);
+  assert(
+    typeof review.preservesHistoricalContent === "boolean",
+    `${label}.preservesHistoricalContentはbooleanである必要があります`,
+  );
+  const note = validateMapDisplayLocalizedText(review.note, `${label}.note`);
+  return Object.freeze({
+    removedElements: Object.freeze(removedElements),
+    preservesHistoricalContent: review.preservesHistoricalContent,
+    note,
+  });
+}
+
 function validateZoom(raw, label) {
   const zoom = assertObject(raw, label, ZOOM_KEYS);
   for (const key of ZOOM_KEYS) assert(Object.hasOwn(zoom, key), `${label}.${key}がありません`);
@@ -193,8 +241,39 @@ function validateZoom(raw, label) {
   return Object.freeze({ minimum, maximum, enterDetailAt, leaveDetailBelow });
 }
 
+function validateArtifactBinding(raw, label, displayMode, displayRole) {
+  assert(raw && typeof raw === "object" && !Array.isArray(raw), `${label}がobjectではありません`);
+  assert(HISTORICAL_MAP_ARTIFACT_KINDS.includes(raw.kind), `${label}.kindが不正です`);
+  if (raw.kind === "historical-raster") {
+    assertObject(raw, label, ["kind", "rasterId"]);
+    assert(!Object.hasOwn(raw, "assetId"), `${label}: historical-rasterにassetIdは含められません`);
+    const rasterId = assertId(raw.rasterId, `${label}.rasterId`);
+    assert(
+      displayMode === "georeferenced-overlay",
+      `${label}: historical-rasterはgeoreferenced-overlay専用です`,
+    );
+    assert(displayRole !== "reference-only", `${label}: reference-onlyはhistorical-rasterにできません`);
+    return Object.freeze({ kind: "historical-raster", rasterId });
+  }
+  assertObject(raw, label, ["kind", "assetId"]);
+  assert(!Object.hasOwn(raw, "rasterId"), `${label}: reference-assetにrasterIdは含められません`);
+  const assetId = assertId(raw.assetId, `${label}.assetId`);
+  assert(displayMode === "reference-panel", `${label}: reference-assetはreference-panel専用です`);
+  return Object.freeze({ kind: "reference-asset", assetId });
+}
+
+function ringArea(positions) {
+  let area = 0;
+  for (let index = 0; index < positions.length - 1; index += 1) {
+    const [x1, y1] = positions[index];
+    const [x2, y2] = positions[index + 1];
+    area += x1 * y2 - x2 * y1;
+  }
+  return Math.abs(area) / 2;
+}
+
 function validatePosition(position, label) {
-  assert(Array.isArray(position) && position.length >= 2, `${label}が不正です`);
+  assert(Array.isArray(position) && position.length === 2, `${label}は[経度,緯度]の2要素である必要があります`);
   assertFinite(position[0], `${label}[0]`, -180, 180);
   assertFinite(position[1], `${label}[1]`, -90, 90);
   return Object.freeze([position[0], position[1]]);
@@ -209,31 +288,40 @@ function validateLinearRing(ring, label) {
     first[0] === last[0] && first[1] === last[1],
     `${label}は閉じたリングである必要があります`,
   );
+  const open = positions.slice(0, -1);
+  const unique = new Set(open.map((position) => `${position[0]},${position[1]}`));
+  assert(unique.size >= 3, `${label}: 閉じる前に異なる頂点が3点以上必要です`);
+  assert(ringArea(positions) > 0, `${label}: 面積0のリングは拒否します`);
   return Object.freeze(positions);
 }
 
-function validateCoveragePolygon(raw, label) {
-  assert(raw && typeof raw === "object" && !Array.isArray(raw), `${label}がobjectではありません`);
+function validateCoverageGeometry(raw, label) {
+  const geometry = assertObject(raw, label, GEOMETRY_KEYS);
   assert(
-    raw.type === "Polygon" || raw.type === "MultiPolygon",
+    geometry.type === "Polygon" || geometry.type === "MultiPolygon",
     `${label}.typeはPolygonまたはMultiPolygonである必要があります`,
   );
-  assert(Array.isArray(raw.coordinates), `${label}.coordinatesがありません`);
-  if (raw.type === "Polygon") {
-    assert(raw.coordinates.length >= 1, `${label}.coordinatesが空です`);
+  assert(Array.isArray(geometry.coordinates), `${label}.coordinatesがありません`);
+  if (geometry.type === "Polygon") {
+    assert(geometry.coordinates.length >= 1, `${label}.coordinatesが空です`);
     return Object.freeze({
       type: "Polygon",
       coordinates: Object.freeze(
-        raw.coordinates.map((ring, index) => validateLinearRing(ring, `${label}.coordinates[${index}]`)),
+        geometry.coordinates.map((ring, index) =>
+          validateLinearRing(ring, `${label}.coordinates[${index}]`),
+        ),
       ),
     });
   }
-  assert(raw.coordinates.length >= 1, `${label}.coordinatesが空です`);
+  assert(geometry.coordinates.length >= 1, `${label}.coordinatesが空です`);
   return Object.freeze({
     type: "MultiPolygon",
     coordinates: Object.freeze(
-      raw.coordinates.map((polygon, polygonIndex) => {
-        assert(Array.isArray(polygon) && polygon.length >= 1, `${label}.coordinates[${polygonIndex}]が不正です`);
+      geometry.coordinates.map((polygon, polygonIndex) => {
+        assert(
+          Array.isArray(polygon) && polygon.length >= 1,
+          `${label}.coordinates[${polygonIndex}]が不正です`,
+        );
         return Object.freeze(
           polygon.map((ring, ringIndex) =>
             validateLinearRing(ring, `${label}.coordinates[${polygonIndex}][${ringIndex}]`),
@@ -242,6 +330,29 @@ function validateCoveragePolygon(raw, label) {
       }),
     ),
   });
+}
+
+function validateSpatialBinding(raw, label, displayMode, displayRole) {
+  assert(raw && typeof raw === "object" && !Array.isArray(raw), `${label}がobjectではありません`);
+  assert(HISTORICAL_MAP_SPATIAL_KINDS.includes(raw.kind), `${label}.kindが不正です`);
+  assertObject(raw, label, ["kind", "geometry"]);
+  const geometry = validateCoverageGeometry(raw.geometry, `${label}.geometry`);
+  if (raw.kind === "georeferenced-coverage") {
+    assert(
+      displayMode === "georeferenced-overlay",
+      `${label}: georeferenced-coverageはgeoreferenced-overlay専用です`,
+    );
+    assert(
+      displayRole !== "reference-only",
+      `${label}: reference-onlyはgeoreferenced-coverageにできません`,
+    );
+    return Object.freeze({ kind: "georeferenced-coverage", geometry });
+  }
+  assert(
+    displayMode === "reference-panel",
+    `${label}: display-trigger-areaはreference-panel専用です`,
+  );
+  return Object.freeze({ kind: "display-trigger-area", geometry });
 }
 
 function validateMap(raw, index) {
@@ -258,11 +369,25 @@ function validateMap(raw, index) {
   assert(HISTORICAL_MAP_DISPLAY_MODES.includes(value.displayMode), `${label}.displayModeが不正です`);
   if (value.displayRole === "reference-only") {
     assert(
-      value.displayMode !== "georeferenced-overlay",
-      `${label}: reference-onlyはgeoreferenced-overlayにできません`,
+      value.displayMode === "reference-panel",
+      `${label}: reference-onlyはreference-panelのみです`,
     );
   }
+
+  const artifactBinding = validateArtifactBinding(
+    value.artifactBinding,
+    `${label}.artifactBinding`,
+    value.displayMode,
+    value.displayRole,
+  );
+  const spatialBinding = validateSpatialBinding(
+    value.spatialBinding,
+    `${label}.spatialBinding`,
+    value.displayMode,
+    value.displayRole,
+  );
   const crop = validateCrop(value.crop, `${label}.crop`);
+  const cropReview = validateCropReview(value.cropReview, `${label}.cropReview`);
   const zoom = validateZoom(value.zoom, `${label}.zoom`);
   const regionId = assertId(value.regionId, `${label}.regionId`);
   const eraId = assertId(value.eraId, `${label}.eraId`);
@@ -272,7 +397,6 @@ function validateMap(raw, index) {
     assert(parentMapId !== id, `${label}: parentMapIdの自己参照は禁止です`);
   }
   const priority = assertInteger(value.priority, `${label}.priority`, 0, 100000);
-  const coveragePolygon = validateCoveragePolygon(value.coveragePolygon, `${label}.coveragePolygon`);
   const sourceId = assertId(value.sourceId, `${label}.sourceId`);
   assert(
     HISTORICAL_MAP_RIGHTS_REVIEW_STATUSES.includes(value.rightsReviewStatus),
@@ -286,6 +410,23 @@ function validateMap(raw, index) {
     HISTORICAL_MAP_PUBLICATION_STATUSES.includes(value.publicationStatus),
     `${label}.publicationStatusが不正です`,
   );
+
+  if (!cropReview.preservesHistoricalContent) {
+    assert(
+      value.technicalReviewStatus !== "approved",
+      `${label}: 歴史情報非保持ではtechnicalReviewStatus=approvedにできません`,
+    );
+    assert(
+      value.publicationStatus === "candidate" || value.publicationStatus === "shortlisted",
+      `${label}: 歴史情報非保持はcandidateまたはshortlistedに留めてください`,
+    );
+  }
+  if (value.technicalReviewStatus === "approved") {
+    assert(
+      cropReview.preservesHistoricalContent === true,
+      `${label}: technical approvedにはpreservesHistoricalContent=trueが必要です`,
+    );
+  }
   if (value.publicationStatus === "published") {
     assert(
       value.technicalReviewStatus === "approved",
@@ -295,6 +436,10 @@ function validateMap(raw, index) {
       value.rightsReviewStatus === "approved",
       `${label}: publishedにはrightsReviewStatus=approvedが必要です`,
     );
+    assert(
+      cropReview.preservesHistoricalContent === true,
+      `${label}: publishedにはpreservesHistoricalContent=trueが必要です`,
+    );
   }
 
   return Object.freeze({
@@ -302,13 +447,15 @@ function validateMap(raw, index) {
     name,
     displayRole: value.displayRole,
     displayMode: value.displayMode,
+    artifactBinding,
+    spatialBinding,
     crop,
+    cropReview,
     zoom,
     regionId,
     eraId,
     ...(parentMapId === undefined ? {} : { parentMapId }),
     priority,
-    coveragePolygon,
     sourceId,
     rightsReviewStatus: value.rightsReviewStatus,
     technicalReviewStatus: value.technicalReviewStatus,
@@ -316,11 +463,54 @@ function validateMap(raw, index) {
   });
 }
 
-function assertNoParentCycles(maps) {
+function assertParentRelations(maps) {
   const byId = new Map(maps.map((map) => [map.id, map]));
   for (const map of maps) {
-    if (!map.parentMapId) continue;
+    if (map.displayRole === "overview") {
+      assert(map.parentMapId === undefined, `${map.id}: overviewはparentMapIdを持てません`);
+    }
+    if (map.displayRole === "detail" || map.displayRole === "reference-only") {
+      assert(map.parentMapId !== undefined, `${map.id}: ${map.displayRole}にはparentMapIdが必要です`);
+    }
+    if (map.parentMapId === undefined) continue;
     assert(byId.has(map.parentMapId), `${map.id}: parentMapId ${map.parentMapId} が存在しません`);
+    const parent = byId.get(map.parentMapId);
+    assert(parent.displayRole !== "reference-only", `${map.id}: reference-onlyをparentにできません`);
+    assert(parent.regionId === map.regionId, `${map.id}: parentとregionIdが一致しません`);
+    assert(parent.eraId === map.eraId, `${map.id}: parentとeraIdが一致しません`);
+
+    if (map.displayRole === "regional") {
+      assert(parent.displayRole === "overview", `${map.id}: regionalのparentはoverviewである必要があります`);
+    }
+    if (map.displayRole === "detail") {
+      assert(
+        parent.displayRole === "overview" || parent.displayRole === "regional",
+        `${map.id}: detailのparentはoverviewまたはregionalである必要があります`,
+      );
+    }
+    if (map.displayRole === "reference-only") {
+      assert(
+        parent.displayRole === "overview" ||
+          parent.displayRole === "regional" ||
+          parent.displayRole === "detail",
+        `${map.id}: reference-onlyのparent roleが不正です`,
+      );
+    }
+
+    if (
+      map.displayMode === "georeferenced-overlay" &&
+      parent.displayMode === "georeferenced-overlay"
+    ) {
+      assert(
+        parent.zoom.maximum >= map.zoom.enterDetailAt,
+        `${map.id}: parent.zoom.maximumはchild.enterDetailAt以上である必要があります`,
+      );
+      assert(
+        map.zoom.minimum <= parent.zoom.maximum,
+        `${map.id}: child.zoom.minimumはparent.zoom.maximum以下である必要があります`,
+      );
+    }
+
     const seen = new Set([map.id]);
     let current = map.parentMapId;
     while (current) {
@@ -361,7 +551,7 @@ export function validateHistoricalMapDisplayCatalog(value) {
   const maps = catalog.maps.map(validateMap);
   const ids = maps.map((map) => map.id);
   assert(new Set(ids).size === ids.length, "古地図表示カタログのidが重複しています");
-  assertNoParentCycles(maps);
+  assertParentRelations(maps);
 
   return Object.freeze({
     schemaVersion: HISTORICAL_MAP_DISPLAY_CATALOG_SCHEMA_VERSION,
@@ -452,16 +642,6 @@ export function auditHistoricalMapDisplayCatalogRepository(root) {
     catalog = loadHistoricalMapDisplayCatalog(root);
   } catch (cause) {
     errors.push(cause instanceof Error ? cause.message : "古地図表示カタログを解析できません");
-  }
-
-  if (catalog && catalog.maps.length === 0) {
-    // Empty catalogs must stay disconnected from runtime/public surfaces.
-  } else if (catalog && catalog.maps.length > 0) {
-    const runtimeEligible = catalog.maps.filter((map) => map.publicationStatus === "published");
-    if (runtimeEligible.length > 0) {
-      // Future published maps still require a separate runtime wiring PR.
-      // This foundation rejects silent promotion while keeping validator ready.
-    }
   }
 
   const publicCatalogPath = join(root, "public", "data", "historical-map-display-catalog.json");
