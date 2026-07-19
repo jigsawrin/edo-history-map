@@ -34,6 +34,8 @@ jobs:
         run: npm run audit:static-links
       - name: Historical raster audit
         run: npm run audit:historical-rasters
+      - name: Historical control-point catalog audit
+        run: npm run audit:historical-control-points
       - name: Prepublish audit (公開ビルドを含む)
         run: npm run audit:prepublish
       - name: npm audit (high 以上で失敗)

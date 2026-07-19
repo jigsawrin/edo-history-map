@@ -212,6 +212,7 @@ URL、Cookie、ブラウザストレージへ保存しません。
 - [docs/HISTORICAL_BASEMAP.md](docs/HISTORICAL_BASEMAP.md) — 年代・pane・歴史画像の安全な拡張設計
 - [docs/HISTORICAL_RASTER_PACKS.md](docs/HISTORICAL_RASTER_PACKS.md) — 1シート単位の古地図ラスターパック、権利・manifest・位置誤差監査
 - [docs/HISTORICAL_RASTER_SOURCES.md](docs/HISTORICAL_RASTER_SOURCES.md) — 候補台帳、商用利用ゲート、同題別所蔵の分離
+- [docs/HISTORICAL_CONTROL_POINT_CATALOG.md](docs/HISTORICAL_CONTROL_POINT_CATALOG.md) — 公式根拠付き歴史基準点カタログの空基盤
 - [docs/REGION_PACKS.md](docs/REGION_PACKS.md) — 地域パックの構造と安全な追加手順
 - [docs/BROWSER_QA.md](docs/BROWSER_QA.md) — Canvas操作とPagesキャッシュの実ブラウザ確認手順
 

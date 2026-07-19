@@ -27,6 +27,10 @@ import { validateHistoricalThemeData } from "./build-static-theme-pages.mjs";
 import { validateTimelineData } from "./build-static-timeline-pages.mjs";
 import { auditHistoricalRasterRepository } from "./audit-historical-rasters.mjs";
 import { auditHistoricalRasterCandidateRepository, summarizeHistoricalRasterCandidates } from "./historical-raster-candidates.mjs";
+import {
+  auditHistoricalControlPointCatalogRepository,
+  summarizeHistoricalControlPointCatalog,
+} from "./historical-control-point-catalog.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -105,7 +109,7 @@ const SECRET_PATTERNS = [
  * - ツールの定型 Co-Authored-By アドレス
  */
 const ALLOWED_EMAILS = P(
-  "([A-Za-z0-9._%+-]+@users\\.noreply\\.github\\.com|dependabot\\[bot\\]@users\\.noreply\\.github\\.com|support@github\\.com|noreply@anthropic\\.com)",
+  "([A-Za-z0-9._%+-]+@users\\.noreply\\.github\\.com|dependabot\\[bot\\]@users\\.noreply\\.github\\.com|support@github\\.com|noreply@anthropic\\.com|cursoragent@cursor\\.com)",
 );
 
 const PII_PATTERNS = [
@@ -211,6 +215,8 @@ const HISTORICAL_THEME_CURATION_FILE = "data-curation/historical-themes.json";
 const HISTORICAL_TIMELINE_CURATION_FILE = "data-curation/historical-timeline.json";
 const HISTORICAL_RASTER_CANDIDATE_CURATION_FILE =
   "data-curation/historical-raster-candidates.json";
+const HISTORICAL_CONTROL_POINT_CATALOG_FILE =
+  "data-curation/historical-control-point-catalog.json";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -1206,6 +1212,7 @@ for (const file of allFiles) {
       HISTORICAL_THEME_CURATION_FILE,
       HISTORICAL_TIMELINE_CURATION_FILE,
       HISTORICAL_RASTER_CANDIDATE_CURATION_FILE,
+      HISTORICAL_CONTROL_POINT_CATALOG_FILE,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
@@ -1503,6 +1510,50 @@ for (const message of historicalRasterCandidateAudit.errors) {
 if (historicalRasterCandidateAudit.registry) {
   const summary = summarizeHistoricalRasterCandidates(historicalRasterCandidateAudit.registry);
   infos.push(`古地図候補: ${summary.total}件、${summary.institutions}機関、approved ${summary.approved}、pending ${summary.pending}、rejected ${summary.rejected}`);
+}
+
+const historicalControlPointCatalogAudit = auditHistoricalControlPointCatalogRepository(ROOT);
+for (const message of historicalControlPointCatalogAudit.errors) {
+  addFinding("error", "歴史基準点カタログ", HISTORICAL_CONTROL_POINT_CATALOG_FILE, 0, message);
+}
+if (historicalControlPointCatalogAudit.catalog) {
+  const summary = summarizeHistoricalControlPointCatalog(historicalControlPointCatalogAudit.catalog);
+  infos.push(
+    `歴史基準点カタログ: schema ${summary.schemaVersion}、${summary.entryCount}件、status ${summary.catalogStatus}`,
+  );
+  if (existsSync(join(ROOT, "public", "data", "historical-control-point-catalog.json"))) {
+    addFinding(
+      "error",
+      "歴史基準点カタログ公開",
+      "public/data/historical-control-point-catalog.json",
+      0,
+      "カタログをpublicへ出力してはいけません",
+    );
+  }
+  const distCatalogLeak = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .some((name) => name.includes("historical-control-point-catalog") || name.includes("test-fixture-control-point"))
+    : false;
+  if (distCatalogLeak) {
+    addFinding("error", "歴史基準点カタログ混入", "dist/", 0, "カタログまたはtest fixtureがdistへ混入しています");
+  }
+  const bundleHasCatalogName = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .filter((name) => name.endsWith(".js"))
+        .some((name) => {
+          const content = readFileSync(join(ROOT, "dist", name), "utf8");
+          return (
+            content.includes("historical-control-point-catalog") ||
+            content.includes("test-fixture-control-point") ||
+            content.includes("試験用基準点")
+          );
+        })
+    : false;
+  if (bundleHasCatalogName) {
+    addFinding("error", "歴史基準点カタログruntime混入", "dist/", 0, "runtime bundleへカタログ候補名が混入しています");
+  }
 }
 
 // ---- 4. 出典表示の確認 -------------------------------------------------------
