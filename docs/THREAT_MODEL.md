@@ -124,6 +124,8 @@ flowchart LR
 
 歴史基準点カタログは現代側ランドマーク候補の調査証跡であり、runtime・publicへ接続しない。`src/`配下の`.ts`/`.mts`/`.js`参照、uncertain、moved、possibly-moved、approximate/unknown座標のeligible/validation-only化、validation-onlyのunknown移設状態、認証情報付きURL、HTML/制御文字、空カタログ以外の未審査entries、カタログからtransform/validationへの自動昇格を監査で拒否する。不確実な地点はholdへ分類する。
 
+古地図表示カタログも調査証跡であり、空基盤の間はruntime・publicへ接続しない。`src/`参照、public/dist混入、reference-onlyのgeoreferenced-overlay化、技術未承認のpublished、parent自己参照・循環、crop外側、ヒステリシス欠落、不正coveragePolygon、本番raster増加、公開古地図ディレクトリ、source map、Service Workerを監査で拒否する。
+
 - 任意URL、query/hash由来raster ID、外部画像originを使わず、固定レジストリの同一originパスだけを解決する。
 - sourceとrasterのapproved二重ゲート、region/era/attribution一致を必須にし、pending/rejectedを拒否する。
 - manifestはXYZ、PNG/lossless WebP、256pxに限定し、絶対パス、`..`、colon、backslash、重複、欠損、orphan、symlink、SVG、HTML、ZIP、JPEG、不正magic bytes・寸法・SHA・bytesを拒否する。

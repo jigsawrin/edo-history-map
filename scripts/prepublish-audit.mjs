@@ -31,6 +31,10 @@ import {
   auditHistoricalControlPointCatalogRepository,
   summarizeHistoricalControlPointCatalog,
 } from "./historical-control-point-catalog.mjs";
+import {
+  auditHistoricalMapDisplayCatalogRepository,
+  summarizeHistoricalMapDisplayCatalog,
+} from "./historical-map-display-catalog.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -217,6 +221,8 @@ const HISTORICAL_RASTER_CANDIDATE_CURATION_FILE =
   "data-curation/historical-raster-candidates.json";
 const HISTORICAL_CONTROL_POINT_CATALOG_FILE =
   "data-curation/historical-control-point-catalog.json";
+const HISTORICAL_MAP_DISPLAY_CATALOG_FILE =
+  "data-curation/historical-map-display-catalog.json";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -1213,6 +1219,7 @@ for (const file of allFiles) {
       HISTORICAL_TIMELINE_CURATION_FILE,
       HISTORICAL_RASTER_CANDIDATE_CURATION_FILE,
       HISTORICAL_CONTROL_POINT_CATALOG_FILE,
+      HISTORICAL_MAP_DISPLAY_CATALOG_FILE,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
@@ -1553,6 +1560,54 @@ if (historicalControlPointCatalogAudit.catalog) {
     : false;
   if (bundleHasCatalogName) {
     addFinding("error", "歴史基準点カタログruntime混入", "dist/", 0, "runtime bundleへカタログ候補名が混入しています");
+  }
+}
+
+const historicalMapDisplayCatalogAudit = auditHistoricalMapDisplayCatalogRepository(ROOT);
+for (const message of historicalMapDisplayCatalogAudit.errors) {
+  addFinding("error", "古地図表示カタログ", HISTORICAL_MAP_DISPLAY_CATALOG_FILE, 0, message);
+}
+if (historicalMapDisplayCatalogAudit.catalog) {
+  const summary = summarizeHistoricalMapDisplayCatalog(historicalMapDisplayCatalogAudit.catalog);
+  infos.push(
+    `古地図表示カタログ: schema ${summary.schemaVersion}、${summary.mapCount}件、status ${summary.catalogStatus}`,
+  );
+  if (existsSync(join(ROOT, "public", "data", "historical-map-display-catalog.json"))) {
+    addFinding(
+      "error",
+      "古地図表示カタログ公開",
+      "public/data/historical-map-display-catalog.json",
+      0,
+      "カタログをpublicへ出力してはいけません",
+    );
+  }
+  const distDisplayLeak = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .some(
+          (name) =>
+            name.includes("historical-map-display-catalog") ||
+            name.includes("test-fixture-display-map"),
+        )
+    : false;
+  if (distDisplayLeak) {
+    addFinding("error", "古地図表示カタログ混入", "dist/", 0, "カタログまたはtest fixtureがdistへ混入しています");
+  }
+  const bundleHasDisplayCatalogName = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .filter((name) => name.endsWith(".js"))
+        .some((name) => {
+          const content = readFileSync(join(ROOT, "dist", name), "utf8");
+          return (
+            content.includes("historical-map-display-catalog") ||
+            content.includes("test-fixture-display-map") ||
+            content.includes("試験用表示地図")
+          );
+        })
+    : false;
+  if (bundleHasDisplayCatalogName) {
+    addFinding("error", "古地図表示カタログruntime混入", "dist/", 0, "runtime bundleへ表示カタログ名が混入しています");
   }
 }
 

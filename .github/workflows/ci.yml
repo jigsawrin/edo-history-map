@@ -36,6 +36,8 @@ jobs:
         run: npm run audit:historical-rasters
       - name: Historical control-point catalog audit
         run: npm run audit:historical-control-points
+      - name: Historical map display catalog audit
+        run: npm run audit:historical-map-display
       - name: Prepublish audit (公開ビルドを含む)
         run: npm run audit:prepublish
       - name: npm audit (high 以上で失敗)
