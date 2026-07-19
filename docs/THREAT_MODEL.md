@@ -126,6 +126,8 @@ flowchart LR
 
 古地図表示カタログも調査証跡であり、空基盤の間はruntime・publicへ接続しない。`src/`参照、public/dist混入、artifact/spatial binding不一致、reference-onlyのgeoreferenced化、歴史情報非保持のapproved/published、不正parent role、親子region/era不一致、overlay親子のzoom gap、crop外側、ヒステリシス欠落、面積0 geometry、本番raster増加、公開古地図ディレクトリ、source map、Service Workerを監査で拒否する。
 
+歴史参考画像台帳は`reference-panel`向け参考資料の調査証跡であり、空基盤の間はruntime・publicへ接続しない。`src/`参照、台帳JSONのpublic配信、`public/data/historical-reference-assets`、raw/derivedの不正パス、published以外のpublicPath、NC/ND相当（商用・再配布・改変・crop不可）のpublished化、歴史情報非保持のapproved/published、候補台帳・表示カタログとの相互参照矛盾、orphan published asset、dist/test fixture混入、source map、Service Workerを監査で拒否する。
+
 - 任意URL、query/hash由来raster ID、外部画像originを使わず、固定レジストリの同一originパスだけを解決する。
 - sourceとrasterのapproved二重ゲート、region/era/attribution一致を必須にし、pending/rejectedを拒否する。
 - manifestはXYZ、PNG/lossless WebP、256pxに限定し、絶対パス、`..`、colon、backslash、重複、欠損、orphan、symlink、SVG、HTML、ZIP、JPEG、不正magic bytes・寸法・SHA・bytesを拒否する。

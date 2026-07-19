@@ -26,6 +26,7 @@
     "audit:historical-raster-candidates": "node scripts/historical-raster-candidates.mjs",
     "audit:historical-control-points": "node scripts/historical-control-point-catalog.mjs",
     "audit:historical-map-display": "node scripts/historical-map-display-catalog.mjs",
+    "audit:historical-reference-assets": "node scripts/historical-reference-assets.mjs",
     "verify:historical-raster-package": "node scripts/historical-raster-package.mjs",
     "analyze:historical-raster-image": "node scripts/inspect-jpeg.mjs data-raw/historical-rasters/taito-2017-chi-009/2017_chi_009_002-canvas-002.jpg"
   },
