@@ -30,6 +30,14 @@ export const REFERENCE_ASSET_ORIGINAL_MIME_TYPES: readonly [
 ];
 export const REFERENCE_ASSET_DERIVED_MIME_TYPES: readonly ["image/png", "image/webp"];
 export const REFERENCE_ASSET_ROTATIONS: readonly [0, 90, 180, 270];
+export const REFERENCE_ASSET_LICENSE_CATEGORIES: readonly [
+  "public-domain",
+  "cc0",
+  "cc-by",
+  "custom-commercial-open",
+  "restricted",
+  "unknown",
+];
 
 export interface LocalizedText {
   readonly ja: string;
@@ -47,6 +55,7 @@ export type ReferenceAssetOriginalMimeType =
   (typeof REFERENCE_ASSET_ORIGINAL_MIME_TYPES)[number];
 export type ReferenceAssetDerivedMimeType = (typeof REFERENCE_ASSET_DERIVED_MIME_TYPES)[number];
 export type ReferenceAssetRotationDegrees = (typeof REFERENCE_ASSET_ROTATIONS)[number];
+export type ReferenceAssetLicenseCategory = (typeof REFERENCE_ASSET_LICENSE_CATEGORIES)[number];
 
 export interface ReferenceAssetOriginalFile {
   readonly fileName: string;
@@ -87,6 +96,7 @@ export interface HistoricalReferenceAsset {
   readonly technicalReviewStatus: ReferenceAssetTechnicalStatus;
   readonly publicationStatus: ReferenceAssetPublicationStatus;
   readonly licenseCode: string;
+  readonly licenseCategory: ReferenceAssetLicenseCategory;
   readonly licenseUrl: string;
   readonly attribution: LocalizedText;
   readonly derivativeDisclosure: LocalizedText;
@@ -132,7 +142,30 @@ export function findRuntimeHistoricalReferenceAssetReferences(root: string): rea
   readonly file: string;
   readonly needle: string;
 }[];
-export function auditHistoricalReferenceAssetRepository(root: string): {
+export interface HistoricalReferenceAssetFileVerificationOptions {
+  readonly requireRawFiles: boolean;
+  readonly requireDerivedFiles: boolean;
+  readonly requirePublicFiles: boolean;
+}
+export function verifyHistoricalReferenceAssetFiles(
+  root: string,
+  catalog: HistoricalReferenceAssetCatalog,
+  options?: Partial<HistoricalReferenceAssetFileVerificationOptions>,
+): {
+  readonly rawFiles: readonly unknown[];
+  readonly derivedFiles: readonly unknown[];
+  readonly publicFiles: readonly string[];
+};
+export function createHistoricalReferenceAssetStaticManifest(catalog: HistoricalReferenceAssetCatalog): {
+  readonly schemaVersion: 1;
+  readonly assetCount: number;
+  readonly files: readonly {
+    readonly publicPath: string;
+    readonly sha256: string;
+    readonly bytes: number;
+  }[];
+};
+export function auditHistoricalReferenceAssetRepository(root: string, options?: { readonly verifyLocal?: boolean }): {
   readonly errors: readonly string[];
   readonly catalog: HistoricalReferenceAssetCatalog | null;
 };

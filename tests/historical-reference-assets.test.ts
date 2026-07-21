@@ -1,14 +1,18 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { deflateSync } from "node:zlib";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   auditHistoricalReferenceAssetRepository,
+  createHistoricalReferenceAssetStaticManifest,
   findRuntimeHistoricalReferenceAssetReferences,
   loadHistoricalReferenceAssetCatalog,
   summarizeHistoricalReferenceAssetCatalog,
   validateHistoricalReferenceAssetCatalog,
+  verifyHistoricalReferenceAssetFiles,
 } from "../scripts/historical-reference-assets.mjs";
 
 const ROOT = join(__dirname, "..");
@@ -17,6 +21,54 @@ const sha256 = (path: string) =>
 
 const ORIGINAL_SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const DERIVED_SHA = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+function crc32(buffer: Buffer) {
+  let crc = 0xffffffff;
+  for (const byte of buffer) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type: string, data: Buffer) {
+  const name = Buffer.from(type, "ascii");
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length);
+  const checksum = Buffer.alloc(4);
+  checksum.writeUInt32BE(crc32(Buffer.concat([name, data])));
+  return Buffer.concat([length, name, data, checksum]);
+}
+
+function tinyPng(width = 2, height = 2, red = 64) {
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 6;
+  const rows = [];
+  for (let y = 0; y < height; y += 1) {
+    const row = Buffer.alloc(1 + width * 4);
+    for (let x = 0; x < width; x += 1) {
+      const offset = 1 + x * 4;
+      row[offset] = red;
+      row[offset + 1] = x * 30;
+      row[offset + 2] = y * 30;
+      row[offset + 3] = 255;
+    }
+    rows.push(row);
+  }
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", deflateSync(Buffer.concat(rows))),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+const LOSSLESS_WEBP = Buffer.from("UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==", "base64");
+const LOSSY_WEBP = Buffer.from("UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA", "base64");
+const bufferSha256 = (value: Buffer) => createHash("sha256").update(value).digest("hex");
 
 const EMPTY_CATALOG = Object.freeze({
   schemaVersion: 1,
@@ -51,6 +103,7 @@ function assetFixture(overrides: Record<string, unknown> = {}) {
     technicalReviewStatus: "in-review",
     publicationStatus: "candidate",
     licenseCode: "CC-BY-4.0",
+    licenseCategory: "cc-by",
     licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
     attribution: { ja: "試験用帰属表示" },
     derivativeDisclosure: { ja: "試験用派生開示" },
@@ -147,6 +200,11 @@ function candidateFixture(overrides: Record<string, unknown> = {}) {
   return {
     candidateId: "test-fixture-candidate-a",
     rightsReviewStatus: "approved",
+    commercialUseCompatible: true,
+    redistributionAllowed: true,
+    modificationAllowed: true,
+    croppingAllowed: true,
+    rightsEvidenceUrls: ["https://example.com/rights"],
     ...overrides,
   };
 }
@@ -237,6 +295,102 @@ function createAuditFixtureRoot(options: {
     writeFileSync(join(root, "dist", "historical-reference-assets-leak.js"), "leak\n", "utf8");
   }
   return root;
+}
+
+function fileBackedAsset(options: {
+  publicationStatus?: "candidate" | "shortlisted" | "published";
+  derivedBuffer?: Buffer;
+  derivedMimeType?: "image/png" | "image/webp";
+} = {}) {
+  const rawBuffer = tinyPng(2, 2, 16);
+  const derivedBuffer = options.derivedBuffer ?? tinyPng(2, 2, 96);
+  const derivedMimeType = options.derivedMimeType ?? "image/png";
+  const extension = derivedMimeType === "image/png" ? "png" : "webp";
+  const publicationStatus = options.publicationStatus ?? "published";
+  const base = publicationStatus === "published" ? publishedAsset() : assetFixture({ publicationStatus });
+  return {
+    rawBuffer,
+    derivedBuffer,
+    asset: {
+      ...base,
+      rightsReviewStatus: publicationStatus === "published" ? "approved" : "pending",
+      technicalReviewStatus: publicationStatus === "published" ? "approved" : "in-review",
+      originalFile: {
+        fileName: "original.png",
+        mimeType: "image/png",
+        width: 2,
+        height: 2,
+        bytes: rawBuffer.length,
+        sha256: bufferSha256(rawBuffer),
+        rawPath: "data-raw/historical-reference-assets/test-fixture-reference-asset-a/original.png",
+      },
+      crop: {
+        sourceWidth: 2,
+        sourceHeight: 2,
+        x: 0,
+        y: 0,
+        width: derivedMimeType === "image/webp" ? 1 : 2,
+        height: derivedMimeType === "image/webp" ? 1 : 2,
+        rotationDegrees: 0,
+      },
+      derivedFile: {
+        mimeType: derivedMimeType,
+        width: derivedMimeType === "image/webp" ? 1 : 2,
+        height: derivedMimeType === "image/webp" ? 1 : 2,
+        bytes: derivedBuffer.length,
+        sha256: bufferSha256(derivedBuffer),
+        derivedPath: `data-derived/historical-reference-assets/test-fixture-reference-asset-a/derived.${extension}`,
+        ...(publicationStatus === "published"
+          ? { publicPath: `/data/historical-reference-assets/test-fixture-reference-asset-a/derived.${extension}` }
+          : {}),
+      },
+    },
+  };
+}
+
+function writeFileBackedAsset(root: string, fixture: ReturnType<typeof fileBackedAsset>, options: {
+  raw?: boolean;
+  derived?: boolean;
+  public?: boolean;
+  manifest?: boolean;
+} = {}) {
+  const asset = fixture.asset as ReturnType<typeof publishedAsset>;
+  const derivedFile = asset.derivedFile as unknown as { derivedPath: string; publicPath?: string };
+  const catalog = validateHistoricalReferenceAssetCatalog(catalogWithAssets([asset]));
+  if (options.raw !== false) {
+    const path = join(root, asset.originalFile.rawPath as string);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, fixture.rawBuffer);
+  }
+  if (options.derived !== false) {
+    const path = join(root, derivedFile.derivedPath);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, fixture.derivedBuffer);
+  }
+  if (options.public !== false && asset.publicationStatus === "published") {
+    if (!derivedFile.publicPath) throw new Error("published fixture publicPath missing");
+    const path = join(root, "public", ...derivedFile.publicPath.slice(1).split("/"));
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, fixture.derivedBuffer);
+  }
+  if (options.manifest !== false && asset.publicationStatus === "published") {
+    const path = join(root, "dist", "places", "manifest.json");
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, `${JSON.stringify({ schemaVersion: 3, historicalReferenceAssets: createHistoricalReferenceAssetStaticManifest(catalog) }, null, 2)}\n`, "utf8");
+  }
+  return catalog;
+}
+
+function createCompletePublishedRoot(options: Parameters<typeof fileBackedAsset>[0] = {}) {
+  const fixture = fileBackedAsset(options);
+  const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+  const catalog = writeFileBackedAsset(root, fixture);
+  return { root, fixture, catalog };
+}
+
+function initializeGitFixture(root: string) {
+  writeFileSync(join(root, ".gitignore"), "data-raw/\ndata-derived/\n", "utf8");
+  execFileSync("git", ["init", "--quiet"], { cwd: root, stdio: "ignore" });
 }
 
 describe("歴史参考画像台帳基盤", () => {
@@ -585,14 +739,10 @@ describe("歴史参考画像台帳基盤", () => {
     expect(audit.errors.some((message) => message.includes("published assetのみ参照"))).toBe(true);
   });
 
-  it("orphan published assetを拒否する", () => {
-    const root = createAuditFixtureRoot({
-      assets: [publishedAsset()],
-      candidates: [candidateFixture()],
-      displayMaps: [],
-    });
+  it("published assetのdisplay未接続を段階登録として許可する", () => {
+    const { root } = createCompletePublishedRoot();
     const audit = auditHistoricalReferenceAssetRepository(root);
-    expect(audit.errors.some((message) => message.includes("orphan"))).toBe(true);
+    expect(audit.errors).toEqual([]);
   });
 
   it("runtime参照を拒否する", () => {
@@ -612,11 +762,310 @@ describe("歴史参考画像台帳基盤", () => {
     const publicRoot = createAuditFixtureRoot({ publicCatalog: true, publicAssetDir: true });
     const publicAudit = auditHistoricalReferenceAssetRepository(publicRoot);
     expect(publicAudit.errors.some((message) => message.includes("publicへ配信"))).toBe(true);
-    expect(publicAudit.errors.some((message) => message.includes("公開参考画像ディレクトリ"))).toBe(true);
+    expect(publicAudit.errors.some((message) => message.includes("published asset 0件"))).toBe(true);
 
     const distRoot = createAuditFixtureRoot({ distLeak: true });
     const distAudit = auditHistoricalReferenceAssetRepository(distRoot);
     expect(distAudit.errors.some((message) => message.includes("distへ混入"))).toBe(true);
+  });
+
+  it("published assetの正しいpublic PNG実ファイルを検証する", () => {
+    const { root, catalog } = createCompletePublishedRoot();
+    const result = verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true });
+    expect(result.publicFiles).toEqual([
+      "public/data/historical-reference-assets/test-fixture-reference-asset-a/derived.png",
+    ]);
+  });
+
+  it("published assetのpublicファイル欠落を拒否する", () => {
+    const fixture = fileBackedAsset();
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    const catalog = writeFileBackedAsset(root, fixture, { public: false });
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/公開参考画像|public.*ありません/u);
+  });
+
+  it("public orphanファイルを拒否する", () => {
+    const { root, catalog } = createCompletePublishedRoot();
+    writeFileSync(join(root, "public/data/historical-reference-assets/test-fixture-reference-asset-a/orphan.png"), tinyPng());
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/orphan/u);
+  });
+
+  it("publicの余分な空assetディレクトリを拒否する", () => {
+    const { root, catalog } = createCompletePublishedRoot();
+    mkdirSync(join(root, "public/data/historical-reference-assets/extra-asset"));
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/余分なassetディレクトリ/u);
+  });
+
+  it("publicの隠しファイルを拒否する", () => {
+    const { root, catalog } = createCompletePublishedRoot();
+    writeFileSync(join(root, "public/data/historical-reference-assets/test-fixture-reference-asset-a/.hidden"), "hidden");
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/隠し項目/u);
+  });
+
+  it("publicの余分な階層を拒否する", () => {
+    const { root, catalog } = createCompletePublishedRoot();
+    mkdirSync(join(root, "public/data/historical-reference-assets/test-fixture-reference-asset-a/nested"));
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/id直下/u);
+  });
+
+  it("candidate assetのpublicファイルを拒否する", () => {
+    const fixture = fileBackedAsset({ publicationStatus: "candidate" });
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    writeFileBackedAsset(root, fixture);
+    const publicPath = join(root, "public/data/historical-reference-assets/test-fixture-reference-asset-a/derived.png");
+    mkdirSync(dirname(publicPath), { recursive: true });
+    writeFileSync(publicPath, fixture.derivedBuffer);
+    const audit = auditHistoricalReferenceAssetRepository(root);
+    expect(audit.errors.some((message) => message.includes("published asset 0件"))).toBe(true);
+  });
+
+  it("public symlinkを拒否する", () => {
+    const fixture = fileBackedAsset();
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    const catalog = writeFileBackedAsset(root, fixture, { public: false });
+    const publicRoot = join(root, "public/data/historical-reference-assets");
+    const targetDirectory = join(root, "public-junction-target");
+    mkdirSync(publicRoot, { recursive: true });
+    mkdirSync(targetDirectory, { recursive: true });
+    writeFileSync(join(targetDirectory, "derived.png"), fixture.derivedBuffer);
+    symlinkSync(targetDirectory, join(publicRoot, "test-fixture-reference-asset-a"), "junction");
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/symlink|通常ファイル/u);
+  });
+
+  it("public SHA不一致を拒否する", () => {
+    const fixture = fileBackedAsset();
+    fixture.asset.derivedFile.sha256 = "c".repeat(64);
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    const catalog = writeFileBackedAsset(root, fixture, { derived: false });
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/SHA-256/u);
+  });
+
+  it("public bytes不一致を拒否する", () => {
+    const fixture = fileBackedAsset();
+    fixture.asset.derivedFile.bytes = fixture.derivedBuffer.length + 1;
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    const catalog = writeFileBackedAsset(root, fixture, { derived: false });
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/bytes/u);
+  });
+
+  it("public寸法不一致を拒否する", () => {
+    const fixture = fileBackedAsset();
+    fixture.derivedBuffer = tinyPng(3, 2, 96);
+    fixture.asset.derivedFile.bytes = fixture.derivedBuffer.length;
+    fixture.asset.derivedFile.sha256 = bufferSha256(fixture.derivedBuffer);
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    const catalog = writeFileBackedAsset(root, fixture, { derived: false });
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/寸法/u);
+  });
+
+  it("public MIME magic不一致を拒否する", () => {
+    const fixture = fileBackedAsset();
+    fixture.derivedBuffer = LOSSLESS_WEBP;
+    fixture.asset.derivedFile.bytes = fixture.derivedBuffer.length;
+    fixture.asset.derivedFile.sha256 = bufferSha256(fixture.derivedBuffer);
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    const catalog = writeFileBackedAsset(root, fixture, { derived: false });
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/magic bytesとmimeType/u);
+  });
+
+  it("最小PNG fixtureのsignature・IHDR・寸法を検証する", () => {
+    const { root, catalog } = createCompletePublishedRoot();
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requireRawFiles: true, requireDerivedFiles: true, requirePublicFiles: true })).not.toThrow();
+  });
+
+  it("最小lossless WebP fixtureを検証する", () => {
+    const { root, catalog } = createCompletePublishedRoot({ derivedBuffer: LOSSLESS_WEBP, derivedMimeType: "image/webp" });
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).not.toThrow();
+  });
+
+  it("lossy WebP派生画像を拒否する", () => {
+    const fixture = fileBackedAsset({ derivedBuffer: LOSSY_WEBP, derivedMimeType: "image/webp" });
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    const catalog = writeFileBackedAsset(root, fixture);
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requirePublicFiles: true })).toThrow(/lossy WebP/u);
+  });
+
+  it("raw実ファイルSHA不一致を拒否する", () => {
+    const fixture = fileBackedAsset({ publicationStatus: "candidate" });
+    fixture.asset.originalFile.sha256 = "d".repeat(64);
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    const catalog = writeFileBackedAsset(root, fixture);
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requireRawFiles: true })).toThrow(/SHA-256/u);
+  });
+
+  it("raw実ファイル寸法不一致を拒否する", () => {
+    const fixture = fileBackedAsset({ publicationStatus: "candidate" });
+    fixture.rawBuffer = tinyPng(3, 2, 16);
+    fixture.asset.originalFile.bytes = fixture.rawBuffer.length;
+    fixture.asset.originalFile.sha256 = bufferSha256(fixture.rawBuffer);
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    const catalog = writeFileBackedAsset(root, fixture);
+    expect(() => verifyHistoricalReferenceAssetFiles(root, catalog, { requireRawFiles: true })).toThrow(/寸法/u);
+  });
+
+  it("raw Git追跡を拒否する", () => {
+    const fixture = fileBackedAsset({ publicationStatus: "candidate" });
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    writeFileBackedAsset(root, fixture);
+    initializeGitFixture(root);
+    execFileSync("git", ["add", "-f", "--", fixture.asset.originalFile.rawPath], { cwd: root });
+    const audit = auditHistoricalReferenceAssetRepository(root);
+    expect(audit.errors.some((message) => message.includes("rawPathがGit追跡"))).toBe(true);
+  });
+
+  it("derived Git追跡を拒否する", () => {
+    const fixture = fileBackedAsset({ publicationStatus: "candidate" });
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    writeFileBackedAsset(root, fixture);
+    initializeGitFixture(root);
+    execFileSync("git", ["add", "-f", "--", fixture.asset.derivedFile.derivedPath], { cwd: root });
+    const audit = auditHistoricalReferenceAssetRepository(root);
+    expect(audit.errors.some((message) => message.includes("derivedPathがGit追跡"))).toBe(true);
+  });
+
+  it("published publicPathのGit未追跡を拒否する", () => {
+    const { root } = createCompletePublishedRoot();
+    initializeGitFixture(root);
+    const audit = auditHistoricalReferenceAssetRepository(root);
+    expect(audit.errors.some((message) => message.includes("publicPathがGit追跡されていません"))).toBe(true);
+  });
+
+  it("published publicPathだけをGit追跡対象として許可する", () => {
+    const { root } = createCompletePublishedRoot();
+    initializeGitFixture(root);
+    execFileSync("git", ["add", "--", "public/data/historical-reference-assets/test-fixture-reference-asset-a/derived.png"], { cwd: root });
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
+  it("raw/derived assetディレクトリのGit除外欠落を拒否する", () => {
+    const root = createAuditFixtureRoot();
+    execFileSync("git", ["init", "--quiet"], { cwd: root, stdio: "ignore" });
+    const audit = auditHistoricalReferenceAssetRepository(root);
+    expect(audit.errors.filter((message) => message.includes(".gitignoreで保護")).length).toBe(2);
+  });
+
+  it("candidate commercial=falseを超えるasset trueを拒否する", () => {
+    const root = createAuditFixtureRoot({ assets: [assetFixture()], candidates: [candidateFixture({ commercialUseCompatible: false })] });
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("commercialUseAllowed"))).toBe(true);
+  });
+
+  it("candidate redistribution=falseを超えるasset trueを拒否する", () => {
+    const root = createAuditFixtureRoot({ assets: [assetFixture()], candidates: [candidateFixture({ redistributionAllowed: false })] });
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("redistributionAllowed"))).toBe(true);
+  });
+
+  it("candidate modification=falseを超えるasset trueを拒否する", () => {
+    const root = createAuditFixtureRoot({ assets: [assetFixture()], candidates: [candidateFixture({ modificationAllowed: false })] });
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("modificationAllowed"))).toBe(true);
+  });
+
+  it("candidate cropping=falseを超えるasset trueを拒否する", () => {
+    const root = createAuditFixtureRoot({ assets: [assetFixture()], candidates: [candidateFixture({ croppingAllowed: false })] });
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("croppingAllowed"))).toBe(true);
+  });
+
+  it("candidate pending + asset approvedを拒否する", () => {
+    const root = createAuditFixtureRoot({ assets: [assetFixture({ rightsReviewStatus: "approved" })], candidates: [candidateFixture({ rightsReviewStatus: "pending" })] });
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("候補rights=pendingを超え"))).toBe(true);
+  });
+
+  it("candidate rejected + asset approvedを拒否する", () => {
+    const root = createAuditFixtureRoot({ assets: [assetFixture({ rightsReviewStatus: "approved" })], candidates: [candidateFixture({ rightsReviewStatus: "rejected" })] });
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("候補rights=rejectedを超え"))).toBe(true);
+  });
+
+  it("candidate approved + asset rejectedを保守的上書きとして許可する", () => {
+    const root = createAuditFixtureRoot({ assets: [assetFixture({ rightsReviewStatus: "rejected" })], candidates: [candidateFixture()] });
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
+  it.each([
+    "CC-BY-NC-4.0",
+    "NONCOMMERCIAL",
+    "CC-BY-ND-4.0",
+    "NO_DERIVATIVES",
+    "ALL RIGHTS RESERVED",
+    "ARR",
+  ])("restricted licenseCode %s のpublishedを拒否する", (licenseCode) => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([publishedAsset({ licenseCode })]))).toThrow(/NC\/ND|権利留保/u);
+  });
+
+  it("licenseCodeの単純部分文字列を誤検出しない", () => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([publishedAsset({ licenseCode: "CANDIDATE-OPEN-1.0" })]))).not.toThrow();
+  });
+
+  it("unknown license categoryのpublishedを拒否する", () => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([publishedAsset({ licenseCategory: "unknown" })]))).toThrow(/licenseCategory/u);
+  });
+
+  it("custom-commercial-openで候補rights evidence欠落を拒否する", () => {
+    const fixture = fileBackedAsset();
+    fixture.asset.licenseCategory = "custom-commercial-open";
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture({ rightsEvidenceUrls: [] })] });
+    writeFileBackedAsset(root, fixture);
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("rights evidence"))).toBe(true);
+  });
+
+  it("正常なpublished権利条件を候補台帳まで含めて成功させる", () => {
+    const { root } = createCompletePublishedRoot();
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
+  it("published publicPathとstatic manifest SHA不一致を拒否する", () => {
+    const { root } = createCompletePublishedRoot();
+    const manifestPath = join(root, "dist/places/manifest.json");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+    manifest.historicalReferenceAssets.files[0].sha256 = "e".repeat(64);
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("static manifestのSHA-256"))).toBe(true);
+  });
+
+  it("static manifestだけにあるorphan entryを拒否する", () => {
+    const root = createAuditFixtureRoot();
+    const manifestPath = join(root, "dist/places/manifest.json");
+    mkdirSync(dirname(manifestPath), { recursive: true });
+    writeFileSync(manifestPath, `${JSON.stringify({ historicalReferenceAssets: { schemaVersion: 1, assetCount: 1, files: [{ publicPath: "/data/historical-reference-assets/orphan/x.png", sha256: "a".repeat(64), bytes: 1 }] } })}\n`, "utf8");
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("orphan entry"))).toBe(true);
+  });
+
+  it("local verifierで非rejected assetのraw欠落を拒否する", () => {
+    const fixture = fileBackedAsset();
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    writeFileBackedAsset(root, fixture, { raw: false });
+    expect(auditHistoricalReferenceAssetRepository(root, { verifyLocal: true }).errors.some((message) => message.includes("raw原画像がありません"))).toBe(true);
+  });
+
+  it("local verifierでderivedFileのローカル欠落を拒否する", () => {
+    const fixture = fileBackedAsset();
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    writeFileBackedAsset(root, fixture, { derived: false });
+    expect(auditHistoricalReferenceAssetRepository(root, { verifyLocal: true }).errors.some((message) => message.includes("derivedローカル画像がありません"))).toBe(true);
+  });
+
+  it("raw symlinkを拒否する", () => {
+    const fixture = fileBackedAsset({ publicationStatus: "candidate" });
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    writeFileBackedAsset(root, fixture, { raw: false });
+    const rawRoot = join(root, "data-raw/historical-reference-assets");
+    const targetDirectory = join(root, "raw-junction-target");
+    mkdirSync(rawRoot, { recursive: true });
+    mkdirSync(targetDirectory, { recursive: true });
+    writeFileSync(join(targetDirectory, "original.png"), fixture.rawBuffer);
+    symlinkSync(targetDirectory, join(rawRoot, "test-fixture-reference-asset-a"), "junction");
+    expect(() => verifyHistoricalReferenceAssetFiles(root, validateHistoricalReferenceAssetCatalog(catalogWithAssets([fixture.asset])), { requireRawFiles: true })).toThrow(/symlink/u);
+  });
+
+  it("derived symlinkを拒否する", () => {
+    const fixture = fileBackedAsset({ publicationStatus: "candidate" });
+    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+    writeFileBackedAsset(root, fixture, { derived: false });
+    const derivedRoot = join(root, "data-derived/historical-reference-assets");
+    const targetDirectory = join(root, "derived-junction-target");
+    mkdirSync(derivedRoot, { recursive: true });
+    mkdirSync(targetDirectory, { recursive: true });
+    writeFileSync(join(targetDirectory, "derived.png"), fixture.derivedBuffer);
+    symlinkSync(targetDirectory, join(derivedRoot, "test-fixture-reference-asset-a"), "junction");
+    expect(() => verifyHistoricalReferenceAssetFiles(root, validateHistoricalReferenceAssetCatalog(catalogWithAssets([fixture.asset])), { requireDerivedFiles: true })).toThrow(/symlink/u);
   });
 
   it("既存公開データSHAを変更しない", () => {
