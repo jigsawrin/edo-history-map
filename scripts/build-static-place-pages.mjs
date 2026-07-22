@@ -9,6 +9,10 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import { validateSources } from "./build-kyoto-bakumatsu-places.mjs";
 import { validateSources as validateShigaSources } from "./build-shiga-sengoku-places.mjs";
+import {
+  createHistoricalReferenceAssetStaticManifest,
+  loadHistoricalReferenceAssetCatalog,
+} from "./historical-reference-assets.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUTPUT_ROOT = join(ROOT, "dist", "places");
@@ -545,7 +549,7 @@ function validatePresentation(value, label = "京都", extraKeys = []) {
   return value;
 }
 
-export function generateStaticPlaceFiles({ edoRaw, kyotoRaw, sourceData, presentation, shigaRaw, shigaSourceData, shigaPresentation, css, inputSha256 }) {
+export function generateStaticPlaceFiles({ edoRaw, kyotoRaw, sourceData, presentation, shigaRaw, shigaSourceData, shigaPresentation, css, inputSha256, historicalReferenceAssets }) {
   const sourceRegistry = validateSources(sourceData);
   for (const source of sourceRegistry.values()) {
     validateExternalSourceUrl(source.url, new Set([new URL(source.url).origin]));
@@ -588,6 +592,7 @@ export function generateStaticPlaceFiles({ edoRaw, kyotoRaw, sourceData, present
     files: Object.fromEntries(
       [...files].map(([path, content]) => [path, sha256(content)]),
     ),
+    ...(historicalReferenceAssets?.assetCount > 0 ? { historicalReferenceAssets } : {}),
   };
   files.set("manifest.json", `${JSON.stringify(manifest, null, 2)}\n`);
   return Object.freeze({ files, manifest, edoPlaces, kyotoPlaces, shigaPlaces });
@@ -606,6 +611,9 @@ export function buildStaticPlacePages(root = ROOT, outputRoot = OUTPUT_ROOT) {
     if (actual !== expected) fail(`${path}のSHA-256が期待値と一致しません`);
     inputSha256[path] = actual;
   }
+  const historicalReferenceAssets = createHistoricalReferenceAssetStaticManifest(
+    loadHistoricalReferenceAssetCatalog(root),
+  );
   const generated = generateStaticPlaceFiles({
     edoRaw: readUtf8(join(root, "public/data/edo-places.geojson")),
     kyotoRaw: readUtf8(join(root, "public/data/kyoto-bakumatsu-places.geojson")),
@@ -616,6 +624,7 @@ export function buildStaticPlacePages(root = ROOT, outputRoot = OUTPUT_ROOT) {
     shigaPresentation: JSON.parse(readUtf8(join(root, "src/shiga-place-presentation.json"))),
     css: readUtf8(join(root, "src/static-places.css")),
     inputSha256,
+    historicalReferenceAssets,
   });
   rmSync(outputRoot, { recursive: true, force: true });
   for (const [path, content] of generated.files) {

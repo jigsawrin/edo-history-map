@@ -35,6 +35,10 @@ import {
   auditHistoricalMapDisplayCatalogRepository,
   summarizeHistoricalMapDisplayCatalog,
 } from "./historical-map-display-catalog.mjs";
+import {
+  auditHistoricalReferenceAssetRepository,
+  summarizeHistoricalReferenceAssetCatalog,
+} from "./historical-reference-assets.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -223,6 +227,8 @@ const HISTORICAL_CONTROL_POINT_CATALOG_FILE =
   "data-curation/historical-control-point-catalog.json";
 const HISTORICAL_MAP_DISPLAY_CATALOG_FILE =
   "data-curation/historical-map-display-catalog.json";
+const HISTORICAL_REFERENCE_ASSETS_FILE =
+  "data-curation/historical-reference-assets.json";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -1220,6 +1226,7 @@ for (const file of allFiles) {
       HISTORICAL_RASTER_CANDIDATE_CURATION_FILE,
       HISTORICAL_CONTROL_POINT_CATALOG_FILE,
       HISTORICAL_MAP_DISPLAY_CATALOG_FILE,
+      HISTORICAL_REFERENCE_ASSETS_FILE,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
@@ -1608,6 +1615,63 @@ if (historicalMapDisplayCatalogAudit.catalog) {
     : false;
   if (bundleHasDisplayCatalogName) {
     addFinding("error", "古地図表示カタログruntime混入", "dist/", 0, "runtime bundleへ表示カタログ名が混入しています");
+  }
+}
+
+const historicalReferenceAssetAudit = auditHistoricalReferenceAssetRepository(ROOT);
+for (const message of historicalReferenceAssetAudit.errors) {
+  addFinding("error", "歴史参考画像台帳", HISTORICAL_REFERENCE_ASSETS_FILE, 0, message);
+}
+if (historicalReferenceAssetAudit.catalog) {
+  const summary = summarizeHistoricalReferenceAssetCatalog(historicalReferenceAssetAudit.catalog);
+  infos.push(
+    `歴史参考画像台帳: schema ${summary.schemaVersion}、${summary.assetCount}件、status ${summary.catalogStatus}`,
+  );
+  if (existsSync(join(ROOT, "public", "data", "historical-reference-assets.json"))) {
+    addFinding(
+      "error",
+      "歴史参考画像台帳公開",
+      "public/data/historical-reference-assets.json",
+      0,
+      "台帳をpublicへ出力してはいけません",
+    );
+  }
+  if (existsSync(join(ROOT, "public", "data", "historical-reference-assets"))) {
+    addFinding(
+      "error",
+      "歴史参考画像公開",
+      "public/data/historical-reference-assets",
+      0,
+      "参考画像ディレクトリをpublicへ出力してはいけません",
+    );
+  }
+  const distReferenceLeak = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .some(
+          (name) =>
+            name.includes("historical-reference-assets") ||
+            name.includes("test-fixture-reference-asset"),
+        )
+    : false;
+  if (distReferenceLeak) {
+    addFinding("error", "歴史参考画像台帳混入", "dist/", 0, "台帳またはtest fixtureがdistへ混入しています");
+  }
+  const bundleHasReferenceAssetName = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .filter((name) => name.endsWith(".js"))
+        .some((name) => {
+          const content = readFileSync(join(ROOT, "dist", name), "utf8");
+          return (
+            content.includes("historical-reference-assets") ||
+            content.includes("test-fixture-reference-asset") ||
+            content.includes("試験用参考画像")
+          );
+        })
+    : false;
+  if (bundleHasReferenceAssetName) {
+    addFinding("error", "歴史参考画像台帳runtime混入", "dist/", 0, "runtime bundleへ参考画像台帳名が混入しています");
   }
 }
 

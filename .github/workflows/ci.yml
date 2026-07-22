@@ -38,6 +38,8 @@ jobs:
         run: npm run audit:historical-control-points
       - name: Historical map display catalog audit
         run: npm run audit:historical-map-display
+      - name: Historical reference asset catalog audit
+        run: npm run audit:historical-reference-assets
       - name: Prepublish audit (公開ビルドを含む)
         run: npm run audit:prepublish
       - name: npm audit (high 以上で失敗)
