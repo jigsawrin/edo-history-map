@@ -1,10 +1,11 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "reviewedAt": "2026-07-18",
   "commercialContextJa": "一般公開ブログでの広告表示・寄付募集を含む利用を想定し、NCまたは商用・再配布・加工条件が不明な画像は本番候補にしない。",
   "candidates": [
     {
       "candidateId": "tokyo-archive-00042226-daimyo-koji-1863",
+      "intendedUses": ["georeferenced-overlay"],
       "titleFamilyId": "daimyo-koji-central",
       "titleJa": "大名小路神田橋内内桜田之図（文久3年改）",
       "titleOriginal": "大名小路神田橋内内桜田之図（題簽）御江戸大名小路繪圖 全",
@@ -56,6 +57,7 @@
     },
     {
       "candidateId": "tokyo-archive-00042700-daimyo-koji-1849",
+      "intendedUses": ["georeferenced-overlay"],
       "titleFamilyId": "daimyo-koji-central",
       "titleJa": "大名小路神田橋内内桜田之図（嘉永2年）",
       "titleOriginal": "大名小路神田橋内内桜田之図（題簽）御江戸大名小路繪圖 全",
@@ -104,6 +106,7 @@
     },
     {
       "candidateId": "tokyo-archive-00042236-okuruwauchi-1865",
+      "intendedUses": ["georeferenced-overlay"],
       "titleFamilyId": "daimyo-koji-central",
       "titleJa": "御曲輪内大名小路絵図",
       "titleOriginal": "御曲輪内大名小路絵図（題簽）大名小路繪圖 全",
@@ -152,6 +155,7 @@
     },
     {
       "candidateId": "taito-2017-chi-009-daimyo-koji",
+      "intendedUses": ["georeferenced-overlay"],
       "titleFamilyId": "daimyo-koji-central",
       "titleJa": "御大名小路辰之口辺図",
       "titleOriginal": "御大名小路辰之口辺図",
@@ -201,6 +205,7 @@
     },
     {
       "candidateId": "tokyo-archive-00042235-soto-sakurada-1850",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "増補改正麹町永田町外桜田絵図（嘉永3年）",
       "titleOriginal": "増補改正麹町永田町外桜田絵図（題簽）外櫻田永田町繪圖 全",
       "provider": "東京都立図書館デジタルアーカイブ TOKYOアーカイブ",
@@ -248,6 +253,7 @@
     },
     {
       "candidateId": "tokyo-archive-00042232-soto-sakurada-1864",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "増補改正麹町永田町外桜田絵図（元治元年改）",
       "titleOriginal": "増補改正麹町永田町外桜田絵図（題簽）外櫻田永田町繪圖 全",
       "provider": "東京都立図書館デジタルアーカイブ TOKYOアーカイブ",
@@ -295,6 +301,7 @@
     },
     {
       "candidateId": "tokyo-archive-00042220-bancho-1864-a",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "安政再版東都番町大絵図（東京誌料）",
       "titleOriginal": "安政再版東都番町大絵図（題簽）御江戸番町繪圖 全",
       "provider": "東京都立図書館デジタルアーカイブ TOKYOアーカイブ",
@@ -342,6 +349,7 @@
     },
     {
       "candidateId": "tokyo-archive-00042231-bancho-1864-b",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "安政再版東都番町大絵図（別資料）",
       "titleOriginal": "安政再版東都番町大絵図",
       "provider": "東京都立図書館デジタルアーカイブ TOKYOアーカイブ",
@@ -389,6 +397,7 @@
     },
     {
       "candidateId": "tokyo-archive-00042227-nagatacho-1759",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "永田町絵図",
       "titleOriginal": "永田町絵図（題簽（書））永田町繪圖 全",
       "provider": "東京都立図書館デジタルアーカイブ TOKYOアーカイブ",
@@ -436,6 +445,7 @@
     },
     {
       "candidateId": "taito-2017-chi-001-ueno-shitaya-sotokanda",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "上野下谷外神田辺絵図",
       "titleOriginal": "上野下谷外神田辺絵図（外神田下谷上野辺絵図）",
       "provider": "台東区立図書館デジタルアーカイブ（ADEAC）",
@@ -483,6 +493,7 @@
     },
     {
       "candidateId": "taito-2017-chi-002-toto-shitaya",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "東都下谷絵図",
       "titleOriginal": "東都下谷絵図（下谷絵図）",
       "provider": "台東区立図書館デジタルアーカイブ（ADEAC）",
@@ -530,6 +541,7 @@
     },
     {
       "candidateId": "taito-2017-chi-005-asakusa-torigoe",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "浅草鳥越堀田原辺絵図",
       "titleOriginal": "浅草鳥越堀田原辺絵図（浅草鳥越堀田原図）",
       "provider": "台東区立図書館デジタルアーカイブ（ADEAC）",
@@ -577,6 +589,7 @@
     },
     {
       "candidateId": "taito-2017-chi-006-toto-asakusa",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "東都浅草絵図",
       "titleOriginal": "東都浅草絵図（浅草御蔵前辺図）",
       "provider": "台東区立図書館デジタルアーカイブ（ADEAC）",
@@ -624,6 +637,7 @@
     },
     {
       "candidateId": "naj-177-0646-edo-kiriezu-bundle",
+      "intendedUses": ["georeferenced-overlay"],
       "titleJa": "江戸切絵図（近吾堂・31鋪）",
       "titleOriginal": "江戸切絵図",
       "provider": "国立公文書館デジタルアーカイブ",
@@ -671,6 +685,7 @@
     },
     {
       "candidateId": "ndl-000007297269-daimyo-koji-paper",
+      "intendedUses": ["georeferenced-overlay"],
       "titleFamilyId": "daimyo-koji-central",
       "titleJa": "大名小路神田橋内内桜田之図（NDL紙資料）",
       "titleOriginal": "大名小路神田橋内内桜田之図（[江戸切絵図]. 1）",

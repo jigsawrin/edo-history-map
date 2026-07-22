@@ -85,7 +85,7 @@ const EMPTY_DISPLAY = Object.freeze({
 });
 
 const EMPTY_CANDIDATES = Object.freeze({
-  schemaVersion: 2,
+  schemaVersion: 3,
   reviewedAt: "2026-01-01",
   commercialContextJa: "試験用",
   candidates: [],
@@ -199,6 +199,7 @@ function catalogWithAssets(assets: Record<string, unknown>[], reviewedAt = "2026
 function candidateFixture(overrides: Record<string, unknown> = {}) {
   return {
     candidateId: "test-fixture-candidate-a",
+    intendedUses: ["reference-panel"],
     rightsReviewStatus: "approved",
     commercialUseCompatible: true,
     redistributionAllowed: true,
@@ -746,6 +747,13 @@ describe("歴史参考画像台帳基盤", () => {
     });
     const audit = auditHistoricalReferenceAssetRepository(root);
     expect(audit.errors.some((message) => message.includes("候補台帳に存在しません"))).toBe(true);
+  });
+
+  it("reference assetはreference-panel用途sourceだけを参照する", () => {
+    const accepted = createAuditFixtureRoot({ assets: [assetFixture()], candidates: [candidateFixture()] });
+    expect(auditHistoricalReferenceAssetRepository(accepted).errors.some((message) => message.includes("intendedUses"))).toBe(false);
+    const rejected = createAuditFixtureRoot({ assets: [assetFixture()], candidates: [candidateFixture({ intendedUses: ["georeferenced-overlay"] })] });
+    expect(auditHistoricalReferenceAssetRepository(rejected).errors.some((message) => message.includes("reference-panel"))).toBe(true);
   });
 
   it("candidate rightsと矛盾するpublishedを拒否する", () => {

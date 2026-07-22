@@ -21,6 +21,8 @@ schema version 1の空カタログから開始する。本番`maps`は0件、
 - `reference-panel` → `{ kind: "reference-asset", assetId }`
 - `reference-only` → `reference-panel`かつ`reference-asset`のみ
 
+各mapの`sourceId`が指すcandidateにも同じ用途が必要である。`reference-panel`は`reference-panel`用途、`georeferenced-overlay`は`georeferenced-overlay`用途を要求し、reference専用sourceをrasterへ昇格させない。両用途の資料はcandidateに両方を列挙する。
+
 1つのbindingに`rasterId`と`assetId`を同時に含めない。
 
 ## spatialBinding

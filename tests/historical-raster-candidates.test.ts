@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -7,6 +8,7 @@ import {
   summarizeHistoricalRasterCandidates,
   validateHistoricalRasterCandidateRegistry,
   migrateHistoricalRasterCandidateRegistryV1,
+  migrateHistoricalRasterCandidateRegistryV2,
 } from "../scripts/historical-raster-candidates.mjs";
 
 const ROOT = join(__dirname, "..");
@@ -26,11 +28,20 @@ describe("古地図候補台帳", () => {
     });
   });
 
-  it("schema v2で権利・技術・公開状態を分離し、対象だけshortlistedの技術不合格にする", () => {
+  it("schema v3で用途・権利・技術・公開状態を分離する", () => {
     const registry = loadHistoricalRasterCandidateRegistry(ROOT);
-    expect(registry.schemaVersion).toBe(2);
+    expect(registry.schemaVersion).toBe(3);
     const target = registry.candidates.find((candidate) => candidate.candidateId === "taito-2017-chi-009-daimyo-koji");
     expect(target).toMatchObject({ reviewStatus: "approved", rightsReviewStatus: "approved", technicalReviewStatus: "rejected", publicationStatus: "shortlisted" });
+  });
+
+  it("v2を全候補overlay用途つきv3へ明示移行する", () => {
+    const v2 = clone(); v2.schemaVersion = 2;
+    for (const candidate of v2.candidates as Record<string, unknown>[]) delete candidate.intendedUses;
+    const migrated = migrateHistoricalRasterCandidateRegistryV2(v2) as typeof RAW;
+    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.candidates.every((candidate: { intendedUses?: string[] }) => candidate.intendedUses?.join() === "georeferenced-overlay")).toBe(true);
+    expect(() => validateHistoricalRasterCandidateRegistry(v2)).not.toThrow();
   });
 
   it("v1を後方互換aliasつきv2へ明示移行する", () => {
@@ -78,6 +89,33 @@ describe("古地図候補台帳", () => {
     expect(() => validateHistoricalRasterCandidateRegistry(data)).toThrow(field);
   });
 
+  it.each([
+    ["欠落", undefined], ["空配列", []], ["重複", ["georeferenced-overlay", "georeferenced-overlay"]],
+    ["未知値", ["both"]], ["順序不正", ["reference-panel", "georeferenced-overlay"]],
+  ])("intendedUsesの%sを拒否する", (_label, intendedUses) => {
+    const data = clone(); const candidate = (data.candidates as Record<string, unknown>[])[0]!;
+    if (intendedUses === undefined) delete candidate.intendedUses; else candidate.intendedUses = intendedUses;
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).toThrow(/intendedUses/u);
+  });
+
+  it.each(["georeferencingAllowed", "tilingAllowed"])("reference-panel専用approvedは%s=falseを許可する", (field) => {
+    const data = clone(); const candidate = (data.candidates as Record<string, unknown>[])[0]!;
+    candidate.intendedUses = ["reference-panel"]; candidate[field] = false;
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).not.toThrow();
+  });
+
+  it("reference-panel専用approvedはgeoreferencing/tilingの両nullを許可する", () => {
+    const data = clone(); const candidate = (data.candidates as Record<string, unknown>[])[0]!;
+    candidate.intendedUses = ["reference-panel"]; candidate.georeferencingAllowed = null; candidate.tilingAllowed = null;
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).not.toThrow();
+  });
+
+  it("両用途approvedはoverlay権利条件を必須にする", () => {
+    const data = clone(); const candidate = (data.candidates as Record<string, unknown>[])[0]!;
+    candidate.intendedUses = ["georeferenced-overlay", "reference-panel"]; candidate.tilingAllowed = false;
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).toThrow(/tilingAllowed/u);
+  });
+
   it("pendingとrejectedを本番承認と混同しない", () => {
     const registry = loadHistoricalRasterCandidateRegistry(ROOT);
     const unavailable = registry.candidates.filter((candidate) => candidate.reviewStatus !== "approved");
@@ -98,6 +136,14 @@ describe("古地図候補台帳", () => {
       "台東区立中央図書館",
       "国立国会図書館",
     ]));
+  });
+
+  it("既存candidate IDと用途以外の全履歴・権利・URL・priorityを維持する", () => {
+    const candidates = (clone().candidates as Record<string, unknown>[]);
+    const idsSha = createHash("sha256").update(JSON.stringify(candidates.map(({ candidateId }) => candidateId))).digest("hex");
+    const priorFieldsSha = createHash("sha256").update(JSON.stringify(candidates.map((candidate) => Object.fromEntries(Object.entries(candidate).filter(([key]) => key !== "intendedUses"))))).digest("hex");
+    expect(idsSha).toBe("a6f95c658645c00e8e7b9436b04c41e21f167a8f1fca6c7f2ba307d14b980713");
+    expect(priorFieldsSha).toBe("0bf8e7c97fa22ceee049a3e8724c798fcb4a3489c7c0070d1b2f0b8bcdbaeedf");
   });
 
   it("候補ID重複・資料URL重複・平文URLを拒否する", () => {
