@@ -159,6 +159,27 @@ function referenceFixture(overrides: Record<string, unknown> = {}) {
   });
 }
 
+function referenceAssetFixture(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "test-fixture-asset-a",
+    sourceId: "test-fixture-source",
+    publicationStatus: "shortlisted",
+    crop: {
+      sourceWidth: 1000,
+      sourceHeight: 800,
+      x: 10,
+      y: 20,
+      width: 400,
+      height: 300,
+      rotationDegrees: 0,
+    },
+    removedElements: ["ruler", "color-chart"],
+    preservesHistoricalContent: true,
+    cropReviewNote: { ja: "撮影用定規とカラーチャートのみ除去した試験fixtureです。" },
+    ...overrides,
+  };
+}
+
 function catalogWithMaps(maps: Record<string, unknown>[], reviewedAt = "2026-07-19") {
   return {
     schemaVersion: 1,
@@ -245,7 +266,7 @@ describe("古地図表示カタログ基盤", () => {
         removedElements: ["capture-background", "ruler", "color-chart", "shelfmark-label"],
         preservesHistoricalContent: true,
         note: {
-          ja: "図面本体、全注記、方角表示、右下の細部図、原本余白、折り目、印・記号、台紙の縁を保持し、原本外の撮影補助物だけを除去した。",
+          ja: "図面本体、全注記、方角表示、右下の細部図、原本余白、折り目、印・記号、台紙の縁を残した。原本外であることが明確な外側の灰色背景、資料番号札、カラーチャート、グレースケール、定規だけを除去した。",
         },
       },
       zoom: { minimum: 15, maximum: 20, enterDetailAt: 17, leaveDetailBelow: 16.5 },
@@ -265,7 +286,7 @@ describe("古地図表示カタログ基盤", () => {
     expect(catalog.maps[0]?.cropReview).toEqual({
       removedElements: asset.removedElements,
       preservesHistoricalContent: asset.preservesHistoricalContent,
-      note: catalog.maps[0]?.cropReview.note,
+      note: asset.cropReviewNote,
     });
     expect(summarizeHistoricalMapDisplayCatalog(catalog)).toMatchObject({
       schemaVersion: 1,
@@ -802,7 +823,7 @@ describe("古地図表示カタログ基盤", () => {
     const matching = createAuditFixtureRoot({
       maps: [overlay, reference],
       candidates: [{ candidateId: "test-fixture-source", intendedUses: ["georeferenced-overlay", "reference-panel"] }],
-      assets: [{ id: "test-fixture-asset-a", sourceId: "test-fixture-source", publicationStatus: "shortlisted" }],
+      assets: [referenceAssetFixture()],
     });
     expect(auditHistoricalMapDisplayCatalogRepository(matching).errors).toEqual([]);
 
@@ -818,7 +839,7 @@ describe("古地図表示カタログ基盤", () => {
     const matching = createAuditFixtureRoot({
       maps: [reference],
       candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
-      assets: [{ id: "test-fixture-asset-a", sourceId: "test-fixture-source", publicationStatus: "shortlisted" }],
+      assets: [referenceAssetFixture()],
     });
     expect(auditHistoricalMapDisplayCatalogRepository(matching).errors).toEqual([]);
 
@@ -831,7 +852,7 @@ describe("古地図表示カタログ基盤", () => {
     const mismatched = createAuditFixtureRoot({
       maps: [reference],
       candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
-      assets: [{ id: "test-fixture-asset-a", sourceId: "other-source", publicationStatus: "shortlisted" }],
+      assets: [referenceAssetFixture({ sourceId: "other-source" })],
     });
     expect(auditHistoricalMapDisplayCatalogRepository(mismatched).errors.some((message) => message.includes("sourceId"))).toBe(true);
 
@@ -842,9 +863,45 @@ describe("古地図表示カタログ基盤", () => {
         technicalReviewStatus: "approved",
       })],
       candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
-      assets: [{ id: "test-fixture-asset-a", sourceId: "test-fixture-source", publicationStatus: "shortlisted" }],
+      assets: [referenceAssetFixture()],
     });
     expect(auditHistoricalMapDisplayCatalogRepository(publishedDisplay).errors.some((message) => message.includes("published reference asset"))).toBe(true);
+  });
+
+  it("reference assetとのcrop不一致を拒否する", () => {
+    const root = createAuditFixtureRoot({
+      maps: [referenceFixture()],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
+      assets: [referenceAssetFixture({ crop: { ...referenceAssetFixture().crop, x: 11 } })],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(root).errors.some((message) => message.includes("cropが"))).toBe(true);
+  });
+
+  it("reference assetとのremovedElements不一致を拒否する", () => {
+    const root = createAuditFixtureRoot({
+      maps: [referenceFixture()],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
+      assets: [referenceAssetFixture({ removedElements: ["color-chart", "ruler"] })],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(root).errors.some((message) => message.includes("removedElements"))).toBe(true);
+  });
+
+  it("reference assetとのpreservesHistoricalContent不一致を拒否する", () => {
+    const root = createAuditFixtureRoot({
+      maps: [referenceFixture()],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
+      assets: [referenceAssetFixture({ preservesHistoricalContent: false })],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(root).errors.some((message) => message.includes("preservesHistoricalContent"))).toBe(true);
+  });
+
+  it("reference assetとのcropReview.note不一致を拒否する", () => {
+    const root = createAuditFixtureRoot({
+      maps: [referenceFixture()],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
+      assets: [referenceAssetFixture({ cropReviewNote: { ja: "異なる説明です。" } })],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(root).errors.some((message) => message.includes("cropReview note"))).toBe(true);
   });
 
   it("既存公開データSHAを変更しない", () => {

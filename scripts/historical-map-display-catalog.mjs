@@ -635,6 +635,41 @@ export function findRuntimeHistoricalMapDisplayCatalogReferences(root) {
   return Object.freeze(hits);
 }
 
+function hasSameCrop(displayCrop, assetCrop) {
+  const fields = [
+    "sourceWidth",
+    "sourceHeight",
+    "x",
+    "y",
+    "width",
+    "height",
+    "rotationDegrees",
+  ];
+  return fields.every((field) => displayCrop[field] === assetCrop?.[field]);
+}
+
+function hasSameOrderedElements(displayElements, assetElements) {
+  return (
+    Array.isArray(displayElements) &&
+    Array.isArray(assetElements) &&
+    displayElements.length === assetElements.length &&
+    displayElements.every((element, index) => element === assetElements[index])
+  );
+}
+
+function hasSameLocalizedText(displayText, assetText) {
+  if (!displayText || !assetText || typeof displayText !== "object" || typeof assetText !== "object") {
+    return false;
+  }
+  const displayHasEnglish = Object.hasOwn(displayText, "en");
+  const assetHasEnglish = Object.hasOwn(assetText, "en");
+  return (
+    displayText.ja === assetText.ja &&
+    displayHasEnglish === assetHasEnglish &&
+    (!displayHasEnglish || displayText.en === assetText.en)
+  );
+}
+
 export function auditHistoricalMapDisplayCatalogRepository(root) {
   const errors = [];
   let catalog = null;
@@ -675,6 +710,20 @@ export function auditHistoricalMapDisplayCatalogRepository(root) {
         }
         if (map.publicationStatus === "published" && asset.publicationStatus !== "published") {
           errors.push(`${map.id}: published displayはpublished reference assetのみ参照できます`);
+        }
+        if (!hasSameCrop(map.crop, asset.crop)) {
+          errors.push(`${map.id}: display cropがreference assetのcropと一致しません`);
+        }
+        if (!hasSameOrderedElements(map.cropReview.removedElements, asset.removedElements)) {
+          errors.push(`${map.id}: display cropReview removedElementsがreference assetと一致しません`);
+        }
+        if (map.cropReview.preservesHistoricalContent !== asset.preservesHistoricalContent) {
+          errors.push(
+            `${map.id}: display cropReview preservesHistoricalContentがreference assetと一致しません`,
+          );
+        }
+        if (!hasSameLocalizedText(map.cropReview.note, asset.cropReviewNote)) {
+          errors.push(`${map.id}: display cropReview noteがreference assetと一致しません`);
         }
       }
     } catch (cause) {
