@@ -4,6 +4,8 @@
 
 江戸古地図候補は`data-curation/historical-raster-candidates.json`で1資料・1画像系列ごとに管理する。2026-07-22時点で16候補・4所蔵機関を登録し、権利面approved 14、pending 1、rejected 1である。用途はoverlay専用15件、reference-panel専用1件である。候補のapprovedは商用利用を含む権利条件の適合を示し、本番公開や位置精度の承認を意味しない。
 
+reference-panel専用の和田倉御門候補は、公式JPEGを監査し、撮影補助物だけを除く保守的cropのPNGをshortlisted reference assetとして1件登録している。raw / derived画像はGit管理外で、publicPath、display map、runtime接続はない。
+
 schema v3では`reviewStatus`を権利審査の後方互換aliasとして残し、`rightsReviewStatus`、`technicalReviewStatus`、`publicationStatus`を分離する。さらに各候補へ`intendedUses`を必須化し、`georeferenced-overlay`（現代地図へ測地同期）と`reference-panel`（測地同期しない閲覧）を固定順で列挙する。両用途なら両方を列挙し、`both`のような別値は使わない。v2入力は明示的な移行関数で既存候補をoverlay専用としてv3へ正規化する。既存候補を自動的にreference-panel対応へはしない。
 
 同じ題名でも所蔵館、資料コード、版、スキャン、画像SHA、歪み、基準点、位置合わせ、タイルmanifestは共有しない。`titleFamilyId`は同系統を検索するためだけに使い、画像同一性の根拠にしない。

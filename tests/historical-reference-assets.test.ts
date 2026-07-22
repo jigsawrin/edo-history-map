@@ -445,15 +445,47 @@ function initializeGitFixture(root: string) {
 }
 
 describe("歴史参考画像台帳基盤", () => {
-  it("正常な空台帳を読み込み、0件・empty-foundationを返す", () => {
+  it("和田倉御門のshortlisted reference assetを読み込む", () => {
     const catalog = loadHistoricalReferenceAssetCatalog(ROOT);
     expect(catalog.schemaVersion).toBe(1);
-    expect(catalog.catalogStatus).toBe("empty-foundation");
-    expect(catalog.assets).toEqual([]);
+    expect(catalog.catalogStatus).toBe("reviewed");
+    expect(catalog.assets).toHaveLength(1);
+    expect(catalog.assets[0]).toMatchObject({
+      id: "tokyo-archive-4300033114-wadakura-gate-reference-image",
+      sourceId: "tokyo-archive-4300033114-wadakura-gate",
+      rightsReviewStatus: "approved",
+      technicalReviewStatus: "in-review",
+      publicationStatus: "shortlisted",
+      licenseCategory: "public-domain",
+      licenseUrl: "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2",
+      originalFile: {
+        fileName: "6194_02_01.jpg",
+        width: 3514,
+        height: 2500,
+        bytes: 215751,
+        sha256: "2bac080e87dd98c9b1927ba7a9cc23227a8b12bdf6b610b91f27d3a93491d8b7",
+        rawPath:
+          "data-raw/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/6194_02_01.jpg",
+      },
+      crop: { sourceWidth: 3514, sourceHeight: 2500, x: 500, y: 270, width: 2450, height: 1800 },
+      removedElements: ["capture-background", "ruler", "color-chart", "shelfmark-label"],
+      preservesHistoricalContent: true,
+      derivedFile: {
+        mimeType: "image/png",
+        width: 2450,
+        height: 1800,
+        bytes: 1680142,
+        sha256: "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81",
+        derivedPath:
+          "data-derived/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
+      },
+    });
+    expect(catalog.assets[0]?.derivedFile).not.toHaveProperty("publicPath");
     const summary = summarizeHistoricalReferenceAssetCatalog(catalog);
     expect(summary).toMatchObject({
-      assetCount: 0,
+      assetCount: 1,
       publishedCount: 0,
+      approvedRightsCount: 1,
       runtimeConnected: false,
     });
     const audit = auditHistoricalReferenceAssetRepository(ROOT);
