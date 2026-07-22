@@ -1,6 +1,68 @@
 {
   "schemaVersion": 1,
-  "catalogStatus": "empty-foundation",
-  "reviewedAt": null,
-  "maps": []
+  "catalogStatus": "reviewed",
+  "reviewedAt": "2026-07-22",
+  "maps": [
+    {
+      "id": "tokyo-archive-4300033114-wadakura-gate-reference-display",
+      "name": {
+        "ja": "江戸城御外郭御門絵図 第1図 和田倉御門"
+      },
+      "displayRole": "reference-only",
+      "displayMode": "reference-panel",
+      "artifactBinding": {
+        "kind": "reference-asset",
+        "assetId": "tokyo-archive-4300033114-wadakura-gate-reference-image"
+      },
+      "spatialBinding": {
+        "kind": "display-trigger-area",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [139.75995, 35.6827],
+              [139.7622, 35.6827],
+              [139.7622, 35.6842],
+              [139.75995, 35.6842],
+              [139.75995, 35.6827]
+            ]
+          ]
+        }
+      },
+      "crop": {
+        "sourceWidth": 3514,
+        "sourceHeight": 2500,
+        "x": 500,
+        "y": 270,
+        "width": 2450,
+        "height": 1800,
+        "rotationDegrees": 0
+      },
+      "cropReview": {
+        "removedElements": [
+          "capture-background",
+          "ruler",
+          "color-chart",
+          "shelfmark-label"
+        ],
+        "preservesHistoricalContent": true,
+        "note": {
+          "ja": "図面本体、全注記、方角表示、右下の細部図、原本余白、折り目、印・記号、台紙の縁を残した。原本外であることが明確な外側の灰色背景、資料番号札、カラーチャート、グレースケール、定規だけを除去した。"
+        }
+      },
+      "zoom": {
+        "minimum": 15,
+        "maximum": 20,
+        "enterDetailAt": 17,
+        "leaveDetailBelow": 16.5
+      },
+      "regionId": "edo",
+      "eraId": "edo-middle",
+      "priority": 70,
+      "sourceId": "tokyo-archive-4300033114-wadakura-gate",
+      "rightsReviewStatus": "approved",
+      "technicalReviewStatus": "in-review",
+      "publicationStatus": "shortlisted"
+    }
+  ]
 }

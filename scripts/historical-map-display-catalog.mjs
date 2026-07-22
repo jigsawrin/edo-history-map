@@ -469,7 +469,7 @@ function assertParentRelations(maps) {
     if (map.displayRole === "overview") {
       assert(map.parentMapId === undefined, `${map.id}: overviewはparentMapIdを持てません`);
     }
-    if (map.displayRole === "detail" || map.displayRole === "reference-only") {
+    if (map.displayRole === "detail") {
       assert(map.parentMapId !== undefined, `${map.id}: ${map.displayRole}にはparentMapIdが必要です`);
     }
     if (map.parentMapId === undefined) continue;
@@ -635,6 +635,41 @@ export function findRuntimeHistoricalMapDisplayCatalogReferences(root) {
   return Object.freeze(hits);
 }
 
+function hasSameCrop(displayCrop, assetCrop) {
+  const fields = [
+    "sourceWidth",
+    "sourceHeight",
+    "x",
+    "y",
+    "width",
+    "height",
+    "rotationDegrees",
+  ];
+  return fields.every((field) => displayCrop[field] === assetCrop?.[field]);
+}
+
+function hasSameOrderedElements(displayElements, assetElements) {
+  return (
+    Array.isArray(displayElements) &&
+    Array.isArray(assetElements) &&
+    displayElements.length === assetElements.length &&
+    displayElements.every((element, index) => element === assetElements[index])
+  );
+}
+
+function hasSameLocalizedText(displayText, assetText) {
+  if (!displayText || !assetText || typeof displayText !== "object" || typeof assetText !== "object") {
+    return false;
+  }
+  const displayHasEnglish = Object.hasOwn(displayText, "en");
+  const assetHasEnglish = Object.hasOwn(assetText, "en");
+  return (
+    displayText.ja === assetText.ja &&
+    displayHasEnglish === assetHasEnglish &&
+    (!displayHasEnglish || displayText.en === assetText.en)
+  );
+}
+
 export function auditHistoricalMapDisplayCatalogRepository(root) {
   const errors = [];
   let catalog = null;
@@ -656,6 +691,43 @@ export function auditHistoricalMapDisplayCatalogRepository(root) {
       }
     } catch (cause) {
       errors.push(cause instanceof Error ? cause.message : "古地図候補台帳を解析できません");
+    }
+
+    try {
+      const assetRegistry = JSON.parse(
+        readFileSync(join(root, "data-curation", "historical-reference-assets.json"), "utf8"),
+      );
+      const assets = new Map(assetRegistry.assets.map((asset) => [asset.id, asset]));
+      for (const map of catalog.maps) {
+        if (map.artifactBinding.kind !== "reference-asset") continue;
+        const asset = assets.get(map.artifactBinding.assetId);
+        if (!asset) {
+          errors.push(`${map.id}: reference assetが参考画像台帳に存在しません`);
+          continue;
+        }
+        if (asset.sourceId !== map.sourceId) {
+          errors.push(`${map.id}: reference assetとsourceIdが一致しません`);
+        }
+        if (map.publicationStatus === "published" && asset.publicationStatus !== "published") {
+          errors.push(`${map.id}: published displayはpublished reference assetのみ参照できます`);
+        }
+        if (!hasSameCrop(map.crop, asset.crop)) {
+          errors.push(`${map.id}: display cropがreference assetのcropと一致しません`);
+        }
+        if (!hasSameOrderedElements(map.cropReview.removedElements, asset.removedElements)) {
+          errors.push(`${map.id}: display cropReview removedElementsがreference assetと一致しません`);
+        }
+        if (map.cropReview.preservesHistoricalContent !== asset.preservesHistoricalContent) {
+          errors.push(
+            `${map.id}: display cropReview preservesHistoricalContentがreference assetと一致しません`,
+          );
+        }
+        if (!hasSameLocalizedText(map.cropReview.note, asset.cropReviewNote)) {
+          errors.push(`${map.id}: display cropReview noteがreference assetと一致しません`);
+        }
+      }
+    } catch (cause) {
+      errors.push(cause instanceof Error ? cause.message : "歴史参考画像台帳を解析できません");
     }
   }
 
