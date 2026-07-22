@@ -469,7 +469,7 @@ function assertParentRelations(maps) {
     if (map.displayRole === "overview") {
       assert(map.parentMapId === undefined, `${map.id}: overviewはparentMapIdを持てません`);
     }
-    if (map.displayRole === "detail" || map.displayRole === "reference-only") {
+    if (map.displayRole === "detail") {
       assert(map.parentMapId !== undefined, `${map.id}: ${map.displayRole}にはparentMapIdが必要です`);
     }
     if (map.parentMapId === undefined) continue;
@@ -656,6 +656,29 @@ export function auditHistoricalMapDisplayCatalogRepository(root) {
       }
     } catch (cause) {
       errors.push(cause instanceof Error ? cause.message : "古地図候補台帳を解析できません");
+    }
+
+    try {
+      const assetRegistry = JSON.parse(
+        readFileSync(join(root, "data-curation", "historical-reference-assets.json"), "utf8"),
+      );
+      const assets = new Map(assetRegistry.assets.map((asset) => [asset.id, asset]));
+      for (const map of catalog.maps) {
+        if (map.artifactBinding.kind !== "reference-asset") continue;
+        const asset = assets.get(map.artifactBinding.assetId);
+        if (!asset) {
+          errors.push(`${map.id}: reference assetが参考画像台帳に存在しません`);
+          continue;
+        }
+        if (asset.sourceId !== map.sourceId) {
+          errors.push(`${map.id}: reference assetとsourceIdが一致しません`);
+        }
+        if (map.publicationStatus === "published" && asset.publicationStatus !== "published") {
+          errors.push(`${map.id}: published displayはpublished reference assetのみ参照できます`);
+        }
+      }
+    } catch (cause) {
+      errors.push(cause instanceof Error ? cause.message : "歴史参考画像台帳を解析できません");
     }
   }
 

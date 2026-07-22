@@ -3,15 +3,13 @@
 ## 目的
 
 表示範囲・ズーム・資料種別に応じて、将来の古地図自動切替を安全に行うための
-表示カタログ基盤である。今回は空の安全基盤だけを追加し、古地図画像・実在資料・
-位置合わせ・UI・runtime接続・public成果物は含めない。
+表示カタログ基盤である。カタログ登録は古地図画像・位置合わせ・UI・runtime接続・
+public成果物の公開を意味しない。
 
 ## 今回の範囲
 
-schema version 1の空カタログから開始する。本番`maps`は0件、
-`catalogStatus`は`empty-foundation`である。coverageや座標の推測、実在古地図の登録は行わない。
-
-空カタログの間はruntimeとpublicへ接続しない。
+schema version 1を維持し、監査済みの表示候補だけを登録する。
+カタログはruntimeとpublicへ接続せず、`published`かつ後続実装で明示接続されるまで表示しない。
 
 ## sourceIdとartifactBinding
 
@@ -35,6 +33,12 @@ schema version 1の空カタログから開始する。本番`maps`は0件、
 `display-trigger-area`は参考資料を表示する地域トリガーであり、
 資料の正確な測地範囲や位置精度を意味しない。
 `reference-only`を`georeferenced-coverage`にできない。
+
+和田倉御門の登録polygonは、和田倉噴水公園、和田倉橋、和田倉門跡周辺、
+門跡へ至る公園内動線を閲覧している利用者へ参考パネルを案内するための、
+意図的に粗い長方形のtrigger envelopeである。1717年図の正確な測地範囲、
+現存石垣の境界、歴史座標、公園の法的・管理上の正式境界を示さない。
+polygonの頂点や中心はcontrol point、測地同期、史跡境界の根拠に使用しない。
 
 ## displayRole / displayMode
 
@@ -65,7 +69,7 @@ width/heightは正数とする。
 - `overview`は`parentMapId`を持てない
 - `regional`がparentを持つ場合、parentは`overview`
 - `detail`は`parentMapId`必須で、parentは`overview`または`regional`
-- `reference-only`は`parentMapId`必須で、parentは`overview` / `regional` / `detail`
+- `reference-only`は単独表示できるため`parentMapId`任意。指定時のparentは`overview` / `regional` / `detail`
 - `reference-only`を他mapのparentにできない
 - childとparentの`regionId` / `eraId`は一致
 
@@ -78,6 +82,24 @@ width/heightは正数とする。
 
 `priority`は数値が大きい方を優先し、同値では`id`の昇順で決定する。
 runtime実装は今回行わない。
+
+## 和田倉御門reference display
+
+`tokyo-archive-4300033114-wadakura-gate-reference-display`は、shortlistedの
+reference assetを単独の`reference-only` / `reference-panel`候補として登録する。
+親overlayが存在しないため、同じ画像を使った架空のoverview / regional entryは作らない。
+表示領域は`display-trigger-area`であり、`georeferenced-coverage`ではない。
+
+trigger envelopeの確認根拠は次の公式資料である。
+
+- [環境省 皇居外苑地区案内図](https://www.env.go.jp/garden/content/000146165.pdf) — 和田倉噴水公園、和田倉橋、和田倉濠の周辺関係を確認
+- [環境省 和田倉噴水公園](https://www.env.go.jp/garden/kokyogaien/1_intro/his_07.html) — 公園と周辺施設の案内を確認
+- [国土交通省・観光庁 多言語解説文データベース](https://www.mlit.go.jp/tagengo-db/R1-03068.html) — 所在地が東京都千代田区皇居外苑3-1であり、公園奥の江戸時代の石垣が和田倉橋まで続くとの説明を確認
+- [国土地理院 地理院地図で得られる値等について](https://maps.gsi.go.jp/help/howtouse.html) — 国内座標はJGD2011で、地図画面上の読取値には誤差があることを確認
+- [国土地理院 地理院タイル仕様](https://maps.gsi.go.jp/development/siyou.html) — 地理院タイルの座標・表示仕様を確認
+
+登録polygonはこれら公式図面の境界を複製したものではなく、表示誘導用の保守的な
+trigger envelopeである。公式案内図や地理院タイル画像はリポジトリへ転載しない。
 
 zoomは`minimum <= maximum`と、`enterDetailAt > leaveDetailBelow`のヒステリシスを必須にする。
 

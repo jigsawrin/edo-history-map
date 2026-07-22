@@ -66,6 +66,19 @@ const SAMPLE_MULTIPOLYGON = Object.freeze({
   ],
 });
 
+const WADAKURA_TRIGGER_POLYGON = Object.freeze({
+  type: "Polygon" as const,
+  coordinates: [
+    [
+      [139.75995, 35.6827],
+      [139.7622, 35.6827],
+      [139.7622, 35.6842],
+      [139.75995, 35.6842],
+      [139.75995, 35.6827],
+    ],
+  ],
+});
+
 /** Test-only fixtures. Never write these into production catalog. */
 function mapFixture(overrides: Record<string, unknown> = {}) {
   return {
@@ -142,7 +155,6 @@ function referenceFixture(overrides: Record<string, unknown> = {}) {
       kind: "display-trigger-area",
       geometry: structuredClone(SAMPLE_POLYGON),
     },
-    parentMapId: "test-fixture-display-map-overview",
     ...overrides,
   });
 }
@@ -169,6 +181,7 @@ function createAuditFixtureRoot(options: {
   scriptReference?: boolean;
   maps?: Record<string, unknown>[];
   candidates?: Record<string, unknown>[];
+  assets?: Record<string, unknown>[];
 } = {}) {
   const root = mkdtempSync(join(tmpdir(), "historical-map-display-catalog-"));
   tempRoots.push(root);
@@ -180,6 +193,7 @@ function createAuditFixtureRoot(options: {
     "utf8",
   );
   writeFileSync(join(root, "data-curation", "historical-raster-candidates.json"), `${JSON.stringify({ schemaVersion: 3, candidates: options.candidates ?? [] }, null, 2)}\n`, "utf8");
+  writeFileSync(join(root, "data-curation", "historical-reference-assets.json"), `${JSON.stringify({ schemaVersion: 1, catalogStatus: "reviewed", reviewedAt: "2026-07-22", assets: options.assets ?? [] }, null, 2)}\n`, "utf8");
   writeFileSync(join(root, "src", "historical-raster-registry.json"), "[]\n", "utf8");
   writeFileSync(join(root, "src", "main.ts"), "export {};\n", "utf8");
   if (options.runtimeSource) {
@@ -199,13 +213,65 @@ function createAuditFixtureRoot(options: {
 }
 
 describe("古地図表示カタログ基盤", () => {
-  it("正常な空カタログを読み込み、0件・empty-foundationを返す", () => {
+  it("本番カタログに和田倉御門のshortlisted reference displayだけを保持する", () => {
     const catalog = loadHistoricalMapDisplayCatalog(ROOT);
-    expect(catalog).toEqual(EMPTY_CATALOG);
+    expect(catalog.schemaVersion).toBe(1);
+    expect(catalog.catalogStatus).toBe("reviewed");
+    expect(catalog.reviewedAt).toBe("2026-07-22");
+    expect(catalog.maps).toHaveLength(1);
+    expect(catalog.maps[0]).toEqual({
+      id: "tokyo-archive-4300033114-wadakura-gate-reference-display",
+      name: { ja: "江戸城御外郭御門絵図 第1図 和田倉御門" },
+      displayRole: "reference-only",
+      displayMode: "reference-panel",
+      artifactBinding: {
+        kind: "reference-asset",
+        assetId: "tokyo-archive-4300033114-wadakura-gate-reference-image",
+      },
+      spatialBinding: {
+        kind: "display-trigger-area",
+        geometry: WADAKURA_TRIGGER_POLYGON,
+      },
+      crop: {
+        sourceWidth: 3514,
+        sourceHeight: 2500,
+        x: 500,
+        y: 270,
+        width: 2450,
+        height: 1800,
+        rotationDegrees: 0,
+      },
+      cropReview: {
+        removedElements: ["capture-background", "ruler", "color-chart", "shelfmark-label"],
+        preservesHistoricalContent: true,
+        note: {
+          ja: "図面本体、全注記、方角表示、右下の細部図、原本余白、折り目、印・記号、台紙の縁を保持し、原本外の撮影補助物だけを除去した。",
+        },
+      },
+      zoom: { minimum: 15, maximum: 20, enterDetailAt: 17, leaveDetailBelow: 16.5 },
+      regionId: "edo",
+      eraId: "edo-middle",
+      priority: 70,
+      sourceId: "tokyo-archive-4300033114-wadakura-gate",
+      rightsReviewStatus: "approved",
+      technicalReviewStatus: "in-review",
+      publicationStatus: "shortlisted",
+    });
+    expect(catalog.maps[0]).not.toHaveProperty("parentMapId");
+    const asset = JSON.parse(
+      readFileSync(join(ROOT, "data-curation", "historical-reference-assets.json"), "utf8"),
+    ).assets[0];
+    expect(catalog.maps[0]?.crop).toEqual(asset.crop);
+    expect(catalog.maps[0]?.cropReview).toEqual({
+      removedElements: asset.removedElements,
+      preservesHistoricalContent: asset.preservesHistoricalContent,
+      note: catalog.maps[0]?.cropReview.note,
+    });
     expect(summarizeHistoricalMapDisplayCatalog(catalog)).toMatchObject({
       schemaVersion: 1,
-      catalogStatus: "empty-foundation",
-      mapCount: 0,
+      catalogStatus: "reviewed",
+      mapCount: 1,
+      publishedCount: 0,
       runtimeEligibleCount: 0,
       runtimeConnected: false,
     });
@@ -274,6 +340,26 @@ describe("古地図表示カタログ基盤", () => {
     ).toThrow(/historical-raster/u);
   });
 
+  it("reference-only + historical-rasterを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          referenceFixture({
+            artifactBinding: { kind: "historical-raster", rasterId: "test-fixture-raster-a" },
+          }),
+        ]),
+      ),
+    ).toThrow(/historical-raster/u);
+  });
+
+  it("reference-only + georeferenced-overlayを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([referenceFixture({ displayMode: "georeferenced-overlay" })]),
+      ),
+    ).toThrow(/reference-onlyはreference-panel/u);
+  });
+
   it("reference-only + georeferenced-coverageを拒否する", () => {
     expect(() =>
       validateHistoricalMapDisplayCatalog(
@@ -291,10 +377,19 @@ describe("古地図表示カタログ基盤", () => {
   });
 
   it("reference-only + display-trigger-areaを受理する", () => {
+    const catalog = validateHistoricalMapDisplayCatalog(catalogWithMaps([referenceFixture()]));
+    expect(catalog.maps[0]?.spatialBinding.kind).toBe("display-trigger-area");
+    expect(catalog.maps[0]).not.toHaveProperty("parentMapId");
+  });
+
+  it("parentMapIdありreference-onlyも従来どおり受理する", () => {
     const catalog = validateHistoricalMapDisplayCatalog(
-      catalogWithMaps([overviewFixture(), referenceFixture()]),
+      catalogWithMaps([
+        overviewFixture(),
+        referenceFixture({ parentMapId: "test-fixture-display-map-overview" }),
+      ]),
     );
-    expect(catalog.maps[1]?.spatialBinding.kind).toBe("display-trigger-area");
+    expect(catalog.maps[1]?.parentMapId).toBe("test-fixture-display-map-overview");
   });
 
   it("technical approved + historical content非保持を拒否する", () => {
@@ -492,6 +587,17 @@ describe("古地図表示カタログ基盤", () => {
     ).toThrow(/reference-onlyをparent/u);
   });
 
+  it("reference-onlyの不正なparent roleを拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          referenceFixture({ id: "test-fixture-display-map-parent-ref" }),
+          referenceFixture({ parentMapId: "test-fixture-display-map-parent-ref" }),
+        ]),
+      ),
+    ).toThrow(/reference-onlyをparent|parent role/u);
+  });
+
   it("overlay親子のzoom gapを拒否する", () => {
     expect(() =>
       validateHistoricalMapDisplayCatalog(
@@ -670,7 +776,7 @@ describe("古地図表示カタログ基盤", () => {
     );
     const audit = auditHistoricalMapDisplayCatalogRepository(ROOT);
     expect(audit.errors).toEqual([]);
-    expect(audit.catalog?.maps).toHaveLength(0);
+    expect(audit.catalog?.maps).toHaveLength(1);
   });
 
   it("src配下の間接参照を監査失敗にする", () => {
@@ -696,6 +802,7 @@ describe("古地図表示カタログ基盤", () => {
     const matching = createAuditFixtureRoot({
       maps: [overlay, reference],
       candidates: [{ candidateId: "test-fixture-source", intendedUses: ["georeferenced-overlay", "reference-panel"] }],
+      assets: [{ id: "test-fixture-asset-a", sourceId: "test-fixture-source", publicationStatus: "shortlisted" }],
     });
     expect(auditHistoricalMapDisplayCatalogRepository(matching).errors).toEqual([]);
 
@@ -704,6 +811,40 @@ describe("古地図表示カタログ基盤", () => {
       candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
     });
     expect(auditHistoricalMapDisplayCatalogRepository(mismatched).errors.some((message) => message.includes("georeferenced-overlay"))).toBe(true);
+  });
+
+  it("reference assetの存在・sourceId・公開状態を監査する", () => {
+    const reference = referenceFixture({ publicationStatus: "shortlisted" });
+    const matching = createAuditFixtureRoot({
+      maps: [reference],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
+      assets: [{ id: "test-fixture-asset-a", sourceId: "test-fixture-source", publicationStatus: "shortlisted" }],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(matching).errors).toEqual([]);
+
+    const missing = createAuditFixtureRoot({
+      maps: [reference],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(missing).errors.some((message) => message.includes("reference asset"))).toBe(true);
+
+    const mismatched = createAuditFixtureRoot({
+      maps: [reference],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
+      assets: [{ id: "test-fixture-asset-a", sourceId: "other-source", publicationStatus: "shortlisted" }],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(mismatched).errors.some((message) => message.includes("sourceId"))).toBe(true);
+
+    const publishedDisplay = createAuditFixtureRoot({
+      maps: [referenceFixture({
+        publicationStatus: "published",
+        rightsReviewStatus: "approved",
+        technicalReviewStatus: "approved",
+      })],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
+      assets: [{ id: "test-fixture-asset-a", sourceId: "test-fixture-source", publicationStatus: "shortlisted" }],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(publishedDisplay).errors.some((message) => message.includes("published reference asset"))).toBe(true);
   });
 
   it("既存公開データSHAを変更しない", () => {

@@ -1301,9 +1301,17 @@ describe("歴史参考画像台帳基盤", () => {
     expect(sha256("data-curation/historical-timeline.json")).toBe(
       "976c49cdbdeda4d776f22259f95d3e6940d4e742b3f6c377b1cbfbaf7867b444",
     );
-    expect(JSON.parse(readFileSync(join(ROOT, "data-curation/historical-map-display-catalog.json"), "utf8")).maps).toEqual(
-      [],
-    );
+    const displayMaps = JSON.parse(
+      readFileSync(join(ROOT, "data-curation/historical-map-display-catalog.json"), "utf8"),
+    ).maps;
+    expect(displayMaps).toHaveLength(1);
+    expect(displayMaps[0]).toMatchObject({
+      id: "tokyo-archive-4300033114-wadakura-gate-reference-display",
+      displayRole: "reference-only",
+      displayMode: "reference-panel",
+      publicationStatus: "shortlisted",
+    });
+    expect(displayMaps[0]).not.toHaveProperty("parentMapId");
     expect(
       JSON.parse(readFileSync(join(ROOT, "data-curation/historical-control-point-catalog.json"), "utf8")).entries,
     ).toEqual([]);
