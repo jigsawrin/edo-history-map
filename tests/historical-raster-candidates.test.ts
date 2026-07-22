@@ -90,6 +90,10 @@ describe("古地図候補台帳", () => {
     const target = registry.candidates.find((candidate) => candidate.candidateId === "tokyo-archive-4300033114-wadakura-gate");
     expect(target).toMatchObject({
       intendedUses: ["reference-panel"],
+      rightsEvidenceUrls: [
+        "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960",
+        "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2",
+      ],
       rightsReviewStatus: "approved",
       technicalReviewStatus: "not-started",
       publicationStatus: "candidate",
