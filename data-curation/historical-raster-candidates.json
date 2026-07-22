@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "reviewedAt": "2026-07-18",
+  "reviewedAt": "2026-07-22",
   "commercialContextJa": "一般公開ブログでの広告表示・寄付募集を含む利用を想定し、NCまたは商用・再配布・加工条件が不明な画像は本番候補にしない。",
   "candidates": [
     {
@@ -731,6 +731,58 @@
       "expectedTileSizeRisk": "low",
       "priorityScore": 0,
       "notesJa": "東京都立図書館・台東区立図書館の同題資料とは別所蔵。代替画像として混同しない。"
+    },
+    {
+      "candidateId": "tokyo-archive-4300033114-wadakura-gate",
+      "intendedUses": ["reference-panel"],
+      "titleFamilyId": "edo-castle-outer-gates",
+      "titleJa": "江戸城御外郭御門絵図 第1図 和田倉御門",
+      "titleOriginal": "江戸城御外郭御門絵図 全（題簽） 第1図 和田倉御門",
+      "provider": "東京都立図書館デジタルアーカイブ TOKYOアーカイブ",
+      "holdingInstitution": "東京都立中央図書館",
+      "series": "江戸城御外郭御門絵図（26図）",
+      "sheetNumber": "第1図 / 請求記号6194-2・東6194-002 / 資料コード4300033114",
+      "publicationYearDisplay": "享保2年（1717）",
+      "historicalPeriod": "江戸中期",
+      "regionId": "edo",
+      "eraId": "edo-middle",
+      "approximateCoverageJa": "和田倉御門の門構造（正確な測地範囲は未確定）",
+      "likelyModernCoverageJa": "和田倉御門周辺とされるが、現代位置との同一点性は未確定",
+      "exactItemUrl": "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960",
+      "exactImageUrl": null,
+      "exactViewerUrl": "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960",
+      "rightsEvidenceUrls": [
+        "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960",
+        "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2"
+      ],
+      "directDownloadAvailable": true,
+      "iiifAvailable": false,
+      "commercialUseCompatible": true,
+      "redistributionAllowed": true,
+      "modificationAllowed": true,
+      "croppingAllowed": true,
+      "georeferencingAllowed": null,
+      "tilingAllowed": null,
+      "attributionRequired": false,
+      "attributionRecommendedTextJa": "『江戸城御外郭御門絵図 第1図 和田倉御門』（東京都立中央図書館所蔵）（部分・加工）",
+      "loginRequired": false,
+      "paywallRequired": false,
+      "reviewStatus": "approved",
+      "rightsReviewStatus": "approved",
+      "technicalReviewStatus": "not-started",
+      "publicationStatus": "candidate",
+      "reviewReasonCode": "public-domain-open-data",
+      "reviewReasonJa": "2026-07-22に公式個別資料ページの画像使用条件がパブリックドメインであることを確認した。公式画像利用案内はオープンデータとして利用制限なし・無料ダウンロード可とし、資料名・所蔵館名や部分・加工の表示は義務ではないお願いとしている。",
+      "technicalSuitability": "medium",
+      "rightsSuitability": "high",
+      "imageFileAvailable": true,
+      "expectedResolutionSuitability": "medium",
+      "expectedControlPointAvailability": "low",
+      "expectedSeamRisk": "low",
+      "expectedCoverageBreadth": "narrow",
+      "expectedTileSizeRisk": "low",
+      "priorityScore": 70,
+      "notesJa": "TOKYOアーカイブ識別子0000000002-00006960。門構造を読むreference-panel専用候補であり、現代地図との測地同期、同一点対応、位置合わせ、タイル化、runtime公開は未評価・対象外。画像・派生物は未登録。"
     }
   ]
 }

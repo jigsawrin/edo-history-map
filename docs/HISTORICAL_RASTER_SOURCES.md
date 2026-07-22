@@ -2,7 +2,7 @@
 
 ## 候補台帳
 
-江戸古地図候補は`data-curation/historical-raster-candidates.json`で1資料・1画像系列ごとに管理する。2026-07-18時点で15候補・4所蔵機関を登録し、権利面approved 13、pending 1、rejected 1である。候補のapprovedは商用利用を含む権利条件の適合を示し、本番公開や位置精度の承認を意味しない。
+江戸古地図候補は`data-curation/historical-raster-candidates.json`で1資料・1画像系列ごとに管理する。2026-07-22時点で16候補・4所蔵機関を登録し、権利面approved 14、pending 1、rejected 1である。用途はoverlay専用15件、reference-panel専用1件である。候補のapprovedは商用利用を含む権利条件の適合を示し、本番公開や位置精度の承認を意味しない。
 
 schema v3では`reviewStatus`を権利審査の後方互換aliasとして残し、`rightsReviewStatus`、`technicalReviewStatus`、`publicationStatus`を分離する。さらに各候補へ`intendedUses`を必須化し、`georeferenced-overlay`（現代地図へ測地同期）と`reference-panel`（測地同期しない閲覧）を固定順で列挙する。両用途なら両方を列挙し、`both`のような別値は使わない。v2入力は明示的な移行関数で既存候補をoverlay専用としてv3へ正規化する。既存候補を自動的にreference-panel対応へはしない。
 

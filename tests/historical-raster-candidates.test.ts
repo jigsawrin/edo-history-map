@@ -16,15 +16,15 @@ const RAW = JSON.parse(readFileSync(join(ROOT, "data-curation", "historical-rast
 const clone = (): Record<string, unknown> => structuredClone(RAW) as Record<string, unknown>;
 
 describe("古地図候補台帳", () => {
-  it("15候補・4所蔵機関をapproved 13、pending 1、rejected 1へ固定する", () => {
+  it("16候補・4所蔵機関をapproved 14、pending 1、rejected 1へ固定する", () => {
     const registry = loadHistoricalRasterCandidateRegistry(ROOT);
     expect(summarizeHistoricalRasterCandidates(registry)).toEqual({
-      total: 15,
+      total: 16,
       institutions: 4,
-      approved: 13,
+      approved: 14,
       pending: 1,
       rejected: 1,
-      commercialUseCompatible: 13,
+      commercialUseCompatible: 14,
     });
   });
 
@@ -37,6 +37,7 @@ describe("古地図候補台帳", () => {
 
   it("v2を全候補overlay用途つきv3へ明示移行する", () => {
     const v2 = clone(); v2.schemaVersion = 2;
+    v2.candidates = (v2.candidates as Record<string, unknown>[]).slice(0, 15);
     for (const candidate of v2.candidates as Record<string, unknown>[]) delete candidate.intendedUses;
     const migrated = migrateHistoricalRasterCandidateRegistryV2(v2) as typeof RAW;
     expect(migrated.schemaVersion).toBe(3);
@@ -47,6 +48,7 @@ describe("古地図候補台帳", () => {
   it("v1を後方互換aliasつきv2へ明示移行する", () => {
     const v1 = structuredClone(RAW) as Record<string, unknown>;
     v1.schemaVersion = 1;
+    v1.candidates = (v1.candidates as Record<string, unknown>[]).slice(0, 15);
     for (const candidate of v1.candidates as Record<string, unknown>[]) {
       delete candidate.rightsReviewStatus; delete candidate.technicalReviewStatus; delete candidate.publicationStatus;
     }
@@ -64,7 +66,7 @@ describe("古地図候補台帳", () => {
     expect(() => validateHistoricalRasterCandidateRegistry(data)).not.toThrow();
   });
 
-  it("approvedは商用・再配布・加工・切り抜き・位置合わせ・タイル化の二重ゲートを満たす", () => {
+  it("approvedは共通権利ゲートを満たし、overlay用途だけ位置合わせ・タイル化を要求する", () => {
     const approved = loadHistoricalRasterCandidateRegistry(ROOT).candidates.filter((candidate) => candidate.reviewStatus === "approved");
     for (const candidate of approved) {
       expect(candidate).toMatchObject({
@@ -72,14 +74,32 @@ describe("古地図候補台帳", () => {
         redistributionAllowed: true,
         modificationAllowed: true,
         croppingAllowed: true,
-        georeferencingAllowed: true,
-        tilingAllowed: true,
         rightsSuitability: "high",
         imageFileAvailable: true,
         loginRequired: false,
         paywallRequired: false,
       });
+      if (candidate.intendedUses.includes("georeferenced-overlay")) {
+        expect(candidate).toMatchObject({ georeferencingAllowed: true, tilingAllowed: true });
+      }
     }
+  });
+
+  it("和田倉御門をreference-panel専用candidateとして登録する", () => {
+    const registry = loadHistoricalRasterCandidateRegistry(ROOT);
+    const target = registry.candidates.find((candidate) => candidate.candidateId === "tokyo-archive-4300033114-wadakura-gate");
+    expect(target).toMatchObject({
+      intendedUses: ["reference-panel"],
+      rightsEvidenceUrls: [
+        "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960",
+        "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2",
+      ],
+      rightsReviewStatus: "approved",
+      technicalReviewStatus: "not-started",
+      publicationStatus: "candidate",
+      georeferencingAllowed: null,
+      tilingAllowed: null,
+    });
   });
 
   it.each(["commercialUseCompatible", "redistributionAllowed", "modificationAllowed", "croppingAllowed", "georeferencingAllowed", "tilingAllowed"])("approvedの%s=falseを拒否する", (field) => {
@@ -139,7 +159,7 @@ describe("古地図候補台帳", () => {
   });
 
   it("既存candidate IDと用途以外の全履歴・権利・URL・priorityを維持する", () => {
-    const candidates = (clone().candidates as Record<string, unknown>[]);
+    const candidates = (clone().candidates as Record<string, unknown>[]).slice(0, 15);
     const idsSha = createHash("sha256").update(JSON.stringify(candidates.map(({ candidateId }) => candidateId))).digest("hex");
     const priorFieldsSha = createHash("sha256").update(JSON.stringify(candidates.map((candidate) => Object.fromEntries(Object.entries(candidate).filter(([key]) => key !== "intendedUses"))))).digest("hex");
     expect(idsSha).toBe("a6f95c658645c00e8e7b9436b04c41e21f167a8f1fca6c7f2ba307d14b980713");
@@ -167,6 +187,6 @@ describe("古地図候補台帳", () => {
   it("本番レジストリ0件・public古地図0件の調査のみ経路を監査する", () => {
     const audit = auditHistoricalRasterCandidateRepository(ROOT);
     expect(audit.errors).toEqual([]);
-    expect(audit.registry?.candidates).toHaveLength(15);
+    expect(audit.registry?.candidates).toHaveLength(16);
   });
 });
