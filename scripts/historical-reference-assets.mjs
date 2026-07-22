@@ -305,6 +305,38 @@ function hasRestrictedLicenseToken(licenseCode) {
   return joined.includes("ALL RIGHTS RESERVED") || joined.includes("NO DERIVATIVES");
 }
 
+function hasLicenseTokenSequence(tokens, ...sequence) {
+  return tokens.some((token, index) =>
+    sequence.every((expected, offset) => tokens[index + offset] === expected),
+  );
+}
+
+function assertPublishedLicenseConsistency(licenseCategory, licenseCode, label) {
+  const tokens = normalizedLicenseTokens(licenseCode);
+  const hasCc0 = tokens.includes("CC0");
+  const hasCcBy = hasLicenseTokenSequence(tokens, "CC", "BY");
+  const hasPublicDomain =
+    tokens.includes("PDM") ||
+    tokens.includes("PD") ||
+    hasLicenseTokenSequence(tokens, "PUBLIC", "DOMAIN");
+
+  if (licenseCategory === "cc0") {
+    assert(hasCc0, `${label}: licenseCategory=cc0にはCC0を示すlicenseCodeが必要です`);
+  } else if (licenseCategory === "cc-by") {
+    assert(hasCcBy && !hasCc0, `${label}: licenseCategory=cc-byにはCC-BYを示すlicenseCodeが必要です`);
+  } else if (licenseCategory === "public-domain") {
+    assert(
+      hasPublicDomain && !hasCc0 && !hasCcBy,
+      `${label}: licenseCategory=public-domainには明示的なPD/PDM/Public-DomainのlicenseCodeが必要です`,
+    );
+  } else if (licenseCategory === "custom-commercial-open") {
+    assert(
+      !hasCc0 && !hasCcBy && !hasPublicDomain && !tokens.includes("CC"),
+      `${label}: custom-commercial-openのlicenseCodeに別licenseCategoryを指定できません`,
+    );
+  }
+}
+
 function validateOriginalFile(raw, label, assetId) {
   const value = assertObject(raw, label, ORIGINAL_FILE_KEYS);
   for (const key of ORIGINAL_FILE_KEYS) assert(Object.hasOwn(value, key), `${label}.${key}がありません`);
@@ -549,6 +581,7 @@ function validateAsset(raw, index) {
       !hasRestrictedLicenseToken(value.licenseCode),
       `${label}: publishedのlicenseCodeにNC/ND/権利留保を指定できません`,
     );
+    assertPublishedLicenseConsistency(value.licenseCategory, value.licenseCode, label);
   } else if (derivedFile?.publicPath !== undefined) {
     fail(`${label}: published以外ではpublicPathを持てません`);
   }
@@ -1030,6 +1063,7 @@ function auditCrossReferences(catalog, candidates, displayBindings, errors) {
   if (catalog.assets.length === 0 && displayBindings.length === 0) return;
 
   const assetsById = new Map(catalog.assets.map((asset) => [asset.id, asset]));
+  const publishedReferenceAssetIds = new Set();
 
   for (const asset of catalog.assets) {
     if (!candidates.has(asset.sourceId)) {
@@ -1087,8 +1121,22 @@ function auditCrossReferences(catalog, candidates, displayBindings, errors) {
         `display map ${binding.mapId}: sourceIdがassetと一致しません（map=${binding.sourceId}, asset=${asset.sourceId}）`,
       );
     }
+    if (
+      binding.publicationStatus === "published" &&
+      asset.publicationStatus === "published" &&
+      binding.sourceId === asset.sourceId
+    ) {
+      publishedReferenceAssetIds.add(asset.id);
+    }
   }
 
+  for (const asset of catalog.assets) {
+    if (asset.publicationStatus === "published" && !publishedReferenceAssetIds.has(asset.id)) {
+      errors.push(
+        `${asset.id}: published assetはsourceIdが一致するpublished display mapからreference-asset参照される必要があります（orphan）`,
+      );
+    }
+  }
 }
 
 function readGitTrackedPaths(root) {
@@ -1195,20 +1243,6 @@ export function auditHistoricalReferenceAssetRepository(root, options = {}) {
   const publicCatalogPath = join(root, "public", "data", "historical-reference-assets.json");
   if (existsSync(publicCatalogPath)) {
     errors.push("歴史参考画像台帳をpublicへ配信してはいけません");
-  }
-
-  const publicRasterPath = join(root, "public", "data", "historical-rasters");
-  if (existsSync(publicRasterPath)) {
-    errors.push("公開古地図ディレクトリが存在します");
-  }
-
-  try {
-    const runtime = JSON.parse(readFileSync(join(root, "src", "historical-raster-registry.json"), "utf8"));
-    if (!Array.isArray(runtime) || runtime.length !== 0) {
-      errors.push("本番ラスターレジストリが空ではありません");
-    }
-  } catch {
-    errors.push("本番ラスターレジストリを確認できません");
   }
 
   for (const relativePath of [

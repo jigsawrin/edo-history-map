@@ -222,6 +222,40 @@ function displayMapFixture(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function rasterRegistryFixture() {
+  return {
+    id: "project-grid",
+    regionId: "edo",
+    eraId: "edo-late",
+    titleJa: "権利確認済みテスト定義",
+    sheetLabelJa: "テスト格子",
+    localTilePath: "data/historical-rasters/project-grid/{z}/{x}/{y}.png",
+    tileManifestPath: "data/historical-rasters/project-grid/tile-manifest.json",
+    tileFormat: "png",
+    tileSize: 256,
+    minZoom: 1,
+    maxZoom: 1,
+    maxNativeZoom: 1,
+    bounds: [[35.6, 139.7], [35.7, 139.8]],
+    defaultOpacity: 0.8,
+    attributionId: "gsi-tiles",
+    sourceId: "project-generated-fixture",
+    georeferenceMethod: "projective",
+    controlPointCount: 4,
+    estimatedErrorMeters: 12,
+    maximumErrorMeters: 25,
+    qualityGateVersion: 1,
+    qualityGatePassed: true,
+    sourceDateDisplayJa: "テスト用",
+    geographicCoverageJa: "テスト専用格子範囲",
+    georeferenceNoteJa: "四隅の自作基準点で検証します。",
+    contextNoteJa: "利用者向けの古地図として表示しません。",
+    seamPolicy: "single-sheet",
+    priority: 10,
+    reviewStatus: "approved",
+  };
+}
+
 const tempRoots: string[] = [];
 afterEach(() => {
   while (tempRoots.length > 0) {
@@ -239,6 +273,8 @@ function createAuditFixtureRoot(options: {
   runtimeSource?: { relativePath: string; content: string };
   publicCatalog?: boolean;
   publicAssetDir?: boolean;
+  publicRasterDir?: boolean;
+  rasterRegistry?: Record<string, unknown>[];
   distLeak?: boolean;
 } = {}) {
   const root = mkdtempSync(join(tmpdir(), "historical-reference-assets-"));
@@ -271,7 +307,11 @@ function createAuditFixtureRoot(options: {
     `${JSON.stringify({ ...EMPTY_DISPLAY, maps: options.displayMaps ?? [] }, null, 2)}\n`,
     "utf8",
   );
-  writeFileSync(join(root, "src", "historical-raster-registry.json"), "[]\n", "utf8");
+  writeFileSync(
+    join(root, "src", "historical-raster-registry.json"),
+    `${JSON.stringify(options.rasterRegistry ?? [], null, 2)}\n`,
+    "utf8",
+  );
   writeFileSync(join(root, "src", "main.ts"), "export {};\n", "utf8");
 
   if (options.runtimeSource) {
@@ -289,6 +329,9 @@ function createAuditFixtureRoot(options: {
   }
   if (options.publicAssetDir) {
     mkdirSync(join(root, "public", "data", "historical-reference-assets"), { recursive: true });
+  }
+  if (options.publicRasterDir) {
+    mkdirSync(join(root, "public", "data", "historical-rasters"), { recursive: true });
   }
   if (options.distLeak) {
     mkdirSync(join(root, "dist"), { recursive: true });
@@ -381,9 +424,16 @@ function writeFileBackedAsset(root: string, fixture: ReturnType<typeof fileBacke
   return catalog;
 }
 
-function createCompletePublishedRoot(options: Parameters<typeof fileBackedAsset>[0] = {}) {
+function createCompletePublishedRoot(
+  options: Parameters<typeof fileBackedAsset>[0] = {},
+  displayMaps: Record<string, unknown>[] = [displayMapFixture()],
+) {
   const fixture = fileBackedAsset(options);
-  const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture()] });
+  const root = createAuditFixtureRoot({
+    assets: [fixture.asset],
+    candidates: [candidateFixture()],
+    displayMaps,
+  });
   const catalog = writeFileBackedAsset(root, fixture);
   return { root, fixture, catalog };
 }
@@ -739,10 +789,49 @@ describe("歴史参考画像台帳基盤", () => {
     expect(audit.errors.some((message) => message.includes("published assetのみ参照"))).toBe(true);
   });
 
-  it("published assetのdisplay未接続を段階登録として許可する", () => {
-    const { root } = createCompletePublishedRoot();
+  it("published asset参照なしをorphanとして拒否する", () => {
+    const { root } = createCompletePublishedRoot({}, []);
     const audit = auditHistoricalReferenceAssetRepository(root);
-    expect(audit.errors).toEqual([]);
+    expect(audit.errors.some((message) => message.includes("orphan"))).toBe(true);
+  });
+
+  it("candidate displayからだけ参照されるpublished assetをorphanとして拒否する", () => {
+    const { root } = createCompletePublishedRoot({}, [
+      displayMapFixture({ publicationStatus: "candidate" }),
+    ]);
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("orphan"))).toBe(true);
+  });
+
+  it("shortlisted displayからだけ参照されるpublished assetをorphanとして拒否する", () => {
+    const { root } = createCompletePublishedRoot({}, [
+      displayMapFixture({ publicationStatus: "shortlisted" }),
+    ]);
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("orphan"))).toBe(true);
+  });
+
+  it("sourceId不一致のpublished display参照をorphanとして拒否する", () => {
+    const { root } = createCompletePublishedRoot({}, [
+      displayMapFixture({ sourceId: "different-test-source" }),
+    ]);
+    const errors = auditHistoricalReferenceAssetRepository(root).errors;
+    expect(errors.some((message) => message.includes("sourceIdがassetと一致しません"))).toBe(true);
+    expect(errors.some((message) => message.includes("orphan"))).toBe(true);
+  });
+
+  it("published displayから参照されるpublished assetを成功させる", () => {
+    const { root } = createCompletePublishedRoot();
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
+  it("shortlisted asset参照なしを段階導入として成功させる", () => {
+    const fixture = fileBackedAsset({ publicationStatus: "shortlisted" });
+    const root = createAuditFixtureRoot({
+      assets: [fixture.asset],
+      candidates: [candidateFixture()],
+      displayMaps: [],
+    });
+    writeFileBackedAsset(root, fixture);
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
   });
 
   it("runtime参照を拒否する", () => {
@@ -767,6 +856,23 @@ describe("歴史参考画像台帳基盤", () => {
     const distRoot = createAuditFixtureRoot({ distLeak: true });
     const distAudit = auditHistoricalReferenceAssetRepository(distRoot);
     expect(distAudit.errors.some((message) => message.includes("distへ混入"))).toBe(true);
+  });
+
+  it("正常な非空raster registryとreference asset空台帳を共存させる", () => {
+    const root = createAuditFixtureRoot({ rasterRegistry: [rasterRegistryFixture()] });
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
+  it("public historical-rasterディレクトリをreference asset監査では拒否しない", () => {
+    const root = createAuditFixtureRoot({ publicRasterDir: true });
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
+  it("raster共存時もreference asset publicディレクトリ規則を維持する", () => {
+    const root = createAuditFixtureRoot({ publicRasterDir: true, publicAssetDir: true });
+    const errors = auditHistoricalReferenceAssetRepository(root).errors;
+    expect(errors.some((message) => message.includes("published asset 0件"))).toBe(true);
+    expect(errors.some((message) => message.includes("公開古地図"))).toBe(false);
   });
 
   it("published assetの正しいpublic PNG実ファイルを検証する", () => {
@@ -979,6 +1085,61 @@ describe("歴史参考画像台帳基盤", () => {
     expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
   });
 
+  it("cc-by + CC-BY-4.0を成功させる", () => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([
+      publishedAsset({ licenseCategory: "cc-by", licenseCode: "CC-BY-4.0" }),
+    ]))).not.toThrow();
+  });
+
+  it("cc-by + CC0を拒否する", () => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([
+      publishedAsset({ licenseCategory: "cc-by", licenseCode: "CC0-1.0" }),
+    ]))).toThrow(/licenseCategory=cc-by/u);
+  });
+
+  it("cc0 + CC0-1.0を成功させる", () => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([
+      publishedAsset({ licenseCategory: "cc0", licenseCode: "CC0-1.0" }),
+    ]))).not.toThrow();
+  });
+
+  it("cc0 + CC-BY-4.0を拒否する", () => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([
+      publishedAsset({ licenseCategory: "cc0", licenseCode: "CC-BY-4.0" }),
+    ]))).toThrow(/licenseCategory=cc0/u);
+  });
+
+  it("public-domain + Public-Domainを成功させる", () => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([
+      publishedAsset({ licenseCategory: "public-domain", licenseCode: "Public-Domain" }),
+    ]))).not.toThrow();
+  });
+
+  it("public-domain + CC-BYを拒否する", () => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([
+      publishedAsset({ licenseCategory: "public-domain", licenseCode: "CC-BY-4.0" }),
+    ]))).toThrow(/licenseCategory=public-domain/u);
+  });
+
+  it("custom-commercial-open + CC-BYを拒否する", () => {
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([
+      publishedAsset({ licenseCategory: "custom-commercial-open", licenseCode: "CC-BY-4.0" }),
+    ]))).toThrow(/custom-commercial-open/u);
+  });
+
+  it("custom-commercial-open + custom codeを候補権利根拠込みで成功させる", () => {
+    const fixture = fileBackedAsset();
+    fixture.asset.licenseCategory = "custom-commercial-open";
+    fixture.asset.licenseCode = "CUSTOM-COMMERCIAL-OPEN-1.0";
+    const root = createAuditFixtureRoot({
+      assets: [fixture.asset],
+      candidates: [candidateFixture()],
+      displayMaps: [displayMapFixture()],
+    });
+    writeFileBackedAsset(root, fixture);
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
   it.each([
     "CC-BY-NC-4.0",
     "NONCOMMERCIAL",
@@ -991,7 +1152,12 @@ describe("歴史参考画像台帳基盤", () => {
   });
 
   it("licenseCodeの単純部分文字列を誤検出しない", () => {
-    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([publishedAsset({ licenseCode: "CANDIDATE-OPEN-1.0" })]))).not.toThrow();
+    expect(() => validateHistoricalReferenceAssetCatalog(catalogWithAssets([
+      publishedAsset({
+        licenseCategory: "custom-commercial-open",
+        licenseCode: "CANDIDATE-OPEN-1.0",
+      }),
+    ]))).not.toThrow();
   });
 
   it("unknown license categoryのpublishedを拒否する", () => {
@@ -1001,7 +1167,12 @@ describe("歴史参考画像台帳基盤", () => {
   it("custom-commercial-openで候補rights evidence欠落を拒否する", () => {
     const fixture = fileBackedAsset();
     fixture.asset.licenseCategory = "custom-commercial-open";
-    const root = createAuditFixtureRoot({ assets: [fixture.asset], candidates: [candidateFixture({ rightsEvidenceUrls: [] })] });
+    fixture.asset.licenseCode = "CUSTOM-COMMERCIAL-OPEN-1.0";
+    const root = createAuditFixtureRoot({
+      assets: [fixture.asset],
+      candidates: [candidateFixture({ rightsEvidenceUrls: [] })],
+      displayMaps: [displayMapFixture()],
+    });
     writeFileBackedAsset(root, fixture);
     expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("rights evidence"))).toBe(true);
   });
