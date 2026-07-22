@@ -1009,12 +1009,14 @@ function loadCandidatesById(root, errors) {
     for (const candidate of registry.candidates) {
       if (typeof candidate?.candidateId === "string") {
         assert(REFERENCE_ASSET_RIGHTS_STATUSES.includes(candidate.rightsReviewStatus), `${candidate.candidateId}: 候補rightsReviewStatusが不正です`);
+        assert(Array.isArray(candidate.intendedUses), `${candidate.candidateId}: 候補intendedUsesが不正です`);
         for (const field of ["commercialUseCompatible", "redistributionAllowed", "modificationAllowed", "croppingAllowed"]) {
           assert(candidate[field] === null || typeof candidate[field] === "boolean", `${candidate.candidateId}: 候補${field}が不正です`);
         }
         assert(Array.isArray(candidate.rightsEvidenceUrls), `${candidate.candidateId}: 候補rightsEvidenceUrlsが不正です`);
         map.set(candidate.candidateId, Object.freeze({
           rightsReviewStatus: candidate.rightsReviewStatus,
+          intendedUses: Object.freeze([...candidate.intendedUses]),
           commercialUseCompatible: candidate.commercialUseCompatible,
           redistributionAllowed: candidate.redistributionAllowed,
           modificationAllowed: candidate.modificationAllowed,
@@ -1071,6 +1073,9 @@ function auditCrossReferences(catalog, candidates, displayBindings, errors) {
       continue;
     }
     const candidate = candidates.get(asset.sourceId);
+    if (!candidate.intendedUses.includes("reference-panel")) {
+      errors.push(`${asset.id}: source candidateにintendedUses=reference-panelがありません`);
+    }
     const candidateRightsStatus = candidate.rightsReviewStatus;
     if (asset.publicationStatus === "published") {
       if (candidateRightsStatus !== "approved") {

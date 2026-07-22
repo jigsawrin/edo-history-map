@@ -118,13 +118,13 @@ flowchart LR
 
 ## 古地図ラスターパックの脅威と対策
 
-候補台帳は実行時URLレジストリではなく、調査証跡である。HTTPSの個別資料URLだけを許可し、candidateId・資料URLの重複、10件未満、3機関未満、approvedの商用・再配布・加工・切り抜き・位置合わせ・タイル化フラグ欠落を監査で拒否する。候補approvedだけではpublic配信を許可せず、既存のsource承認、raster定義、manifest、基準点、誤差評価の二重ゲートを維持する。
+候補台帳は実行時URLレジストリではなく、調査証跡である。HTTPSの個別資料URLだけを許可し、candidateId・資料URLの重複、10件未満、3機関未満、approvedの共通権利条件欠落を監査で拒否する。位置合わせ・タイル化フラグはoverlay用途にだけ必須とする。候補approvedだけではpublic配信を許可せず、既存のsource承認、raster定義、manifest、基準点、誤差評価の二重ゲートを維持する。
 
-候補schema v2は権利、技術、公開状態を分離する。権利approvedだけでruntime registryやpublic artifactへ昇格できず、technical approvedとpublication publishedを別に要求する。基準点はrole、公式evidence URL、source approvalを検証し、推測点や独立validationの使い回しによる見かけの精度向上を拒否する。
+候補schema v3は権利、技術、公開状態に加えて用途を分離する。reference-panelは測地同期精度を主張せず、専用資料にはgeoreferencing/tiling権利を要求しない。overlayを含む資料には両権利を要求する。両用途は両方を明記し、用途追加は個別史料監査を必須として、既存候補を自動的にreference対応へしない。権利approvedだけでruntime registryやpublic artifactへ昇格できず、technical approvedとpublication publishedを別に要求する。
 
 歴史基準点カタログは現代側ランドマーク候補の調査証跡であり、runtime・publicへ接続しない。`src/`配下の`.ts`/`.mts`/`.js`参照、uncertain、moved、possibly-moved、approximate/unknown座標のeligible/validation-only化、validation-onlyのunknown移設状態、認証情報付きURL、HTML/制御文字、空カタログ以外の未審査entries、カタログからtransform/validationへの自動昇格を監査で拒否する。不確実な地点はholdへ分類する。
 
-古地図表示カタログも調査証跡であり、空基盤の間はruntime・publicへ接続しない。`src/`参照、public/dist混入、artifact/spatial binding不一致、reference-onlyのgeoreferenced化、歴史情報非保持のapproved/published、不正parent role、親子region/era不一致、overlay親子のzoom gap、crop外側、ヒステリシス欠落、面積0 geometry、本番raster増加、公開古地図ディレクトリ、source map、Service Workerを監査で拒否する。
+古地図表示カタログも調査証跡であり、空基盤の間はruntime・publicへ接続しない。`src/`参照、public/dist混入、artifact/spatial binding不一致、candidate用途不一致、reference-onlyのgeoreferenced化、reference専用sourceのraster昇格、歴史情報非保持のapproved/published、不正parent role、親子region/era不一致、overlay親子のzoom gap、crop外側、ヒステリシス欠落、面積0 geometry、本番raster増加、公開古地図ディレクトリ、source map、Service Workerを監査で拒否する。
 
 歴史参考画像台帳は`reference-panel`向け参考資料の調査証跡であり、空基盤の間はruntime・publicへ接続しない。`src/`参照、台帳JSONのpublic配信、`public/data/historical-reference-assets`、raw/derivedの不正パス、published以外のpublicPath、NC/ND相当（商用・再配布・改変・crop不可）のpublished化、歴史情報非保持のapproved/published、候補台帳・表示カタログとの相互参照矛盾、orphan published asset、dist/test fixture混入、source map、Service Workerを監査で拒否する。
 

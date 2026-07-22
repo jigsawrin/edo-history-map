@@ -7,6 +7,10 @@ const TECHNICAL_STATUS = new Set(["not-started", "in-review", "approved", "rejec
 const PUBLICATION_STATUS = new Set(["candidate", "shortlisted", "published"]);
 const SUITABILITY = new Set(["high", "medium", "low"]);
 const COVERAGE = new Set(["narrow", "medium", "broad"]);
+export const HISTORICAL_SOURCE_INTENDED_USES = Object.freeze([
+  "georeferenced-overlay",
+  "reference-panel",
+]);
 const REASON_CODES = new Set([
   "cc-by-4.0",
   "image-unit-unavailable",
@@ -46,14 +50,25 @@ const BOOLEAN_FIELDS = [
   "paywallRequired",
   "imageFileAvailable",
 ];
-const APPROVAL_FIELDS = [
+const COMMON_APPROVAL_FIELDS = [
   "commercialUseCompatible",
   "redistributionAllowed",
   "modificationAllowed",
   "croppingAllowed",
+];
+const OVERLAY_APPROVAL_FIELDS = [
   "georeferencingAllowed",
   "tilingAllowed",
 ];
+const CANDIDATE_KEYS = new Set([
+  ...TEXT_FIELDS, "titleFamilyId", "series", "sheetNumber", "attributionRecommendedTextJa",
+  "exactItemUrl", "exactImageUrl", "exactViewerUrl", "rightsEvidenceUrls", "intendedUses",
+  ...BOOLEAN_FIELDS, ...BOOLEAN_OR_NULL_FIELDS, "reviewStatus", "rightsReviewStatus",
+  "technicalReviewStatus", "publicationStatus", "technicalReviewReasonJa", "technicalSuitability",
+  "rightsSuitability", "expectedResolutionSuitability", "expectedControlPointAvailability",
+  "expectedSeamRisk", "expectedCoverageBreadth", "expectedTileSizeRisk", "priorityScore",
+]);
+const REGISTRY_KEYS = new Set(["schemaVersion", "reviewedAt", "commercialContextJa", "candidates"]);
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -85,9 +100,22 @@ export function migrateHistoricalRasterCandidateRegistryV1(value) {
   return { ...value, schemaVersion: 2, candidates: value.candidates.map(migrateCandidateV1) };
 }
 
+export function migrateHistoricalRasterCandidateRegistryV2(value) {
+  if (!value || value.schemaVersion !== 2) return value;
+  return {
+    ...value,
+    schemaVersion: 3,
+    candidates: value.candidates.map((candidate) => ({
+      ...candidate,
+      intendedUses: ["georeferenced-overlay"],
+    })),
+  };
+}
+
 function validateCandidate(candidate, index) {
   const label = `候補${index + 1}`;
   assert(candidate && typeof candidate === "object" && !Array.isArray(candidate), `${label}がobjectではありません`);
+  for (const key of Object.keys(candidate)) assert(CANDIDATE_KEYS.has(key), `${label}.${key}は未定義キーです`);
   for (const field of TEXT_FIELDS) assert(typeof candidate[field] === "string" && candidate[field].trim().length > 0, `${label}.${field}がありません`);
   assert(ID_PATTERN.test(candidate.candidateId), `${label}.candidateIdが不正です`);
   if (candidate.titleFamilyId !== undefined) assert(typeof candidate.titleFamilyId === "string" && ID_PATTERN.test(candidate.titleFamilyId), `${label}.titleFamilyIdが不正です`);
@@ -99,6 +127,11 @@ function validateCandidate(candidate, index) {
   candidate.rightsEvidenceUrls.forEach((url, evidenceIndex) => assertHttps(url, `${label}.rightsEvidenceUrls[${evidenceIndex}]`));
   for (const field of BOOLEAN_FIELDS) assert(typeof candidate[field] === "boolean", `${label}.${field}はbooleanである必要があります`);
   for (const field of BOOLEAN_OR_NULL_FIELDS) assert(candidate[field] === null || typeof candidate[field] === "boolean", `${label}.${field}はbooleanまたはnullである必要があります`);
+  assert(Array.isArray(candidate.intendedUses) && candidate.intendedUses.length > 0, `${label}.intendedUsesは1件以上必要です`);
+  assert(new Set(candidate.intendedUses).size === candidate.intendedUses.length, `${label}.intendedUsesが重複しています`);
+  assert(candidate.intendedUses.every((use) => HISTORICAL_SOURCE_INTENDED_USES.includes(use)), `${label}.intendedUsesに未知値があります`);
+  const normalizedUses = HISTORICAL_SOURCE_INTENDED_USES.filter((use) => candidate.intendedUses.includes(use));
+  assert(normalizedUses.every((use, useIndex) => use === candidate.intendedUses[useIndex]), `${label}.intendedUsesの順序が不正です`);
   assert(STATUS.has(candidate.reviewStatus), `${label}.reviewStatusが不正です`);
   assert(STATUS.has(candidate.rightsReviewStatus), `${label}.rightsReviewStatusが不正です`);
   assert(candidate.reviewStatus === candidate.rightsReviewStatus, `${label}: reviewStatusはrightsReviewStatusの後方互換aliasである必要があります`);
@@ -110,25 +143,29 @@ function validateCandidate(candidate, index) {
   assert(COVERAGE.has(candidate.expectedCoverageBreadth), `${label}.expectedCoverageBreadthが不正です`);
   assert(Number.isInteger(candidate.priorityScore) && candidate.priorityScore >= 0 && candidate.priorityScore <= 100, `${label}.priorityScoreが不正です`);
   if (candidate.rightsReviewStatus === "approved") {
-    for (const field of APPROVAL_FIELDS) assert(candidate[field] === true, `${candidate.candidateId}: approvedには${field}=trueが必要です`);
+    for (const field of COMMON_APPROVAL_FIELDS) assert(candidate[field] === true, `${candidate.candidateId}: approvedには${field}=trueが必要です`);
+    if (candidate.intendedUses.includes("georeferenced-overlay")) {
+      for (const field of OVERLAY_APPROVAL_FIELDS) assert(candidate[field] === true, `${candidate.candidateId}: overlay approvedには${field}=trueが必要です`);
+    }
     assert(candidate.rightsSuitability === "high", `${candidate.candidateId}: approvedにはrightsSuitability=highが必要です`);
     assert(candidate.imageFileAvailable && (candidate.directDownloadAvailable || candidate.iiifAvailable), `${candidate.candidateId}: approved画像の取得経路がありません`);
     assert(!candidate.loginRequired && !candidate.paywallRequired, `${candidate.candidateId}: approved画像にログインまたは課金を要求できません`);
     assert(candidate.exactImageUrl !== null || candidate.exactViewerUrl !== null, `${candidate.candidateId}: approved画像単位のURLがありません`);
   } else {
-    assert(!APPROVAL_FIELDS.every((field) => candidate[field] === true), `${candidate.candidateId}: 全権利条件がtrueならpending/rejected理由を見直してください`);
+    assert(![...COMMON_APPROVAL_FIELDS, ...OVERLAY_APPROVAL_FIELDS].every((field) => candidate[field] === true), `${candidate.candidateId}: 全権利条件がtrueならpending/rejected理由を見直してください`);
   }
   if (candidate.publicationStatus === "published") {
     assert(candidate.rightsReviewStatus === "approved" && candidate.technicalReviewStatus === "approved", `${candidate.candidateId}: publishedには権利と技術の両approvedが必要です`);
   }
   if (candidate.technicalReviewStatus === "approved") assert(candidate.rightsReviewStatus === "approved", `${candidate.candidateId}: 技術approvedだけでは公開できません`);
-  return Object.freeze({ ...candidate, rightsEvidenceUrls: Object.freeze([...candidate.rightsEvidenceUrls]) });
+  return Object.freeze({ ...candidate, intendedUses: Object.freeze([...candidate.intendedUses]), rightsEvidenceUrls: Object.freeze([...candidate.rightsEvidenceUrls]) });
 }
 
 export function validateHistoricalRasterCandidateRegistry(value) {
-  value = migrateHistoricalRasterCandidateRegistryV1(value);
+  value = migrateHistoricalRasterCandidateRegistryV2(migrateHistoricalRasterCandidateRegistryV1(value));
   assert(value && typeof value === "object" && !Array.isArray(value), "候補台帳がobjectではありません");
-  assert(value.schemaVersion === 2, "候補台帳schemaVersionは2である必要があります");
+  for (const key of Object.keys(value)) assert(REGISTRY_KEYS.has(key), `候補台帳.${key}は未定義キーです`);
+  assert(value.schemaVersion === 3, "候補台帳schemaVersionは3である必要があります");
   assert(/^\d{4}-\d{2}-\d{2}$/u.test(value.reviewedAt), "候補台帳reviewedAtが不正です");
   assert(typeof value.commercialContextJa === "string" && value.commercialContextJa.includes("広告") && value.commercialContextJa.includes("寄付") && value.commercialContextJa.includes("NC"), "候補台帳に商用利用前提がありません");
   assert(Array.isArray(value.candidates) && value.candidates.length >= 10, "候補は10件以上必要です");
@@ -144,7 +181,7 @@ export function validateHistoricalRasterCandidateRegistry(value) {
     assert(new Set(family.map((candidate) => candidate.exactItemUrl)).size === family.length, `${familyId}: 同題資料の個別URLが分離されていません`);
   }
   return Object.freeze({
-    schemaVersion: 2,
+    schemaVersion: 3,
     reviewedAt: value.reviewedAt,
     commercialContextJa: value.commercialContextJa,
     candidates: Object.freeze(candidates),

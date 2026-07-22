@@ -17,6 +17,7 @@
 | reference-asset | 参考パネルに表示する | `reference-panel` |
 
 reference assetは正確な測地範囲や位置合わせ精度を主張しない。
+参照元candidateの`intendedUses`には`reference-panel`が必要であり、overlay専用candidateから参考画像へ昇格できない。reference-panel専用資料では測地同期・タイル化の許可を要求せず、閲覧・再配布・改変・cropの権利と混同しない。用途追加は個別史料監査を経て行う。
 
 ## 空台帳から開始する理由
 

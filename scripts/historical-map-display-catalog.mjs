@@ -644,6 +644,21 @@ export function auditHistoricalMapDisplayCatalogRepository(root) {
     errors.push(cause instanceof Error ? cause.message : "古地図表示カタログを解析できません");
   }
 
+  if (catalog && catalog.maps.length > 0) {
+    try {
+      const candidateRegistry = JSON.parse(readFileSync(join(root, "data-curation", "historical-raster-candidates.json"), "utf8"));
+      const candidates = new Map(candidateRegistry.candidates.map((candidate) => [candidate.candidateId, candidate]));
+      for (const map of catalog.maps) {
+        const candidate = candidates.get(map.sourceId);
+        const requiredUse = map.displayMode === "reference-panel" ? "reference-panel" : "georeferenced-overlay";
+        if (!candidate) errors.push(`${map.id}: source candidateが候補台帳に存在しません`);
+        else if (!candidate.intendedUses?.includes(requiredUse)) errors.push(`${map.id}: source candidateにintendedUses=${requiredUse}がありません`);
+      }
+    } catch (cause) {
+      errors.push(cause instanceof Error ? cause.message : "古地図候補台帳を解析できません");
+    }
+  }
+
   const publicCatalogPath = join(root, "public", "data", "historical-map-display-catalog.json");
   if (existsSync(publicCatalogPath)) {
     errors.push("古地図表示カタログをpublicへ配信してはいけません");

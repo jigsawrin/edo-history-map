@@ -1,11 +1,19 @@
+export type HistoricalSourceIntendedUse = "georeferenced-overlay" | "reference-panel";
+
+export interface HistoricalRasterCandidate extends Readonly<Record<string, unknown>> {
+  readonly intendedUses: readonly HistoricalSourceIntendedUse[];
+}
+
 export interface HistoricalRasterCandidateRegistry {
-  readonly schemaVersion: 2;
+  readonly schemaVersion: 3;
   readonly reviewedAt: string;
   readonly commercialContextJa: string;
-  readonly candidates: readonly Readonly<Record<string, unknown>>[];
+  readonly candidates: readonly HistoricalRasterCandidate[];
 }
 
 export function migrateHistoricalRasterCandidateRegistryV1(value: unknown): unknown;
+export function migrateHistoricalRasterCandidateRegistryV2(value: unknown): unknown;
+export const HISTORICAL_SOURCE_INTENDED_USES: readonly HistoricalSourceIntendedUse[];
 
 export interface HistoricalRasterCandidateSummary {
   readonly total: number;

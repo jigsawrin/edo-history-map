@@ -167,6 +167,8 @@ afterEach(() => {
 function createAuditFixtureRoot(options: {
   runtimeSource?: { relativePath: string; content: string };
   scriptReference?: boolean;
+  maps?: Record<string, unknown>[];
+  candidates?: Record<string, unknown>[];
 } = {}) {
   const root = mkdtempSync(join(tmpdir(), "historical-map-display-catalog-"));
   tempRoots.push(root);
@@ -174,9 +176,10 @@ function createAuditFixtureRoot(options: {
   mkdirSync(join(root, "src"), { recursive: true });
   writeFileSync(
     join(root, "data-curation", "historical-map-display-catalog.json"),
-    `${JSON.stringify(EMPTY_CATALOG, null, 2)}\n`,
+    `${JSON.stringify(options.maps ? catalogWithMaps(options.maps) : EMPTY_CATALOG, null, 2)}\n`,
     "utf8",
   );
+  writeFileSync(join(root, "data-curation", "historical-raster-candidates.json"), `${JSON.stringify({ schemaVersion: 3, candidates: options.candidates ?? [] }, null, 2)}\n`, "utf8");
   writeFileSync(join(root, "src", "historical-raster-registry.json"), "[]\n", "utf8");
   writeFileSync(join(root, "src", "main.ts"), "export {};\n", "utf8");
   if (options.runtimeSource) {
@@ -685,6 +688,22 @@ describe("古地図表示カタログ基盤", () => {
     const root = createAuditFixtureRoot({ scriptReference: true });
     const audit = auditHistoricalMapDisplayCatalogRepository(root);
     expect(audit.errors).toEqual([]);
+  });
+
+  it("display modeとsource intendedUsesの一致を監査する", () => {
+    const overlay = overviewFixture();
+    const reference = referenceFixture({ parentMapId: "test-fixture-display-map-overview" });
+    const matching = createAuditFixtureRoot({
+      maps: [overlay, reference],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["georeferenced-overlay", "reference-panel"] }],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(matching).errors).toEqual([]);
+
+    const mismatched = createAuditFixtureRoot({
+      maps: [overlay],
+      candidates: [{ candidateId: "test-fixture-source", intendedUses: ["reference-panel"] }],
+    });
+    expect(auditHistoricalMapDisplayCatalogRepository(mismatched).errors.some((message) => message.includes("georeferenced-overlay"))).toBe(true);
   });
 
   it("既存公開データSHAを変更しない", () => {
