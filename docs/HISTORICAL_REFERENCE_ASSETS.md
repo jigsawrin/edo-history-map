@@ -6,8 +6,8 @@
 歴史参考画像専用の安全な台帳基盤である。測地同期したoverlayラスタとは別物で、
 `reference-panel`向けの参考資料（図版・写真・図面など）を扱う。
 
-今回は空の安全基盤だけを追加する。実在画像・実在資料・ファイル・crop値・URL・
-座標・公開物は登録していない。
+安全基盤上に、和田倉御門の実在資料をshortlisted reference assetとして1件登録している。
+raw / derived画像はGit管理外に置き、publicPath、座標、表示カタログ、runtime接続、公開物は追加していない。
 
 ## 測地同期ラスタとの違い
 
@@ -19,11 +19,11 @@
 reference assetは正確な測地範囲や位置合わせ精度を主張しない。
 参照元candidateの`intendedUses`には`reference-panel`が必要であり、overlay専用candidateから参考画像へ昇格できない。reference-panel専用資料では測地同期・タイル化の許可を要求せず、閲覧・再配布・改変・cropの権利と混同しない。用途追加は個別史料監査を経て行う。
 
-## 空台帳から開始する理由
+## 段階導入
 
-権利・派生画像・歴史情報保護・候補台帳／表示カタログ相互参照のゲートを先に固定し、
-実在資料を推測登録しないためである。`catalogStatus`は`empty-foundation`、
-本番`assets`は0件から始める。
+権利・派生画像・歴史情報保護・候補台帳／表示カタログ相互参照のゲートを先に固定した。
+現在は`catalogStatus=reviewed`、assets 1件で、和田倉御門資料を`shortlisted`に留めている。
+公開・表示・runtime接続は後続の個別監査まで行わない。
 
 ## 原画像と派生画像の分離
 

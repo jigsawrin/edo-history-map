@@ -1,6 +1,69 @@
 {
   "schemaVersion": 1,
-  "catalogStatus": "empty-foundation",
-  "reviewedAt": null,
-  "assets": []
+  "catalogStatus": "reviewed",
+  "reviewedAt": "2026-07-22",
+  "assets": [
+    {
+      "id": "tokyo-archive-4300033114-wadakura-gate-reference-image",
+      "sourceId": "tokyo-archive-4300033114-wadakura-gate",
+      "title": {
+        "ja": "江戸城御外郭御門絵図 第1図 和田倉御門 参考画像"
+      },
+      "description": {
+        "ja": "享保2年（1717）の和田倉御門周辺を描いた局所的な門構造図。測地同期せず、reference panelで図面・注記・細部図を閲覧するためのshortlisted画像。"
+      },
+      "rightsReviewStatus": "approved",
+      "technicalReviewStatus": "in-review",
+      "publicationStatus": "shortlisted",
+      "licenseCode": "Public-Domain",
+      "licenseCategory": "public-domain",
+      "licenseUrl": "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2",
+      "attribution": {
+        "ja": "『江戸城御外郭御門絵図 第1図 和田倉御門』（東京都立中央図書館所蔵）"
+      },
+      "derivativeDisclosure": {
+        "ja": "原画像から外側の撮影背景、資料番号札、カラーチャート、グレースケール、定規を除く保守的な切り抜きを行った。"
+      },
+      "commercialUseAllowed": true,
+      "redistributionAllowed": true,
+      "modificationAllowed": true,
+      "croppingAllowed": true,
+      "originalFile": {
+        "fileName": "6194_02_01.jpg",
+        "mimeType": "image/jpeg",
+        "width": 3514,
+        "height": 2500,
+        "bytes": 215751,
+        "sha256": "2bac080e87dd98c9b1927ba7a9cc23227a8b12bdf6b610b91f27d3a93491d8b7",
+        "rawPath": "data-raw/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/6194_02_01.jpg"
+      },
+      "crop": {
+        "sourceWidth": 3514,
+        "sourceHeight": 2500,
+        "x": 500,
+        "y": 270,
+        "width": 2450,
+        "height": 1800,
+        "rotationDegrees": 0
+      },
+      "removedElements": [
+        "capture-background",
+        "ruler",
+        "color-chart",
+        "shelfmark-label"
+      ],
+      "preservesHistoricalContent": true,
+      "cropReviewNote": {
+        "ja": "図面本体、全注記、方角表示、右下の細部図、原本余白、折り目、印・記号、台紙の縁を残した。原本外であることが明確な外側の灰色背景、資料番号札、カラーチャート、グレースケール、定規だけを除去した。"
+      },
+      "derivedFile": {
+        "mimeType": "image/png",
+        "width": 2450,
+        "height": 1800,
+        "bytes": 1680142,
+        "sha256": "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81",
+        "derivedPath": "data-derived/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png"
+      }
+    }
+  ]
 }
