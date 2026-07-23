@@ -39,6 +39,7 @@ import {
   auditHistoricalReferenceAssetRepository,
   summarizeHistoricalReferenceAssetCatalog,
 } from "./historical-reference-assets.mjs";
+import { auditHistoricalReferencePanelRegistry } from "./historical-reference-panel-registry.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -578,7 +579,7 @@ if (!existsSync(dsPath)) {
   }
   // public/data 配下のファイルはすべて台帳の approved に載っていること
   for (const f of allFiles) {
-    if (f.rel.startsWith("public/data/") && !approvedFiles.has(f.rel)) {
+    if (f.rel.startsWith("public/data/") && !f.rel.startsWith("public/data/historical-reference-assets/") && !approvedFiles.has(f.rel)) {
       addFinding("error", "台帳未登録データ", f.rel, 0, "DATA_SOURCES.yml の approved エントリに未登録");
     }
   }
@@ -1636,21 +1637,12 @@ if (historicalReferenceAssetAudit.catalog) {
       "台帳をpublicへ出力してはいけません",
     );
   }
-  if (existsSync(join(ROOT, "public", "data", "historical-reference-assets"))) {
-    addFinding(
-      "error",
-      "歴史参考画像公開",
-      "public/data/historical-reference-assets",
-      0,
-      "参考画像ディレクトリをpublicへ出力してはいけません",
-    );
-  }
   const distReferenceLeak = existsSync(join(ROOT, "dist"))
     ? readdirSync(join(ROOT, "dist"), { recursive: true })
         .map(String)
         .some(
           (name) =>
-            name.includes("historical-reference-assets") ||
+            name === "historical-reference-assets.json" ||
             name.includes("test-fixture-reference-asset"),
         )
     : false;
@@ -1664,7 +1656,7 @@ if (historicalReferenceAssetAudit.catalog) {
         .some((name) => {
           const content = readFileSync(join(ROOT, "dist", name), "utf8");
           return (
-            content.includes("historical-reference-assets") ||
+            content.includes("historical-reference-assets.json") ||
             content.includes("test-fixture-reference-asset") ||
             content.includes("試験用参考画像")
           );
@@ -1674,6 +1666,12 @@ if (historicalReferenceAssetAudit.catalog) {
     addFinding("error", "歴史参考画像台帳runtime混入", "dist/", 0, "runtime bundleへ参考画像台帳名が混入しています");
   }
 }
+
+const historicalReferencePanelAudit = auditHistoricalReferencePanelRegistry(ROOT);
+for (const message of historicalReferencePanelAudit.errors) {
+  addFinding("error", "歴史参考パネルregistry", "src/historical-reference-panel-registry.json", 0, message);
+}
+infos.push(`歴史参考パネルregistry: ${historicalReferencePanelAudit.registry?.entries?.length ?? 0}件`);
 
 // ---- 4. 出典表示の確認 -------------------------------------------------------
 

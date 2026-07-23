@@ -234,11 +234,11 @@ function createAuditFixtureRoot(options: {
 }
 
 describe("古地図表示カタログ基盤", () => {
-  it("本番カタログに和田倉御門のshortlisted reference displayだけを保持する", () => {
+  it("本番カタログに和田倉御門のpublished reference displayだけを保持する", () => {
     const catalog = loadHistoricalMapDisplayCatalog(ROOT);
     expect(catalog.schemaVersion).toBe(1);
     expect(catalog.catalogStatus).toBe("reviewed");
-    expect(catalog.reviewedAt).toBe("2026-07-22");
+    expect(catalog.reviewedAt).toBe("2026-07-23");
     expect(catalog.maps).toHaveLength(1);
     expect(catalog.maps[0]).toEqual({
       id: "tokyo-archive-4300033114-wadakura-gate-reference-display",
@@ -275,8 +275,8 @@ describe("古地図表示カタログ基盤", () => {
       priority: 70,
       sourceId: "tokyo-archive-4300033114-wadakura-gate",
       rightsReviewStatus: "approved",
-      technicalReviewStatus: "in-review",
-      publicationStatus: "shortlisted",
+      technicalReviewStatus: "approved",
+      publicationStatus: "published",
     });
     expect(catalog.maps[0]).not.toHaveProperty("parentMapId");
     const asset = JSON.parse(
@@ -292,8 +292,8 @@ describe("古地図表示カタログ基盤", () => {
       schemaVersion: 1,
       catalogStatus: "reviewed",
       mapCount: 1,
-      publishedCount: 0,
-      runtimeEligibleCount: 0,
+      publishedCount: 1,
+      runtimeEligibleCount: 1,
       runtimeConnected: false,
     });
   });

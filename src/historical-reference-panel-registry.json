@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "tokyo-archive-4300033114-wadakura-gate-reference-display",
+      "assetId": "tokyo-archive-4300033114-wadakura-gate-reference-image",
+      "sourceId": "tokyo-archive-4300033114-wadakura-gate",
+      "regionId": "edo",
+      "sourceEraId": "edo-middle",
+      "sourceDateDisplayJa": "享保2年（1717）",
+      "historicalPeriodJa": "江戸中期",
+      "titleJa": "江戸城御外郭御門絵図 第1図 和田倉御門",
+      "descriptionJa": "享保2年（1717）の和田倉御門周辺を描いた局所的な門構造図です。",
+      "altJa": "1717年の和田倉御門を描いた平面図。門、枡形、周辺構造、注記、右下の細部図が描かれている。",
+      "image": {
+        "publicPath": "/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
+        "mimeType": "image/png",
+        "width": 2450,
+        "height": 1800,
+        "bytes": 1680142,
+        "sha256": "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81"
+      },
+      "trigger": {
+        "geometry": { "type": "Polygon", "coordinates": [[[139.75995,35.6827],[139.7622,35.6827],[139.7622,35.6842],[139.75995,35.6842],[139.75995,35.6827]]] },
+        "zoom": { "minimum": 15, "maximum": 20, "enterDetailAt": 17, "leaveDetailBelow": 16.5 }
+      },
+      "priority": 70,
+      "attributionJa": "『江戸城御外郭御門絵図 第1図 和田倉御門』（東京都立中央図書館所蔵）（部分・加工）",
+      "derivativeDisclosureJa": "原画像から外側の撮影背景、資料番号札、カラーチャート、グレースケール、定規を除く保守的な切り抜きを行った。",
+      "sourceUrl": "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960",
+      "licenseCode": "Public-Domain",
+      "licenseUrl": "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2",
+      "cautionJa": "この図は1717年の局所的な門構造図であり、現代地図や江戸後期レイヤーへ位置合わせした図ではありません。現在選択できる江戸後期表示（1849–1862）とは年代が異なります。"
+    }
+  ]
+}

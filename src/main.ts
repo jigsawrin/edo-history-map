@@ -1,6 +1,9 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./style.css";
+import referenceRegistry from "./historical-reference-panel-registry.json";
+import { selectReferenceEntry, type ReferenceEntry } from "./historical-reference-panel";
+import { HistoricalReferencePanelController } from "./historical-reference-panel-controller";
 
 import {
   MIN_ZOOM,
@@ -126,6 +129,14 @@ function main(): void {
     preferCanvas: true,
   });
   map.attributionControl.setPrefix(false);
+
+  const referenceEntries = referenceRegistry.entries as unknown as readonly ReferenceEntry[];
+  const referenceController = new HistoricalReferencePanelController({
+    prompt:byId("historical-reference-prompt"), open:byId("historical-reference-open"), status:byId("historical-reference-status"), dialog:byId("historical-reference-dialog"), title:byId("historical-reference-title"), date:byId("historical-reference-date"), warning:byId("historical-reference-warning"), description:byId("historical-reference-description"), viewport:byId("historical-reference-image-viewport"), image:byId("historical-reference-image"), imageStatus:byId("historical-reference-image-status"), zoomOut:byId("historical-reference-zoom-out"), zoomIn:byId("historical-reference-zoom-in"), zoomReset:byId("historical-reference-zoom-reset"), zoomStatus:byId("historical-reference-zoom-status"), source:byId("historical-reference-source"), license:byId("historical-reference-license"), attribution:byId("historical-reference-attribution"), disclosure:byId("historical-reference-disclosure"), close:byId("historical-reference-close"),
+  });
+  let visibleReferenceId:string|null=null;
+  const updateReferencePrompt=():void=>{const center=map.getCenter();const entry=selectReferenceEntry(referenceEntries,{regionId:currentRegion.region.id,center:[center.lng,center.lat],zoom:map.getZoom(),visibleId:visibleReferenceId});visibleReferenceId=entry?.id??null;referenceController.setEntry(entry);};
+  map.on("moveend zoomend",updateReferencePrompt);
 
   const panes = createMapPanes(map);
 
@@ -1148,6 +1159,7 @@ function main(): void {
     rasterRequestId = null;
     syncAttributions(["gsi-tiles"]);
     currentRegion = pack;
+    visibleReferenceId = null;
     regionToken = loadCoordinator.begin(pack.region.id);
     historicalPointsLayer = null;
     activeHistoricalPointsDatasetId = null;
@@ -1164,6 +1176,7 @@ function main(): void {
       announceRegionChange(regionStatus, pack);
     }
     loadRegionLayers(pack);
+    updateReferencePrompt();
   }
 
   applyRegionPresentation(currentRegion);
@@ -1183,6 +1196,7 @@ function main(): void {
     curatedSelectionGeneration += 1;
     applyEra(true);
     requestHistoricalRaster();
+    updateReferencePrompt();
   });
   historyViewSelect.addEventListener("change", () => {
     machiyaVisible.checked = defaultMachiyaVisibilityForView(
@@ -1357,6 +1371,7 @@ function main(): void {
   window.addEventListener("beforeunload", () => {
     transitions.dispose();
     activeHistoricalRaster?.historical.dispose();
+    referenceController.dispose();
   }, {
     once: true,
   });
