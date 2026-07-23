@@ -445,7 +445,7 @@ function initializeGitFixture(root: string) {
 }
 
 describe("歴史参考画像台帳基盤", () => {
-  it("和田倉御門のshortlisted reference assetを読み込む", () => {
+  it("和田倉御門のpublished reference assetを読み込む", () => {
     const catalog = loadHistoricalReferenceAssetCatalog(ROOT);
     expect(catalog.schemaVersion).toBe(1);
     expect(catalog.catalogStatus).toBe("reviewed");
@@ -454,8 +454,8 @@ describe("歴史参考画像台帳基盤", () => {
       id: "tokyo-archive-4300033114-wadakura-gate-reference-image",
       sourceId: "tokyo-archive-4300033114-wadakura-gate",
       rightsReviewStatus: "approved",
-      technicalReviewStatus: "in-review",
-      publicationStatus: "shortlisted",
+      technicalReviewStatus: "approved",
+      publicationStatus: "published",
       licenseCategory: "public-domain",
       licenseUrl: "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2",
       originalFile: {
@@ -478,13 +478,14 @@ describe("歴史参考画像台帳基盤", () => {
         sha256: "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81",
         derivedPath:
           "data-derived/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
+        publicPath:
+          "/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
       },
     });
-    expect(catalog.assets[0]?.derivedFile).not.toHaveProperty("publicPath");
     const summary = summarizeHistoricalReferenceAssetCatalog(catalog);
     expect(summary).toMatchObject({
       assetCount: 1,
-      publishedCount: 0,
+      publishedCount: 1,
       approvedRightsCount: 1,
       runtimeConnected: false,
     });
@@ -1309,7 +1310,7 @@ describe("歴史参考画像台帳基盤", () => {
       id: "tokyo-archive-4300033114-wadakura-gate-reference-display",
       displayRole: "reference-only",
       displayMode: "reference-panel",
-      publicationStatus: "shortlisted",
+      publicationStatus: "published",
     });
     expect(displayMaps[0]).not.toHaveProperty("parentMapId");
     expect(

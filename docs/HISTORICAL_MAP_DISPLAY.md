@@ -1,5 +1,11 @@
 # 古地図表示カタログ
 
+## 公開中のreference panel
+
+`tokyo-archive-4300033114-wadakura-gate-reference-display`は2026-07-23にtechnical approved / publishedとなった。`displayRole=reference-only`、`displayMode=reference-panel`、`spatialBinding.kind=display-trigger-area`を維持し、trigger polygonは案内判定専用で、史料の測地範囲・史跡境界ではない。東京・江戸、中心点がpolygon内、zoom 17以上で案内し、表示後は16.5未満で解除する。`sourceEraId=edo-middle`は資料metadataであり、現代／江戸後期の選択を制限または変更しない。
+
+runtimeはprivate display catalogを配信・読込みせず、`src/historical-reference-panel-registry.json`の縮約entryを専用監査でcatalogへ照合する。現在はdisplay 1、published 1、runtime eligible 1、runtime registry 1である。
+
 ## 目的
 
 表示範囲・ズーム・資料種別に応じて、将来の古地図自動切替を安全に行うための
@@ -81,12 +87,12 @@ width/heightは正数とする。
 を要求する。`reference-panel`にはこのズーム重複条件を必須としない。
 
 `priority`は数値が大きい方を優先し、同値では`id`の昇順で決定する。
-runtime実装は今回行わない。
+runtimeは該当候補を同じ規則で決定し、一度に1件だけ案内する。
 
 ## 和田倉御門reference display
 
-`tokyo-archive-4300033114-wadakura-gate-reference-display`は、shortlistedの
-reference assetを単独の`reference-only` / `reference-panel`候補として登録する。
+`tokyo-archive-4300033114-wadakura-gate-reference-display`は、publishedの
+reference assetを単独の`reference-only` / `reference-panel`表示として登録する。
 親overlayが存在しないため、同じ画像を使った架空のoverview / regional entryは作らない。
 表示領域は`display-trigger-area`であり、`georeferenced-coverage`ではない。
 

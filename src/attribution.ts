@@ -160,6 +160,14 @@ export function renderAttribution(
     if (section.links) container.append(linkList(section.links));
   }
 
+  container.append(heading("和田倉御門 参考画像"));
+  container.append(para("『江戸城御外郭御門絵図 第1図 和田倉御門』（東京都立中央図書館所蔵）（部分・加工）。画像の使用条件はパブリックドメインです。現代地図へ位置合わせした画像ではありません。"));
+  container.append(para("原画像から外側の撮影背景、資料番号札、カラーチャート、グレースケール、定規を除く保守的な切り抜きを行いました。"));
+  container.append(linkList([
+    { text:"公式資料ページ（東京都立図書館）", href:"https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960" },
+    { text:"公式画像利用案内（東京都立図書館）", href:"https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2" },
+  ]));
+
   if (attributionIds.some((id) => id.startsWith("codh-"))) {
     container.append(heading("歴史背景について"));
     container.append(
