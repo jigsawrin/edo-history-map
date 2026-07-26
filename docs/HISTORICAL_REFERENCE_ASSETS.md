@@ -6,7 +6,7 @@
 歴史参考画像専用の安全な台帳基盤である。測地同期したoverlayラスタとは別物で、
 `reference-panel`向けの参考資料（図版・写真・図面など）を扱う。
 
-安全基盤上の和田倉御門資料1件は2026-07-23にtechnical approved / publishedへ昇格した。raw / derived画像はGit管理外のまま、同一バイトの公開PNGだけを`/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png`で追跡する（PNG、2450×1800、1680142 bytes、SHA-256 `92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81`）。
+安全基盤上には2件のassetがある。和田倉御門資料は2026-07-23にtechnical approved / publishedへ昇格した。raw / derived画像はGit管理外のまま、同一バイトの公開PNGだけを`/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png`で追跡する（PNG、2450×1800、1680142 bytes、SHA-256 `92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81`）。馬場先御門資料はtechnical in-review / shortlistedで、raw / derivedともGit管理外、display / trigger / runtime / public未接続である。
 
 ## 測地同期ラスタとの違い
 
@@ -21,11 +21,27 @@ reference assetは正確な測地範囲や位置合わせ精度を主張しな�
 ## 段階導入
 
 権利・派生画像・歴史情報保護・候補台帳／表示カタログ相互参照のゲートを先に固定した。
-現在は`catalogStatus=reviewed`、assets 1件、published 1件である。runtimeはprivate台帳をimport/fetchせず、公開UIに必要な値だけを持つ`src/historical-reference-panel-registry.json`を利用し、専用監査で正本・公開画像との一致を固定する。
+現在は`catalogStatus=reviewed`、assets 2件、published 1件、shortlisted 1件である。runtimeはprivate台帳をimport/fetchせず、公開UIに必要な値だけを持つ`src/historical-reference-panel-registry.json`を利用し、専用監査で正本・公開画像との一致を固定する。
+
+## 馬場先御門 shortlisted asset
+
+- asset ID: `tokyo-archive-4300033114-babasaki-gate-reference-image`
+- source candidate: `tokyo-archive-4300033114-babasaki-gate` / `imageUnit.id=figure-02-babasaki-gate`
+- 公式資料ページ: <https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960>
+- 公式画像利用案内: <https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2>
+- 取得方法: 公式ビューアで第2図「馬場先御門」と資料札`6194-02 (2)`を目視確認し、全画面表示下部の標準ダウンロードを使用した。高精細画像申込は使用していない
+- 実ダウンロードファイル名: `6194_02_(02).jpg`（ZIPなし）
+- canonical original: `babasaki-gate-source.jpg`、JPEG、3514×2500、211124 bytes、SHA-256 `5235617d8deb9a77cef9326a85f4e9b54bc7be9211d4179d4edf7d1ffbf12195`、EXIF orientationなし
+- crop: 回転前原画像座標 `x=500, y=270, width=2450, height=1800`、`rotationDegrees=0`
+- removedElements: `capture-background`、`ruler`、`color-chart`、`shelfmark-label`
+- crop review: 図面本体、全注記、方角表示、右下の細部図、原本余白、折り目、印・記号、台紙の縁を残し、原本外の灰色背景、資料番号札、カラーチャート、グレースケール、定規だけを除去した
+- derived: `babasaki-gate-reference.png`、PNG、2450×1800、861237 bytes、SHA-256 `5b2f4e6fa4c33022aa0ba3265b821e43226b1804d0456f12f382ed2d5d6fd36c`
+- license: Public Domain。将来表示する場合も資料名、東京都立中央図書館所蔵、部分・加工を必ず表示する
+- status: rights approved / technical in-review / publication shortlisted。`publicPath`、display、display-trigger-area、runtime registry、public PNG、測地同期、tile、control pointは登録しない
 
 ## 公開パネル
 
-東京・江戸地域で地図中心がdisplay-trigger-area内（境界を含む）にあり、zoom 17以上で案内を表示する。表示後はzoom 16.5以上で維持する。年代選択は条件にせず、1717年と江戸後期表示（1849–1862）の差をdialogで常時明示する。画像は初回openまで読み込まず、画像viewportだけをスクロールでき、100 / 150 / 200%と全体表示へ戻す操作、Esc、focus復帰、モバイル表示、読込失敗通知に対応する。control point、tile、overlay、測地範囲には使用しない。
+公開パネルは和田倉御門1件だけである。東京・江戸地域で地図中心がdisplay-trigger-area内（境界を含む）にあり、zoom 17以上で案内を表示する。表示後はzoom 16.5以上で維持する。年代選択は条件にせず、1717年と江戸後期表示（1849–1862）の差をdialogで常時明示する。画像は初回openまで読み込まず、画像viewportだけをスクロールでき、100 / 150 / 200%と全体表示へ戻す操作、Esc、focus復帰、モバイル表示、読込失敗通知に対応する。control point、tile、overlay、測地範囲には使用しない。馬場先御門はshortlistedのため、この公開パネルや案内には接続しない。
 
 ## 原画像と派生画像の分離
 
