@@ -8,6 +8,7 @@ import {
   parseKyotoBakumatsuGeoJson,
 } from "../src/kyoto-bakumatsu-places";
 import { KYOTO_SOURCE_DEFINITIONS } from "../src/kyoto-source-registry";
+import { ValidationError } from "../src/validate";
 
 interface FixtureFeature {
   type: string;
@@ -371,5 +372,32 @@ describe("京都・幕末地点fetch契約", () => {
       vi.fn().mockResolvedValue(response({ headers })),
     );
     await expect(loadKyotoBakumatsuPlaces("/")).rejects.toThrow("応答が不正");
+  });
+
+  it("取得失敗を安全なmessageで包み元例外をcauseに保持する", async () => {
+    expect.assertions(3);
+    const original = new Error("internal network detail");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(original));
+
+    try {
+      await loadKyotoBakumatsuPlaces("/");
+    } catch (error) {
+      expect(error).not.toBe(original);
+      expect(error).toMatchObject({
+        message: "京都・幕末データを取得できませんでした",
+        cause: original,
+      });
+      expect((error as Error).message).not.toContain(original.message);
+    }
+  });
+
+  it("ValidationErrorは包まず同一インスタンスを再throwする", async () => {
+    const original = new ValidationError("検証エラー");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ text: () => Promise.reject(original) })),
+    );
+
+    await expect(loadKyotoBakumatsuPlaces("/")).rejects.toBe(original);
   });
 });
