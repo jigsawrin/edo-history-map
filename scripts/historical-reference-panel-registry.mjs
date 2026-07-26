@@ -11,6 +11,32 @@ const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const exactKeys = (value, keys) => value && typeof value === "object" && equal(Object.keys(value).sort(), [...keys].sort());
 const safeText = (value) => typeof value === "string" && value.length > 0 && !value.includes("<") && !value.includes(">") && ![...value].some((character) => { const code = character.codePointAt(0); return code !== undefined && (code < 32 || code === 127); });
 const area = (ring) => Math.abs(ring.slice(0, -1).reduce((sum, point, index) => sum + point[0] * ring[index + 1][1] - ring[index + 1][0] * point[1], 0) / 2);
+const hasControlCharacter = (value) => typeof value === "string" && [...value].some((character) => { const code = character.codePointAt(0); return code !== undefined && (code < 32 || code === 127); });
+const validCanonicalUrl = (value, canonical) => {
+  if (typeof value !== "string" || value !== canonical || hasControlCharacter(value)) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.username === "" && url.password === "" && url.hostname !== "";
+  } catch {
+    return false;
+  }
+};
+const validPosition = (value) => Array.isArray(value) && value.length === 2 &&
+  value.every((coordinate) => typeof coordinate === "number" && Number.isFinite(coordinate)) &&
+  value[0] >= -180 && value[0] <= 180 && value[1] >= -90 && value[1] <= 90;
+const validRing = (ring) => Array.isArray(ring) && ring.length >= 4 && ring.every(validPosition) &&
+  equal(ring[0], ring.at(-1)) && area(ring) > 0;
+const validPolygon = (coordinates) => Array.isArray(coordinates) && coordinates.length > 0 &&
+  coordinates.every(validRing);
+const validGeometry = (geometry) => {
+  if (!exactKeys(geometry, ["type", "coordinates"])) return false;
+  if (geometry.type === "Polygon") return validPolygon(geometry.coordinates);
+  if (geometry.type === "MultiPolygon") {
+    return Array.isArray(geometry.coordinates) && geometry.coordinates.length > 0 &&
+      geometry.coordinates.every(validPolygon);
+  }
+  return false;
+};
 
 export function auditHistoricalReferencePanelRegistry(root) {
   const errors = [];
@@ -37,11 +63,6 @@ export function auditHistoricalReferencePanelRegistry(root) {
     if (!exactKeys(entry.image, IMAGE_KEYS) || !exactKeys(entry.trigger, ["geometry", "zoom"]) || !exactKeys(entry.trigger?.zoom, ZOOM_KEYS)) fail(`${entry.id}: image/trigger key不正`);
     if (!new Set(["image/png", "image/webp"]).has(entry.image?.mimeType)) fail(`${entry.id}: MIME不正`);
     if (!/^\/data\/historical-reference-assets\/[a-z0-9-]+\/[a-z0-9-]+\.(png|webp)$/u.test(entry.image?.publicPath ?? "") || /(rawPath|derivedPath|data-raw|data-derived|:\\|\.\.)/u.test(JSON.stringify(entry))) fail(`${entry.id}: private/local path不正`);
-    let sourceUrl;
-    let licenseUrl;
-    try { sourceUrl = new URL(entry.sourceUrl); licenseUrl = new URL(entry.licenseUrl); } catch { fail(`${entry.id}: URL不正`); }
-    if (sourceUrl?.href !== "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960") fail(`${entry.id}: sourceUrl不正`);
-    if (licenseUrl?.href !== "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2") fail(`${entry.id}: licenseUrl不正`);
     const display = displays.maps.find((item) => item.id === entry.id);
     const asset = assets.assets.find((item) => item.id === entry.assetId);
     const candidate = candidates.candidates.find((item) => item.candidateId === entry.sourceId);
@@ -52,14 +73,21 @@ export function auditHistoricalReferencePanelRegistry(root) {
     if (asset && [asset.publicationStatus, asset.technicalReviewStatus, asset.rightsReviewStatus].join("/") !== "published/approved/approved") fail(`${entry.id}: asset未承認`);
     if (display && (display.sourceId !== entry.sourceId || display.artifactBinding.assetId !== entry.assetId)) fail(`${entry.id}: display binding不一致`);
     if (asset?.sourceId !== entry.sourceId) fail(`${entry.id}: asset sourceId不一致`);
+    if (display && entry.regionId !== display.regionId) fail(`${entry.id}: display regionId不一致`);
+    if (candidate && entry.regionId !== candidate.regionId) fail(`${entry.id}: candidate regionId不一致`);
+    if (candidate && entry.sourceEraId !== candidate.eraId) fail(`${entry.id}: sourceEraId不一致`);
+    if (asset && entry.descriptionJa !== asset.description.ja) fail(`${entry.id}: descriptionJa不一致`);
+    if (asset && entry.licenseCode !== asset.licenseCode) fail(`${entry.id}: licenseCode不一致`);
+    if (!validCanonicalUrl(entry.sourceUrl, candidate?.exactItemUrl)) fail(`${entry.id}: sourceUrl不正`);
+    if (!validCanonicalUrl(entry.licenseUrl, asset?.licenseUrl)) fail(`${entry.id}: licenseUrl不正`);
     const expectedImage = asset && { publicPath:asset.derivedFile.publicPath, mimeType:asset.derivedFile.mimeType, width:asset.derivedFile.width, height:asset.derivedFile.height, bytes:asset.derivedFile.bytes, sha256:asset.derivedFile.sha256 };
     if (asset && !equal(entry.image, expectedImage)) fail(`${entry.id}: image metadata不一致`);
-    if (display && (!equal(entry.trigger.geometry, display.spatialBinding.geometry) || !equal(entry.trigger.zoom, display.zoom) || entry.priority !== display.priority)) fail(`${entry.id}: Polygon/zoom/priority不一致`);
+    if (display && (!equal(entry.trigger.geometry, display.spatialBinding.geometry) || !equal(entry.trigger.zoom, display.zoom) || entry.priority !== display.priority)) fail(`${entry.id}: geometry/zoom/priority不一致`);
     if (display?.name.ja !== entry.titleJa) fail(`${entry.id}: title不一致`);
     if (asset && (asset.attribution.ja !== entry.attributionJa || asset.derivativeDisclosure.ja !== entry.derivativeDisclosureJa)) fail(`${entry.id}: attribution/加工説明不一致`);
-    if (candidate && (candidate.publicationYearDisplay !== entry.sourceDateDisplayJa || candidate.historicalPeriod !== entry.historicalPeriodJa || candidate.exactItemUrl !== entry.sourceUrl || !candidate.intendedUses.includes("reference-panel"))) fail(`${entry.id}: candidate metadata不一致`);
+    if (candidate && (candidate.publicationYearDisplay !== entry.sourceDateDisplayJa || candidate.historicalPeriod !== entry.historicalPeriodJa || !candidate.intendedUses.includes("reference-panel"))) fail(`${entry.id}: candidate metadata不一致`);
     const geometry = entry.trigger?.geometry;
-    if (geometry?.type !== "Polygon" || !Array.isArray(geometry.coordinates) || geometry.coordinates.some((ring) => ring.length < 4 || !equal(ring[0], ring.at(-1)) || area(ring) === 0)) fail(`${entry.id}: Polygon不正`);
+    if (!validGeometry(geometry)) fail(`${entry.id}: geometry不正`);
     const file = join(root, `public${entry.image?.publicPath}`);
     if (!existsSync(file)) fail(`${entry.id}: public画像なし`);
     else {

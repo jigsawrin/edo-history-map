@@ -1641,9 +1641,13 @@ if (historicalReferenceAssetAudit.catalog) {
     ? readdirSync(join(ROOT, "dist"), { recursive: true })
         .map(String)
         .some(
-          (name) =>
-            name === "historical-reference-assets.json" ||
-            name.includes("test-fixture-reference-asset"),
+          (name) => {
+            const normalized = name.replace(/\\/gu, "/");
+            return (
+              normalized.split("/").at(-1) === "historical-reference-assets.json" ||
+              normalized.includes("test-fixture-reference-asset")
+            );
+          },
         )
     : false;
   if (distReferenceLeak) {
@@ -1658,7 +1662,13 @@ if (historicalReferenceAssetAudit.catalog) {
           return (
             content.includes("historical-reference-assets.json") ||
             content.includes("test-fixture-reference-asset") ||
-            content.includes("試験用参考画像")
+            content.includes("試験用参考画像") ||
+            [
+              "rawPath",
+              "derivedPath",
+              "cropReviewNote",
+              "tokyo-archive-4300033114-wadakura-gate-reference-image",
+            ].every((needle) => content.includes(needle))
           );
         })
     : false;

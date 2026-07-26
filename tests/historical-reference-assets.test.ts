@@ -1223,6 +1223,36 @@ describe("歴史参考画像台帳基盤", () => {
     expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
   });
 
+  it("build前でdist自体がない場合はstatic manifestを要求しない", () => {
+    const { root } = createCompletePublishedRoot();
+    rmSync(join(root, "dist"), { recursive: true, force: true });
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
+  it("ネストされたprivate catalogを拒否する", () => {
+    const { root } = createCompletePublishedRoot();
+    const privateCatalog = join(root, "dist", "data-curation", "historical-reference-assets.json");
+    mkdirSync(dirname(privateCatalog), { recursive: true });
+    writeFileSync(privateCatalog, "{}\n", "utf8");
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("distへ混入"))).toBe(true);
+  });
+
+  it("private asset台帳をインライン化したbundleを拒否する", () => {
+    const { root } = createCompletePublishedRoot();
+    const bundle = join(root, "dist", "assets", "index.js");
+    mkdirSync(dirname(bundle), { recursive: true });
+    writeFileSync(bundle, 'const leaked={"rawPath":"","derivedPath":"","cropReviewNote":"","id":"tokyo-archive-4300033114-wadakura-gate-reference-image"};\n', "utf8");
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("distへ混入"))).toBe(true);
+  });
+
+  it("公開用reference PNGはprivate catalogとして誤検出しない", () => {
+    const { root, fixture } = createCompletePublishedRoot();
+    const publicDistPath = join(root, "dist", "data", "historical-reference-assets", "test-fixture-reference-asset-a", "derived.png");
+    mkdirSync(dirname(publicDistPath), { recursive: true });
+    writeFileSync(publicDistPath, fixture.derivedBuffer);
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
   it("published publicPathとstatic manifest SHA不一致を拒否する", () => {
     const { root } = createCompletePublishedRoot();
     const manifestPath = join(root, "dist/places/manifest.json");

@@ -32,6 +32,8 @@ jobs:
         run: npm run build
       - name: Static place link audit
         run: npm run audit:static-links
+      - name: Historical raster candidate audit
+        run: npm run audit:historical-raster-candidates
       - name: Historical raster audit
         run: npm run audit:historical-rasters
       - name: Historical control-point catalog audit
