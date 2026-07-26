@@ -21,6 +21,8 @@ describe("historical reference panel registry audit", () => {
     for(const [path,value] of [["src/historical-reference-panel-registry.json",data.registry],["data-curation/historical-reference-assets.json",data.assets],["data-curation/historical-map-display-catalog.json",data.displays],["data-curation/historical-raster-candidates.json",data.candidates]] as const)writeFileSync(join(root,path),JSON.stringify(value));
     return auditHistoricalReferencePanelRegistry(root).errors;
   }
+  const wadakuraCandidate = (data:any) =>
+    data.candidates.candidates.find((candidate:any) => candidate.candidateId === "tokyo-archive-4300033114-wadakura-gate");
   it("accepts the published Wadakura entry and public image", () => {
     const result = auditHistoricalReferencePanelRegistry(join(__dirname, ".."));
     expect(result.errors).toEqual([]);
@@ -41,7 +43,7 @@ describe("historical reference panel registry audit", () => {
     ["assetId mismatch",(d:any)=>d.registry.entries[0].assetId="missing-asset"],
     ["entry regionId mismatch",(d:any)=>d.registry.entries[0].regionId="kyoto"],
     ["display regionId mismatch",(d:any)=>d.displays.maps[0].regionId="kyoto"],
-    ["candidate regionId mismatch",(d:any)=>d.candidates.candidates.at(-1).regionId="kyoto"],
+    ["candidate regionId mismatch",(d:any)=>wadakuraCandidate(d).regionId="kyoto"],
     ["sourceEraId mismatch",(d:any)=>d.registry.entries[0].sourceEraId="edo-late"],
     ["descriptionJa mismatch",(d:any)=>d.registry.entries[0].descriptionJa="不一致"],
     ["licenseCode mismatch",(d:any)=>d.registry.entries[0].licenseCode="CC0-1.0"],
@@ -58,9 +60,9 @@ describe("historical reference panel registry audit", () => {
     ["zoom mismatch",(d:any)=>d.registry.entries[0].trigger.zoom.enterDetailAt=18],
     ["sourceUrl mismatch",(d:any)=>d.registry.entries[0].sourceUrl="https://example.com/item"],
     ["licenseUrl mismatch",(d:any)=>d.registry.entries[0].licenseUrl="https://example.com/license"],
-    ["HTTP sourceUrl",(d:any)=>{d.registry.entries[0].sourceUrl="http://localhost/item";d.candidates.candidates.at(-1).exactItemUrl="http://localhost/item";}],
-    ["authenticated sourceUrl",(d:any)=>{d.registry.entries[0].sourceUrl="https://u:p@[::1]/item";d.candidates.candidates.at(-1).exactItemUrl="https://u:p@[::1]/item";}],
-    ["control character sourceUrl",(d:any)=>{d.registry.entries[0].sourceUrl="https://example.com/\nitem";d.candidates.candidates.at(-1).exactItemUrl="https://example.com/\nitem";}],
+    ["HTTP sourceUrl",(d:any)=>{d.registry.entries[0].sourceUrl="http://localhost/item";wadakuraCandidate(d).exactItemUrl="http://localhost/item";}],
+    ["authenticated sourceUrl",(d:any)=>{d.registry.entries[0].sourceUrl="https://u:p@[::1]/item";wadakuraCandidate(d).exactItemUrl="https://u:p@[::1]/item";}],
+    ["control character sourceUrl",(d:any)=>{d.registry.entries[0].sourceUrl="https://example.com/\nitem";wadakuraCandidate(d).exactItemUrl="https://example.com/\nitem";}],
     ["attribution mismatch",(d:any)=>d.registry.entries[0].attributionJa="不一致"],
     ["disclosure mismatch",(d:any)=>d.registry.entries[0].derivativeDisclosureJa="不一致"],
     ["private path",(d:any)=>d.registry.entries[0].rawPath="data-raw/x"],
