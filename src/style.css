@@ -563,6 +563,16 @@ dialog::backdrop {
   background: rgba(0, 0, 0, 0.5);
 }
 
+.historical-reference-prompt { position:absolute; z-index:700; left:50%; bottom:1rem; transform:translateX(-50%); max-width:min(32rem,calc(100% - 2rem)); padding:.65rem .8rem; border:1px solid #795548; border-radius:.5rem; background:#fffdf7; box-shadow:0 2px 10px #0004; text-align:center; }
+.historical-reference-prompt span { display:block; margin-top:.25rem; font-size:.82rem; }
+.historical-reference-dialog { width:min(62rem,calc(100vw - 2rem)); max-height:calc(100vh - 2rem); }
+.historical-reference-warning { padding:.75rem; border-left:.35rem solid #9b5d12; background:#fff4dc; font-weight:600; }
+.historical-reference-toolbar { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+.historical-reference-image-viewport { max-height:52vh; overflow:auto; margin-top:.75rem; background:#eee; overscroll-behavior:contain; }
+.historical-reference-image { display:block; height:auto; max-width:100%; }
+@media (max-width:600px) { .historical-reference-prompt { bottom:.5rem; } .historical-reference-dialog { width:calc(100vw - 1rem); max-height:calc(100vh - 1rem); padding:.75rem; } .historical-reference-image-viewport { max-height:42vh; } }
+@media (prefers-reduced-motion: reduce) { .historical-reference-prompt, .historical-reference-image { scroll-behavior:auto; transition:none; } }
+
 .dialog-actions {
   display: flex;
   gap: 0.5rem;

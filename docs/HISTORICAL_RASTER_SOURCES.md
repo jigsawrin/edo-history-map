@@ -4,7 +4,7 @@
 
 江戸古地図候補は`data-curation/historical-raster-candidates.json`で1資料・1画像系列ごとに管理する。2026-07-22時点で16候補・4所蔵機関を登録し、権利面approved 14、pending 1、rejected 1である。用途はoverlay専用15件、reference-panel専用1件である。候補のapprovedは商用利用を含む権利条件の適合を示し、本番公開や位置精度の承認を意味しない。
 
-reference-panel専用の和田倉御門候補は、公式JPEGを監査し、撮影補助物だけを除く保守的cropのPNGをshortlisted reference assetとして1件登録している。raw / derived画像はGit管理外で、publicPath、display map、runtime接続はない。
+reference-panel専用の和田倉御門候補は、公式JPEGを監査し、撮影補助物だけを除く保守的cropのPNGをpublished reference assetとして1件公開している。raw / derived画像はGit管理外、public PNGだけを追跡する。candidateの`intendedUses=["reference-panel"]`、測地同期・tile・control pointに使わない制約は維持し、candidate自体のtechnical/publication状態をasset/displayと同一視しない。1717年と江戸後期表示（1849–1862）の年代差、東京都立中央図書館所蔵、部分・加工、パブリックドメイン、公式資料・利用案内URLをpanelと出典dialogに示す。
 
 schema v3では`reviewStatus`を権利審査の後方互換aliasとして残し、`rightsReviewStatus`、`technicalReviewStatus`、`publicationStatus`を分離する。さらに各候補へ`intendedUses`を必須化し、`georeferenced-overlay`（現代地図へ測地同期）と`reference-panel`（測地同期しない閲覧）を固定順で列挙する。両用途なら両方を列挙し、`both`のような別値は使わない。v2入力は明示的な移行関数で既存候補をoverlay専用としてv3へ正規化する。既存候補を自動的にreference-panel対応へはしない。
 

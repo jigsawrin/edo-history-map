@@ -177,6 +177,38 @@ describe("町家領域の安全な取得", () => {
     await expect(loadMachiyaAreas()).rejects.toThrow("サイズ");
   });
 
+  it("取得失敗を安全なmessageで包み元例外をcauseに保持する", async () => {
+    expect.assertions(3);
+    const original = new Error("internal network detail");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(original));
+
+    try {
+      await loadMachiyaAreas();
+    } catch (error) {
+      expect(error).not.toBe(original);
+      expect(error).toMatchObject({
+        message: "町家領域データを読み込めませんでした",
+        cause: original,
+      });
+      expect((error as Error).message).not.toContain(original.message);
+    }
+  });
+
+  it("MachiyaValidationErrorは包まず同一インスタンスを再throwする", async () => {
+    const original = new MachiyaValidationError("検証エラー");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "application/geo+json" }),
+        body: null,
+        text: () => Promise.reject(original),
+      }),
+    );
+
+    await expect(loadMachiyaAreas()).rejects.toBe(original);
+  });
+
   it("応答がタイムアウトした場合にAbortSignalで中断する", async () => {
     vi.useFakeTimers();
     vi.stubGlobal(

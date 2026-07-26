@@ -279,7 +279,9 @@ export async function loadMachiyaAreas(
     return parseMachiyaAreasGeoJson(await responseTextWithinLimit(response));
   } catch (error) {
     if (error instanceof MachiyaValidationError) throw error;
-    throw new Error("町家領域データを読み込めませんでした");
+    throw new Error("町家領域データを読み込めませんでした", {
+      cause: error,
+    });
   } finally {
     clearTimeout(timer);
   }

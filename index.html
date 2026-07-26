@@ -379,6 +379,11 @@
         aria-label="地図。矢印キーで移動、+と-キーでズームできます。"
         aria-describedby="map-help"
       ></div>
+      <aside id="historical-reference-prompt" class="historical-reference-prompt" hidden>
+        <button id="historical-reference-open" type="button" aria-controls="historical-reference-dialog" aria-expanded="false" tabindex="-1">1717年の和田倉御門図を見る</button>
+        <span>この場所の局所的な門構造図があります</span>
+        <span id="historical-reference-status" class="visually-hidden" role="status" aria-live="polite"></span>
+      </aside>
     </div>
 
     <p id="map-help" class="visually-hidden">
@@ -424,6 +429,28 @@
       <div class="dialog-actions">
         <button type="button" id="attribution-close">閉じる</button>
       </div>
+    </dialog>
+
+    <dialog id="historical-reference-dialog" class="historical-reference-dialog" aria-labelledby="historical-reference-title">
+      <h2 id="historical-reference-title"></h2>
+      <p id="historical-reference-date" class="historical-reference-date"></p>
+      <p id="historical-reference-warning" class="historical-reference-warning" role="note"></p>
+      <p id="historical-reference-description"></p>
+      <div class="historical-reference-toolbar" role="group" aria-label="参考画像の倍率">
+        <button id="historical-reference-zoom-out" type="button" aria-label="画像を縮小">縮小</button>
+        <button id="historical-reference-zoom-in" type="button" aria-label="画像を拡大">拡大</button>
+        <button id="historical-reference-zoom-reset" type="button">全体表示へ戻す</button>
+        <output id="historical-reference-zoom-status" aria-live="polite">全体表示</output>
+      </div>
+      <div id="historical-reference-image-viewport" class="historical-reference-image-viewport" tabindex="0" aria-label="参考画像。スクロールして拡大部分を閲覧できます。">
+        <img id="historical-reference-image" decoding="async" alt="" />
+      </div>
+      <p id="historical-reference-image-status" role="status" aria-live="polite"></p>
+      <h3>出典・利用条件</h3>
+      <p id="historical-reference-attribution"></p>
+      <p id="historical-reference-disclosure"></p>
+      <ul><li><a id="historical-reference-source" target="_blank" rel="noopener noreferrer">公式資料ページ</a></li><li><a id="historical-reference-license" target="_blank" rel="noopener noreferrer">画像の使用条件: パブリックドメイン</a></li></ul>
+      <div class="dialog-actions"><button id="historical-reference-close" type="button">閉じる</button></div>
     </dialog>
 
     <dialog id="privacy-dialog" aria-labelledby="privacy-dialog-title">

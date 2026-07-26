@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogStatus": "reviewed",
-  "reviewedAt": "2026-07-22",
+  "reviewedAt": "2026-07-23",
   "maps": [
     {
       "id": "tokyo-archive-4300033114-wadakura-gate-reference-display",
@@ -61,8 +61,8 @@
       "priority": 70,
       "sourceId": "tokyo-archive-4300033114-wadakura-gate",
       "rightsReviewStatus": "approved",
-      "technicalReviewStatus": "in-review",
-      "publicationStatus": "shortlisted"
+      "technicalReviewStatus": "approved",
+      "publicationStatus": "published"
     }
   ]
 }

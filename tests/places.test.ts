@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { loadPlaces } from "../src/places";
 import { LIMITS } from "../src/config";
+import { ValidationError } from "../src/validate";
 
 function mockFetch(response: Partial<Response> | Error): void {
   if (response instanceof Error) {
@@ -47,16 +48,26 @@ describe("loadPlaces", () => {
   });
 
   it("ネットワークエラー時に内部情報を含まない安全なエラーを投げる", async () => {
-    mockFetch(new Error("ECONNREFUSED 127.0.0.1:443 C:\\secret\\path"));
-    await expect(loadPlaces("/")).rejects.toThrow(
-      "歴史データを取得できませんでした",
-    );
+    expect.assertions(4);
+    const original = new Error("ECONNREFUSED 127.0.0.1:443 C:\\secret\\path");
+    mockFetch(original);
     try {
       await loadPlaces("/");
     } catch (e) {
+      expect(e).not.toBe(original);
+      expect(e).toMatchObject({
+        message: "歴史データを取得できませんでした",
+        cause: original,
+      });
       expect(String(e)).not.toContain("C:\\");
       expect(String(e)).not.toContain("127.0.0.1");
     }
+  });
+
+  it("ValidationErrorは包まず同一インスタンスを再throwする", async () => {
+    const original = new ValidationError("検証エラー");
+    mockFetch({ text: () => Promise.reject(original) });
+    await expect(loadPlaces("/")).rejects.toBe(original);
   });
 
   it("HTTP エラー(404等)を安全に処理する", async () => {

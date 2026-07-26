@@ -196,6 +196,14 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   ) {
     fail("静的一覧manifestの件数が不正です");
   }
+  if (
+    manifest.historicalReferenceAssets?.schemaVersion !== 1 ||
+    manifest.historicalReferenceAssets?.assetCount !== 1 ||
+    manifest.historicalReferenceAssets?.files?.length !== 1 ||
+    manifest.historicalReferenceAssets.files[0]?.publicPath !== "/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png" ||
+    manifest.historicalReferenceAssets.files[0]?.sha256 !== "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81" ||
+    manifest.historicalReferenceAssets.files[0]?.bytes !== 1680142
+  ) fail("静的一覧manifestの歴史参考画像が不正です");
   const themeData = JSON.parse(
     readFileSync(join(root, "data-curation/historical-themes.json"), "utf8"),
   );

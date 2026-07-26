@@ -37,9 +37,26 @@ function injectCsp(): Plugin {
   };
 }
 
+function rejectNonPublicPreviewPaths(): Plugin {
+  const forbidden = /\/(?:data-curation|data-raw|data-derived)(?:\/|$)|\/(?:service-worker|sw)(?:\.|\/|$)|\.map(?:[?#]|$)/u;
+  return {
+    name: "reject-non-public-preview-paths",
+    configurePreviewServer(server) {
+      server.middlewares.use((request, response, next) => {
+        if (forbidden.test(request.url ?? "")) {
+          response.statusCode = 404;
+          response.end("Not Found");
+          return;
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
   base: "/edo-history-map/",
-  plugins: [injectCsp()],
+  plugins: [injectCsp(), rejectNonPublicPreviewPaths()],
   build: {
     sourcemap: false,
     target: "es2022",

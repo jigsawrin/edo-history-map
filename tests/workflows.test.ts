@@ -25,11 +25,13 @@ describe("公開ワークフローの退行防止", () => {
     const source = workflow("ci.yml");
     const build = source.indexOf("run: npm run build");
     const staticAudit = source.indexOf("run: npm run audit:static-links");
+    const candidateAudit = source.indexOf("run: npm run audit:historical-raster-candidates");
     const rasterAudit = source.indexOf("run: npm run audit:historical-rasters");
     const audit = source.indexOf("run: npm run audit:prepublish");
     expect(build).toBeGreaterThanOrEqual(0);
     expect(staticAudit).toBeGreaterThan(build);
-    expect(rasterAudit).toBeGreaterThan(staticAudit);
+    expect(candidateAudit).toBeGreaterThan(staticAudit);
+    expect(rasterAudit).toBeGreaterThan(candidateAudit);
     expect(audit).toBeGreaterThan(rasterAudit);
   });
 

@@ -28,7 +28,9 @@ export async function loadPlaces(
     return parsePlacesGeoJson(text);
   } catch (e) {
     if (e instanceof ValidationError) throw e;
-    throw new Error("歴史データを取得できませんでした");
+    throw new Error("歴史データを取得できませんでした", {
+      cause: e,
+    });
   } finally {
     clearTimeout(timer);
   }

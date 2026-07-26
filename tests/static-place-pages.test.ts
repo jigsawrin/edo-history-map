@@ -22,6 +22,15 @@ import { generateStaticThemeFiles } from "../scripts/build-static-theme-pages.mj
 import { generateStaticTimelineFiles } from "../scripts/build-static-timeline-pages.mjs";
 
 const ROOT = join(__dirname, "..");
+const HISTORICAL_REFERENCE_ASSETS = {
+  schemaVersion: 1,
+  assetCount: 1,
+  files: [{
+    publicPath: "/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
+    sha256: "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81",
+    bytes: 1680142,
+  }],
+} as const;
 let generated: StaticPlaceGeneration;
 let temporaryDist = "";
 
@@ -43,6 +52,7 @@ beforeAll(() => {
     shigaPresentation: JSON.parse(readFileSync(join(ROOT, "src/shiga-place-presentation.json"), "utf8")) as Record<string, unknown>,
     css: readFileSync(join(ROOT, "src/static-places.css"), "utf8"),
     inputSha256: EXPECTED_DATA_SHA256,
+    historicalReferenceAssets: HISTORICAL_REFERENCE_ASSETS,
   });
 }, 30_000);
 
@@ -209,6 +219,7 @@ describe("静的地点一覧生成", () => {
       shigaPresentation: JSON.parse(readFileSync(join(ROOT, "src/shiga-place-presentation.json"), "utf8")) as Record<string, unknown>,
       css: readFileSync(join(ROOT, "src/static-places.css"), "utf8"),
       inputSha256: EXPECTED_DATA_SHA256,
+      historicalReferenceAssets: HISTORICAL_REFERENCE_ASSETS,
     });
     expect(second.files.get("manifest.json")).toBe(generated.files.get("manifest.json"));
     expect(second.files.get("edo/page-44.html")).toBe(generated.files.get("edo/page-44.html"));
