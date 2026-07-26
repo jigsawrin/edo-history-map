@@ -12,7 +12,9 @@ schema v3では`reviewStatus`を権利審査の後方互換aliasとして残し�
 
 ### 同一資料内の画像単位
 
-1つの帖・冊子・公式資料ページに複数画像がある場合、`exactItemUrl`だけでは個別図を識別できない。その場合は任意objectの`imageUnit`（安定slugの`id`、公式資料内の`ordinal`、公式に確認できる`labelJa`）で画像単位を明示する。同じ`exactItemUrl`を共有する候補では全件に`imageUnit`と同一の`titleFamilyId`を要求し、provider、holding institution、series、publication year、historical periodも一致させる。識別には`exactItemUrl + "#" + imageUnit.id`を使い、単一画像資料は`exactItemUrl + "#whole-item"`とする。URLへ人工的なqueryやfragmentを足す水増しは行わない。
+1つの帖・冊子・公式資料ページに複数画像がある場合、`exactItemUrl`だけでは個別図を識別できない。その場合は任意objectの`imageUnit`（安定slugの`id`、公式資料内の`ordinal`、公式に確認できる`labelJa`）で画像単位を明示する。共有判定にはraw文字列ではなく、hostnameの大小文字、default HTTPS port、query順を正規化したcanonical URL keyを使う。同じcanonical keyを共有する候補では全件に`imageUnit`と同一の`titleFamilyId`を要求し、provider、holding institution、series、publication year、historical periodも一致させる。source image-unit keyは`canonical exactItemUrl + "#" + imageUnit.id`、単一画像資料は`canonical exactItemUrl + "#whole-item"`とする。台帳内のURL文字列自体は書き換えない。
+
+`exactItemUrl`にはfragment、認証情報、前後空白、制御文字を許可しない。query parameterを人工的に追加して別資料扱いにすることも認めない。特にTOKYOアーカイブの`archive.library.metro.tokyo.lg.jp/da/detail`は、公式資料識別子である空でない`tilcod`をちょうど1件だけ許可し、ほかのquery keyや重複を拒否する。同一公式資料内の別図はURL変更の代替として`imageUnit`で区別する。
 
 `imageUnit`は既存の単一画像候補には不要な後方互換フィールドであり、既存recordやv1/v2移行を無効にしないためschemaVersionは3のまま維持する。第1図和田倉御門と第2図馬場先御門は[同じ東京都立図書館公式資料ページ](https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960)に収録される別candidate・別画像単位である。両方ともreference-panel専用で、`georeferencingAllowed`と`tilingAllowed`は`null`とする。[公式画像利用案内](https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2)では帰属等は義務ではないお願いとされるが、本プロジェクトでは資料名・東京都立中央図書館所蔵・部分／加工を必ず表示する。
 

@@ -194,6 +194,60 @@ describe("古地図候補台帳", () => {
     expect(new Set(family.map((candidate) => (candidate.imageUnit as { id: string }).id)).size).toBe(2);
   });
 
+  it("大文字hostname・default HTTPS portをcanonicalizeして同一URLとして共有判定する", () => {
+    const accepted = clone();
+    findCandidate(accepted, BABASAKI_ID).exactItemUrl =
+      "https://ARCHIVE.LIBRARY.METRO.TOKYO.LG.JP:443/da/detail?tilcod=0000000002-00006960";
+    const registry = validateHistoricalRasterCandidateRegistry(accepted);
+    expect(registry.candidates.find((candidate) => candidate.candidateId === BABASAKI_ID)?.exactItemUrl)
+      .toBe("https://ARCHIVE.LIBRARY.METRO.TOKYO.LG.JP:443/da/detail?tilcod=0000000002-00006960");
+
+    const missingImageUnit = clone();
+    findCandidate(missingImageUnit, BABASAKI_ID).exactItemUrl =
+      "https://ARCHIVE.LIBRARY.METRO.TOKYO.LG.JP:443/da/detail?tilcod=0000000002-00006960";
+    delete findCandidate(missingImageUnit, BABASAKI_ID).imageUnit;
+    expect(() => validateHistoricalRasterCandidateRegistry(missingImageUnit)).toThrow(/全候補にimageUnit/u);
+  });
+
+  it("query parameter順をcanonicalizeして共有判定する", () => {
+    const data = clone();
+    const left = candidateRecords(data)[0]!;
+    const right = candidateRecords(data)[1]!;
+    left.exactItemUrl = "https://example.com/item?b=2&a=1";
+    right.exactItemUrl = "https://EXAMPLE.COM:443/item?a=1&b=2";
+    left.imageUnit = { id: "sheet-01", ordinal: 1, labelJa: "第1図" };
+    right.imageUnit = { id: "sheet-02", ordinal: 2, labelJa: "第2図" };
+    for (const field of ["titleFamilyId", "provider", "holdingInstitution", "series", "publicationYearDisplay", "historicalPeriod"]) {
+      left[field] = right[field] = field === "titleFamilyId" ? "canonical-query-order" : left[field];
+    }
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).not.toThrow();
+  });
+
+  it.each([
+    ["fragment", "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960#figure-02"],
+    ["追加query（後置）", "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960&fake=2"],
+    ["追加query（前置）", "https://archive.library.metro.tokyo.lg.jp/da/detail?fake=2&tilcod=0000000002-00006960"],
+    ["tilcod重複", "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960&tilcod=0000000002-00006960"],
+    ["tilcod欠落", "https://archive.library.metro.tokyo.lg.jp/da/detail"],
+    ["空tilcod", "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod="],
+    ["認証情報", "https://user:password@localhost/da/detail?tilcod=0000000002-00006960"],
+  ])("TOKYOアーカイブdetail URLの%sを拒否する", (_label, exactItemUrl) => {
+    const data = clone();
+    findCandidate(data, BABASAKI_ID).exactItemUrl = exactItemUrl;
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).toThrow(/exactItemUrl/u);
+  });
+
+  it.each([
+    ["先頭空白", " https://example.com/item"],
+    ["末尾空白", "https://example.com/item "],
+    ["C0制御文字", "https://example.com/\u001fitem"],
+    ["C1制御文字", "https://example.com/\u0085item"],
+  ])("exactItemUrlの%sを拒否する", (_label, exactItemUrl) => {
+    const data = clone();
+    candidateRecords(data)[0]!.exactItemUrl = exactItemUrl;
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).toThrow(/exactItemUrl/u);
+  });
+
   it("共有exactItemUrlの片方だけimageUnitなしを拒否する", () => {
     const data = clone();
     delete findCandidate(data, WADAKURA_ID).imageUnit;
@@ -203,6 +257,15 @@ describe("古地図候補台帳", () => {
   it("共有exactItemUrlのimageUnit.id重複とsource image-unit key重複を拒否する", () => {
     const data = clone();
     findCandidate(data, BABASAKI_ID).imageUnit = structuredClone(findCandidate(data, WADAKURA_ID).imageUnit);
+    expect(() => validateHistoricalRasterCandidateRegistry(data)).toThrow(/source image-unit key/u);
+  });
+
+  it("canonical化後に同一source image-unit keyとなるcandidateを拒否する", () => {
+    const data = clone();
+    const babasaki = findCandidate(data, BABASAKI_ID);
+    babasaki.exactItemUrl =
+      "https://ARCHIVE.LIBRARY.METRO.TOKYO.LG.JP:443/da/detail?tilcod=0000000002-00006960";
+    babasaki.imageUnit = structuredClone(findCandidate(data, WADAKURA_ID).imageUnit);
     expect(() => validateHistoricalRasterCandidateRegistry(data)).toThrow(/source image-unit key/u);
   });
 
@@ -238,7 +301,10 @@ describe("古地図候補台帳", () => {
     ["ordinal 1000", { id: "figure-02", ordinal: 1000, labelJa: "第2図" }, /imageUnit\.ordinal/u],
     ["空labelJa", { id: "figure-02", ordinal: 2, labelJa: "  " }, /imageUnit\.labelJa/u],
     ["制御文字labelJa", { id: "figure-02", ordinal: 2, labelJa: "第2図\u0000" }, /imageUnit\.labelJa/u],
+    ["C1制御文字labelJa", { id: "figure-02", ordinal: 2, labelJa: "第2図\u0085馬場先御門" }, /imageUnit\.labelJa/u],
     ["HTML labelJa", { id: "figure-02", ordinal: 2, labelJa: "<b>第2図</b>" }, /imageUnit\.labelJa/u],
+    ["HTML comment labelJa", { id: "figure-02", ordinal: 2, labelJa: "<!-- comment -->" }, /imageUnit\.labelJa/u],
+    ["不完全HTML labelJa", { id: "figure-02", ordinal: 2, labelJa: "<svg/onload=alert(1)>" }, /imageUnit\.labelJa/u],
     ["過長labelJa", { id: "figure-02", ordinal: 2, labelJa: "図".repeat(121) }, /imageUnit\.labelJa/u],
     ["extra key", { id: "figure-02", ordinal: 2, labelJa: "第2図", fileName: "guess.jpg" }, /未定義キー/u],
   ])("imageUnitの%sを拒否する", (_label, imageUnit, error) => {

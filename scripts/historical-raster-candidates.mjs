@@ -20,7 +20,8 @@ const REASON_CODES = new Set([
   "public-domain-open-data",
 ]);
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
-const HTML_PATTERN = /<\/?[a-z][^>]*>/iu;
+const TOKYO_ARCHIVE_HOST = "archive.library.metro.tokyo.lg.jp";
+const TOKYO_ARCHIVE_DETAIL_PATH = "/da/detail";
 const TEXT_FIELDS = [
   "candidateId",
   "titleJa",
@@ -80,7 +81,7 @@ function assert(condition, message) {
 function hasControlCharacter(value) {
   return [...value].some((character) => {
     const codePoint = character.codePointAt(0);
-    return codePoint <= 0x1f || codePoint === 0x7f;
+    return codePoint <= 0x1f || codePoint >= 0x7f && codePoint <= 0x9f;
   });
 }
 
@@ -94,6 +95,45 @@ function assertHttps(value, label, { nullable = false } = {}) {
     throw new Error(`${label}はHTTPS URLである必要があります`);
   }
   assert(parsed.protocol === "https:" && !parsed.username && !parsed.password, `${label}は認証情報なしのHTTPS URLである必要があります`);
+}
+
+function canonicalItemUrlKey(value, label) {
+  assert(
+    typeof value === "string" &&
+      value === value.trim() &&
+      !hasControlCharacter(value),
+    `${label}は前後空白・制御文字なしのHTTPS URLである必要があります`,
+  );
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error(`${label}はHTTPS URLである必要があります`);
+  }
+  assert(
+    parsed.protocol === "https:" && !parsed.username && !parsed.password,
+    `${label}は認証情報なしのHTTPS URLである必要があります`,
+  );
+  assert(!value.includes("#"), `${label}にfragmentは使用できません`);
+
+  if (parsed.hostname === TOKYO_ARCHIVE_HOST && parsed.pathname === TOKYO_ARCHIVE_DETAIL_PATH) {
+    const queryEntries = [...parsed.searchParams.entries()];
+    assert(
+      queryEntries.length === 1 &&
+        queryEntries[0][0] === "tilcod" &&
+        queryEntries[0][1].trim().length > 0,
+      `${label}のTOKYOアーカイブdetail URLは空でないtilcodを1件だけ指定する必要があります`,
+    );
+  }
+
+  const sortedQueryEntries = [...parsed.searchParams.entries()].sort(([leftKey, leftValue], [rightKey, rightValue]) => {
+    const keyOrder = leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+    if (keyOrder !== 0) return keyOrder;
+    return leftValue < rightValue ? -1 : leftValue > rightValue ? 1 : 0;
+  });
+  parsed.search = "";
+  for (const [key, entryValue] of sortedQueryEntries) parsed.searchParams.append(key, entryValue);
+  return parsed.href;
 }
 
 function migrateCandidateV1(candidate) {
@@ -116,7 +156,8 @@ function validateImageUnit(imageUnit, label) {
       imageUnit.labelJa.trim().length > 0 &&
       imageUnit.labelJa.length <= IMAGE_UNIT_LABEL_MAX_LENGTH &&
       !hasControlCharacter(imageUnit.labelJa) &&
-      !HTML_PATTERN.test(imageUnit.labelJa),
+      !imageUnit.labelJa.includes("<") &&
+      !imageUnit.labelJa.includes(">"),
     `${label}.imageUnit.labelJaが不正です`,
   );
   return Object.freeze({
@@ -126,8 +167,12 @@ function validateImageUnit(imageUnit, label) {
   });
 }
 
+function candidateItemUrlKey(candidate) {
+  return canonicalItemUrlKey(candidate.exactItemUrl, `${candidate.candidateId}.exactItemUrl`);
+}
+
 function sourceImageUnitKey(candidate) {
-  return `${candidate.exactItemUrl}#${candidate.imageUnit?.id ?? "whole-item"}`;
+  return `${candidateItemUrlKey(candidate)}#${candidate.imageUnit?.id ?? "whole-item"}`;
 }
 
 export function migrateHistoricalRasterCandidateRegistryV1(value) {
@@ -156,7 +201,7 @@ function validateCandidate(candidate, index) {
   if (candidate.titleFamilyId !== undefined) assert(typeof candidate.titleFamilyId === "string" && ID_PATTERN.test(candidate.titleFamilyId), `${label}.titleFamilyIdが不正です`);
   const imageUnit = validateImageUnit(candidate.imageUnit, label);
   for (const field of ["series", "sheetNumber", "attributionRecommendedTextJa"]) assert(candidate[field] === null || typeof candidate[field] === "string" && candidate[field].trim().length > 0, `${label}.${field}が不正です`);
-  assertHttps(candidate.exactItemUrl, `${label}.exactItemUrl`);
+  canonicalItemUrlKey(candidate.exactItemUrl, `${label}.exactItemUrl`);
   assertHttps(candidate.exactImageUrl, `${label}.exactImageUrl`, { nullable: true });
   assertHttps(candidate.exactViewerUrl, `${label}.exactViewerUrl`, { nullable: true });
   assert(Array.isArray(candidate.rightsEvidenceUrls) && candidate.rightsEvidenceUrls.length > 0, `${label}.rightsEvidenceUrlsがありません`);
@@ -215,15 +260,15 @@ export function validateHistoricalRasterCandidateRegistry(value) {
   assert(new Set(ids).size === ids.length, "candidateIdが重複しています");
   const sourceImageUnitKeys = candidates.map(sourceImageUnitKey);
   assert(new Set(sourceImageUnitKeys).size === sourceImageUnitKeys.length, "source image-unit keyが重複しています。同一図を別候補として水増しできません");
-  const candidatesByItemUrl = Map.groupBy(candidates, (candidate) => candidate.exactItemUrl);
-  for (const [exactItemUrl, group] of candidatesByItemUrl) {
+  const candidatesByItemUrl = Map.groupBy(candidates, candidateItemUrlKey);
+  for (const [canonicalExactItemUrl, group] of candidatesByItemUrl) {
     if (group.length === 1) continue;
-    assert(group.every((candidate) => candidate.imageUnit !== undefined), `${exactItemUrl}: 共有exactItemUrlの全候補にimageUnitが必要です`);
-    assert(new Set(group.map((candidate) => candidate.imageUnit.id)).size === group.length, `${exactItemUrl}: imageUnit.idが重複しています`);
-    assert(new Set(group.map((candidate) => candidate.imageUnit.ordinal)).size === group.length, `${exactItemUrl}: imageUnit.ordinalが重複しています`);
-    assert(group.every((candidate) => candidate.titleFamilyId !== undefined), `${exactItemUrl}: 共有exactItemUrlにはtitleFamilyIdが必要です`);
+    assert(group.every((candidate) => candidate.imageUnit !== undefined), `${canonicalExactItemUrl}: 共有exactItemUrlの全候補にimageUnitが必要です`);
+    assert(new Set(group.map((candidate) => candidate.imageUnit.id)).size === group.length, `${canonicalExactItemUrl}: imageUnit.idが重複しています`);
+    assert(new Set(group.map((candidate) => candidate.imageUnit.ordinal)).size === group.length, `${canonicalExactItemUrl}: imageUnit.ordinalが重複しています`);
+    assert(group.every((candidate) => candidate.titleFamilyId !== undefined), `${canonicalExactItemUrl}: 共有exactItemUrlにはtitleFamilyIdが必要です`);
     for (const field of ["titleFamilyId", "provider", "holdingInstitution", "series", "publicationYearDisplay", "historicalPeriod"]) {
-      assert(new Set(group.map((candidate) => candidate[field])).size === 1, `${exactItemUrl}: 共有exactItemUrlの${field}が一致しません`);
+      assert(new Set(group.map((candidate) => candidate[field])).size === 1, `${canonicalExactItemUrl}: 共有exactItemUrlの${field}が一致しません`);
     }
   }
   assert(new Set(candidates.map((candidate) => candidate.holdingInstitution)).size >= 3, "3機関以上の調査が必要です");
