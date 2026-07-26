@@ -7,6 +7,8 @@ const TECHNICAL_STATUS = new Set(["not-started", "in-review", "approved", "rejec
 const PUBLICATION_STATUS = new Set(["candidate", "shortlisted", "published"]);
 const SUITABILITY = new Set(["high", "medium", "low"]);
 const COVERAGE = new Set(["narrow", "medium", "broad"]);
+const IMAGE_UNIT_KEYS = new Set(["id", "ordinal", "labelJa"]);
+const IMAGE_UNIT_LABEL_MAX_LENGTH = 120;
 export const HISTORICAL_SOURCE_INTENDED_USES = Object.freeze([
   "georeferenced-overlay",
   "reference-panel",
@@ -18,6 +20,8 @@ const REASON_CODES = new Set([
   "public-domain-open-data",
 ]);
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+const TOKYO_ARCHIVE_HOST = "archive.library.metro.tokyo.lg.jp";
+const TOKYO_ARCHIVE_DETAIL_PATH = "/da/detail";
 const TEXT_FIELDS = [
   "candidateId",
   "titleJa",
@@ -61,7 +65,7 @@ const OVERLAY_APPROVAL_FIELDS = [
   "tilingAllowed",
 ];
 const CANDIDATE_KEYS = new Set([
-  ...TEXT_FIELDS, "titleFamilyId", "series", "sheetNumber", "attributionRecommendedTextJa",
+  ...TEXT_FIELDS, "titleFamilyId", "imageUnit", "series", "sheetNumber", "attributionRecommendedTextJa",
   "exactItemUrl", "exactImageUrl", "exactViewerUrl", "rightsEvidenceUrls", "intendedUses",
   ...BOOLEAN_FIELDS, ...BOOLEAN_OR_NULL_FIELDS, "reviewStatus", "rightsReviewStatus",
   "technicalReviewStatus", "publicationStatus", "technicalReviewReasonJa", "technicalSuitability",
@@ -72,6 +76,13 @@ const REGISTRY_KEYS = new Set(["schemaVersion", "reviewedAt", "commercialContext
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function hasControlCharacter(value) {
+  return [...value].some((character) => {
+    const codePoint = character.codePointAt(0);
+    return codePoint <= 0x1f || codePoint >= 0x7f && codePoint <= 0x9f;
+  });
 }
 
 function assertHttps(value, label, { nullable = false } = {}) {
@@ -86,6 +97,45 @@ function assertHttps(value, label, { nullable = false } = {}) {
   assert(parsed.protocol === "https:" && !parsed.username && !parsed.password, `${label}は認証情報なしのHTTPS URLである必要があります`);
 }
 
+function canonicalItemUrlKey(value, label) {
+  assert(
+    typeof value === "string" &&
+      value === value.trim() &&
+      !hasControlCharacter(value),
+    `${label}は前後空白・制御文字なしのHTTPS URLである必要があります`,
+  );
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error(`${label}はHTTPS URLである必要があります`);
+  }
+  assert(
+    parsed.protocol === "https:" && !parsed.username && !parsed.password,
+    `${label}は認証情報なしのHTTPS URLである必要があります`,
+  );
+  assert(!value.includes("#"), `${label}にfragmentは使用できません`);
+
+  if (parsed.hostname === TOKYO_ARCHIVE_HOST && parsed.pathname === TOKYO_ARCHIVE_DETAIL_PATH) {
+    const queryEntries = [...parsed.searchParams.entries()];
+    assert(
+      queryEntries.length === 1 &&
+        queryEntries[0][0] === "tilcod" &&
+        queryEntries[0][1].trim().length > 0,
+      `${label}のTOKYOアーカイブdetail URLは空でないtilcodを1件だけ指定する必要があります`,
+    );
+  }
+
+  const sortedQueryEntries = [...parsed.searchParams.entries()].sort(([leftKey, leftValue], [rightKey, rightValue]) => {
+    const keyOrder = leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+    if (keyOrder !== 0) return keyOrder;
+    return leftValue < rightValue ? -1 : leftValue > rightValue ? 1 : 0;
+  });
+  parsed.search = "";
+  for (const [key, entryValue] of sortedQueryEntries) parsed.searchParams.append(key, entryValue);
+  return parsed.href;
+}
+
 function migrateCandidateV1(candidate) {
   return {
     ...candidate,
@@ -93,6 +143,36 @@ function migrateCandidateV1(candidate) {
     technicalReviewStatus: "not-started",
     publicationStatus: "candidate",
   };
+}
+
+function validateImageUnit(imageUnit, label) {
+  if (imageUnit === undefined) return undefined;
+  assert(imageUnit && typeof imageUnit === "object" && !Array.isArray(imageUnit), `${label}.imageUnitはobjectである必要があります`);
+  for (const key of Object.keys(imageUnit)) assert(IMAGE_UNIT_KEYS.has(key), `${label}.imageUnit.${key}は未定義キーです`);
+  assert(typeof imageUnit.id === "string" && ID_PATTERN.test(imageUnit.id), `${label}.imageUnit.idが不正です`);
+  assert(Number.isInteger(imageUnit.ordinal) && imageUnit.ordinal >= 1 && imageUnit.ordinal <= 999, `${label}.imageUnit.ordinalが不正です`);
+  assert(
+    typeof imageUnit.labelJa === "string" &&
+      imageUnit.labelJa.trim().length > 0 &&
+      imageUnit.labelJa.length <= IMAGE_UNIT_LABEL_MAX_LENGTH &&
+      !hasControlCharacter(imageUnit.labelJa) &&
+      !imageUnit.labelJa.includes("<") &&
+      !imageUnit.labelJa.includes(">"),
+    `${label}.imageUnit.labelJaが不正です`,
+  );
+  return Object.freeze({
+    id: imageUnit.id,
+    ordinal: imageUnit.ordinal,
+    labelJa: imageUnit.labelJa,
+  });
+}
+
+function candidateItemUrlKey(candidate) {
+  return canonicalItemUrlKey(candidate.exactItemUrl, `${candidate.candidateId}.exactItemUrl`);
+}
+
+function sourceImageUnitKey(candidate) {
+  return `${candidateItemUrlKey(candidate)}#${candidate.imageUnit?.id ?? "whole-item"}`;
 }
 
 export function migrateHistoricalRasterCandidateRegistryV1(value) {
@@ -119,8 +199,9 @@ function validateCandidate(candidate, index) {
   for (const field of TEXT_FIELDS) assert(typeof candidate[field] === "string" && candidate[field].trim().length > 0, `${label}.${field}がありません`);
   assert(ID_PATTERN.test(candidate.candidateId), `${label}.candidateIdが不正です`);
   if (candidate.titleFamilyId !== undefined) assert(typeof candidate.titleFamilyId === "string" && ID_PATTERN.test(candidate.titleFamilyId), `${label}.titleFamilyIdが不正です`);
+  const imageUnit = validateImageUnit(candidate.imageUnit, label);
   for (const field of ["series", "sheetNumber", "attributionRecommendedTextJa"]) assert(candidate[field] === null || typeof candidate[field] === "string" && candidate[field].trim().length > 0, `${label}.${field}が不正です`);
-  assertHttps(candidate.exactItemUrl, `${label}.exactItemUrl`);
+  canonicalItemUrlKey(candidate.exactItemUrl, `${label}.exactItemUrl`);
   assertHttps(candidate.exactImageUrl, `${label}.exactImageUrl`, { nullable: true });
   assertHttps(candidate.exactViewerUrl, `${label}.exactViewerUrl`, { nullable: true });
   assert(Array.isArray(candidate.rightsEvidenceUrls) && candidate.rightsEvidenceUrls.length > 0, `${label}.rightsEvidenceUrlsがありません`);
@@ -158,7 +239,12 @@ function validateCandidate(candidate, index) {
     assert(candidate.rightsReviewStatus === "approved" && candidate.technicalReviewStatus === "approved", `${candidate.candidateId}: publishedには権利と技術の両approvedが必要です`);
   }
   if (candidate.technicalReviewStatus === "approved") assert(candidate.rightsReviewStatus === "approved", `${candidate.candidateId}: 技術approvedだけでは公開できません`);
-  return Object.freeze({ ...candidate, intendedUses: Object.freeze([...candidate.intendedUses]), rightsEvidenceUrls: Object.freeze([...candidate.rightsEvidenceUrls]) });
+  return Object.freeze({
+    ...candidate,
+    ...(imageUnit === undefined ? {} : { imageUnit }),
+    intendedUses: Object.freeze([...candidate.intendedUses]),
+    rightsEvidenceUrls: Object.freeze([...candidate.rightsEvidenceUrls]),
+  });
 }
 
 export function validateHistoricalRasterCandidateRegistry(value) {
@@ -172,13 +258,24 @@ export function validateHistoricalRasterCandidateRegistry(value) {
   const candidates = value.candidates.map(validateCandidate);
   const ids = candidates.map((candidate) => candidate.candidateId);
   assert(new Set(ids).size === ids.length, "candidateIdが重複しています");
-  const itemUrls = candidates.map((candidate) => candidate.exactItemUrl);
-  assert(new Set(itemUrls).size === itemUrls.length, "exactItemUrlが重複しています。同一資料を別候補として水増しできません");
+  const sourceImageUnitKeys = candidates.map(sourceImageUnitKey);
+  assert(new Set(sourceImageUnitKeys).size === sourceImageUnitKeys.length, "source image-unit keyが重複しています。同一図を別候補として水増しできません");
+  const candidatesByItemUrl = Map.groupBy(candidates, candidateItemUrlKey);
+  for (const [canonicalExactItemUrl, group] of candidatesByItemUrl) {
+    if (group.length === 1) continue;
+    assert(group.every((candidate) => candidate.imageUnit !== undefined), `${canonicalExactItemUrl}: 共有exactItemUrlの全候補にimageUnitが必要です`);
+    assert(new Set(group.map((candidate) => candidate.imageUnit.id)).size === group.length, `${canonicalExactItemUrl}: imageUnit.idが重複しています`);
+    assert(new Set(group.map((candidate) => candidate.imageUnit.ordinal)).size === group.length, `${canonicalExactItemUrl}: imageUnit.ordinalが重複しています`);
+    assert(group.every((candidate) => candidate.titleFamilyId !== undefined), `${canonicalExactItemUrl}: 共有exactItemUrlにはtitleFamilyIdが必要です`);
+    for (const field of ["titleFamilyId", "provider", "holdingInstitution", "series", "publicationYearDisplay", "historicalPeriod"]) {
+      assert(new Set(group.map((candidate) => candidate[field])).size === 1, `${canonicalExactItemUrl}: 共有exactItemUrlの${field}が一致しません`);
+    }
+  }
   assert(new Set(candidates.map((candidate) => candidate.holdingInstitution)).size >= 3, "3機関以上の調査が必要です");
   for (const familyId of new Set(candidates.map((candidate) => candidate.titleFamilyId).filter(Boolean))) {
     const family = candidates.filter((candidate) => candidate.titleFamilyId === familyId);
     assert(new Set(family.map((candidate) => candidate.candidateId)).size === family.length, `${familyId}: 同題資料のcandidateIdが分離されていません`);
-    assert(new Set(family.map((candidate) => candidate.exactItemUrl)).size === family.length, `${familyId}: 同題資料の個別URLが分離されていません`);
+    assert(new Set(family.map(sourceImageUnitKey)).size === family.length, `${familyId}: 同題資料のsource image-unit keyが分離されていません`);
   }
   return Object.freeze({
     schemaVersion: 3,

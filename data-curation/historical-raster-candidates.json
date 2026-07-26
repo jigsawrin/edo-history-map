@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "reviewedAt": "2026-07-22",
+  "reviewedAt": "2026-07-26",
   "commercialContextJa": "一般公開ブログでの広告表示・寄付募集を含む利用を想定し、NCまたは商用・再配布・加工条件が不明な画像は本番候補にしない。",
   "candidates": [
     {
@@ -736,6 +736,11 @@
       "candidateId": "tokyo-archive-4300033114-wadakura-gate",
       "intendedUses": ["reference-panel"],
       "titleFamilyId": "edo-castle-outer-gates",
+      "imageUnit": {
+        "id": "figure-01-wadakura-gate",
+        "ordinal": 1,
+        "labelJa": "第1図 和田倉御門"
+      },
       "titleJa": "江戸城御外郭御門絵図 第1図 和田倉御門",
       "titleOriginal": "江戸城御外郭御門絵図 全（題簽） 第1図 和田倉御門",
       "provider": "東京都立図書館デジタルアーカイブ TOKYOアーカイブ",
@@ -783,6 +788,63 @@
       "expectedTileSizeRisk": "low",
       "priorityScore": 70,
       "notesJa": "TOKYOアーカイブ識別子0000000002-00006960。門構造を読むreference-panel専用候補であり、現代地図との測地同期、同一点対応、位置合わせ、タイル化、runtime公開は未評価・対象外。画像・派生物は未登録。"
+    },
+    {
+      "candidateId": "tokyo-archive-4300033114-babasaki-gate",
+      "intendedUses": ["reference-panel"],
+      "titleFamilyId": "edo-castle-outer-gates",
+      "imageUnit": {
+        "id": "figure-02-babasaki-gate",
+        "ordinal": 2,
+        "labelJa": "第2図 馬場先御門"
+      },
+      "titleJa": "江戸城御外郭御門絵図 第2図 馬場先御門",
+      "titleOriginal": "江戸城御外郭御門絵図 全（題簽） 第2図 馬場先御門",
+      "provider": "東京都立図書館デジタルアーカイブ TOKYOアーカイブ",
+      "holdingInstitution": "東京都立中央図書館",
+      "series": "江戸城御外郭御門絵図（26図）",
+      "sheetNumber": "第2図 / 請求記号6194-2・東6194-002 / 資料コード4300033114",
+      "publicationYearDisplay": "享保2年（1717）",
+      "historicalPeriod": "江戸中期",
+      "regionId": "edo",
+      "eraId": "edo-middle",
+      "approximateCoverageJa": "馬場先御門の門構造（正確な測地範囲は未確定）",
+      "likelyModernCoverageJa": "馬場先門跡・馬場先門橋周辺とされるが、図面の正確な現代対応範囲は未確定",
+      "exactItemUrl": "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960",
+      "exactImageUrl": null,
+      "exactViewerUrl": "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960",
+      "rightsEvidenceUrls": [
+        "https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960",
+        "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2"
+      ],
+      "directDownloadAvailable": true,
+      "iiifAvailable": false,
+      "commercialUseCompatible": true,
+      "redistributionAllowed": true,
+      "modificationAllowed": true,
+      "croppingAllowed": true,
+      "georeferencingAllowed": null,
+      "tilingAllowed": null,
+      "attributionRequired": false,
+      "attributionRecommendedTextJa": "『江戸城御外郭御門絵図 第2図 馬場先御門』（東京都立中央図書館所蔵）（部分・加工）",
+      "loginRequired": false,
+      "paywallRequired": false,
+      "reviewStatus": "approved",
+      "rightsReviewStatus": "approved",
+      "technicalReviewStatus": "not-started",
+      "publicationStatus": "candidate",
+      "reviewReasonCode": "public-domain-open-data",
+      "reviewReasonJa": "2026-07-26に公式個別資料ページで第2図が馬場先御門であることと、画像使用条件がパブリックドメインであることを確認した。公式画像利用案内はオープンデータとして利用制限なし・無料ダウンロード可とし、資料名・所蔵館名や部分・加工の表示は義務ではないお願いとしている。",
+      "technicalSuitability": "medium",
+      "rightsSuitability": "high",
+      "imageFileAvailable": true,
+      "expectedResolutionSuitability": "medium",
+      "expectedControlPointAvailability": "low",
+      "expectedSeamRisk": "low",
+      "expectedCoverageBreadth": "narrow",
+      "expectedTileSizeRisk": "low",
+      "priorityScore": 71,
+      "notesJa": "同一資料帖の第2図をimageUnitで分離したreference-panel専用候補。千代田区公式資料は馬場先門跡を皇居外苑1先・馬場先門交差点から皇居外苑方面の歩道植栽内と案内するが、図面の測地同期・確定座標・trigger polygonは未評価。画像・派生物・asset・display・runtime登録は未実施。"
     }
   ]
 }
