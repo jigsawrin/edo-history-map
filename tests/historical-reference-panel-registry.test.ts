@@ -23,10 +23,10 @@ describe("historical reference panel registry audit", () => {
   }
   const wadakuraCandidate = (data:any) =>
     data.candidates.candidates.find((candidate:any) => candidate.candidateId === "tokyo-archive-4300033114-wadakura-gate");
-  it("accepts schema 2 with the two published entries and unique public bindings", () => {
+  it("accepts schema 3 with the two published entries and unique public bindings", () => {
     const result:any = auditHistoricalReferencePanelRegistry(join(__dirname, ".."));
     expect(result.errors).toEqual([]);
-    expect(result.registry?.schemaVersion).toBe(2);
+    expect(result.registry?.schemaVersion).toBe(3);
     expect(result.registry?.entries).toHaveLength(2);
     const entries:any[]=result.registry!.entries;
     expect(entries.map((entry:any)=>entry.id)).toEqual([
@@ -40,6 +40,7 @@ describe("historical reference panel registry audit", () => {
     expect(new Set(entries.map((entry:any)=>entry.id)).size).toBe(2);
     expect(new Set(entries.map((entry:any)=>entry.assetId)).size).toBe(2);
     expect(new Set(entries.map((entry:any)=>entry.image.publicPath)).size).toBe(2);
+    expect(entries.map((entry:any)=>entry.displayRotationDegrees)).toEqual([90,90]);
     expect(entries[1].image).toEqual({
       publicPath:"/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
       mimeType:"image/png",
@@ -78,6 +79,7 @@ describe("historical reference panel registry audit", () => {
     ["bytes mismatch",(d:any)=>d.registry.entries[0].image.bytes=1],
     ["dimensions mismatch",(d:any)=>d.registry.entries[0].image.width=1],
     ["MIME mismatch",(d:any)=>d.registry.entries[0].image.mimeType="image/jpeg"],
+    ["invalid display rotation",(d:any)=>d.registry.entries[0].displayRotationDegrees=45],
     ["geometry mismatch",(d:any)=>d.registry.entries[0].trigger.geometry.coordinates[0][0][0]=0],
     ["geometry extra key",(d:any)=>d.registry.entries[0].trigger.geometry.note="不正"],
     ["invalid MultiPolygon",(d:any)=>{const geometry={type:"MultiPolygon",coordinates:[[]]};d.registry.entries[0].trigger.geometry=geometry;d.displays.maps[0].spatialBinding.geometry=geometry;}],

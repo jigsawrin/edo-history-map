@@ -21,7 +21,7 @@ reference assetは正確な測地範囲や位置合わせ精度を主張しな�
 ## 段階導入
 
 権利・派生画像・歴史情報保護・候補台帳／表示カタログ相互参照のゲートを先に固定した。
-現在は`catalogStatus=reviewed`、assets 2件、published 2件である。runtimeはprivate台帳をimport/fetchせず、公開UIに必要な値だけを持つschemaVersion 2の`src/historical-reference-panel-registry.json`を利用する。2 entryはいずれも`promptLabelJa`を必須とし、専用監査で正本・公開画像との一致、entry ID・assetId・publicPathの一意性を固定する。
+現在は`catalogStatus=reviewed`、assets 2件、published 2件である。runtimeはprivate台帳をimport/fetchせず、公開UIに必要な値だけを持つschemaVersion 3の`src/historical-reference-panel-registry.json`を利用する。2 entryはいずれも`promptLabelJa`と表示専用の`displayRotationDegrees`を必須とし、専用監査で正本・公開画像との一致、entry ID・assetId・publicPathの一意性を固定する。`displayRotationDegrees`はpublic画像を改変せず正立表示するための時計回り回転量で、0・90・180・270度だけを許可する。
 
 ## 馬場先御門 technical approved / published asset
 

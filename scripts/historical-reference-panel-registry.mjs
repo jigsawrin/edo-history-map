@@ -4,7 +4,7 @@ import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 
 export const FILE = "src/historical-reference-panel-registry.json";
-const ENTRY_KEYS = ["id","assetId","sourceId","regionId","sourceEraId","sourceDateDisplayJa","historicalPeriodJa","titleJa","promptLabelJa","descriptionJa","altJa","image","trigger","priority","attributionJa","derivativeDisclosureJa","sourceUrl","licenseCode","licenseUrl","cautionJa"];
+const ENTRY_KEYS = ["id","assetId","sourceId","regionId","sourceEraId","sourceDateDisplayJa","historicalPeriodJa","titleJa","promptLabelJa","descriptionJa","altJa","image","displayRotationDegrees","trigger","priority","attributionJa","derivativeDisclosureJa","sourceUrl","licenseCode","licenseUrl","cautionJa"];
 const IMAGE_KEYS = ["publicPath","mimeType","width","height","bytes","sha256"];
 const ZOOM_KEYS = ["minimum","maximum","enterDetailAt","leaveDetailBelow"];
 const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -58,7 +58,7 @@ export function auditHistoricalReferencePanelRegistry(root) {
     return { errors: [`JSONを読めません: ${error.message}`], registry: null };
   }
   const fail = (message) => errors.push(message);
-  if (!exactKeys(registry, ["schemaVersion", "entries"]) || registry.schemaVersion !== 2 || !Array.isArray(registry.entries)) fail("registry schemaが不正です");
+  if (!exactKeys(registry, ["schemaVersion", "entries"]) || registry.schemaVersion !== 3 || !Array.isArray(registry.entries)) fail("registry schemaが不正です");
   const ids = new Set();
   const assetIds = new Set();
   const publicPaths = new Set();
@@ -73,6 +73,7 @@ export function auditHistoricalReferencePanelRegistry(root) {
     for (const key of ["titleJa","descriptionJa","altJa","attributionJa","derivativeDisclosureJa","cautionJa","sourceDateDisplayJa","historicalPeriodJa"]) if (!safeText(entry[key])) fail(`${entry.id}: ${key}に不正な文字・空白・長さ`);
     if (!safeText(entry.promptLabelJa, 100)) fail(`${entry.id}: promptLabelJaに不正な文字・空白・長さ`);
     if (!exactKeys(entry.image, IMAGE_KEYS) || !exactKeys(entry.trigger, ["geometry", "zoom"]) || !exactKeys(entry.trigger?.zoom, ZOOM_KEYS)) fail(`${entry.id}: image/trigger key不正`);
+    if (!new Set([0,90,180,270]).has(entry.displayRotationDegrees)) fail(`${entry.id}: displayRotationDegrees不正`);
     if (!new Set(["image/png", "image/webp"]).has(entry.image?.mimeType)) fail(`${entry.id}: MIME不正`);
     if (!/^\/data\/historical-reference-assets\/[a-z0-9-]+\/[a-z0-9-]+\.(png|webp)$/u.test(entry.image?.publicPath ?? "") || /(rawPath|derivedPath|data-raw|data-derived|:\\|\.\.)/u.test(JSON.stringify(entry))) fail(`${entry.id}: private/local path不正`);
     const display = displays.maps.find((item) => item.id === entry.id);
