@@ -77,7 +77,7 @@
       },
       "rightsReviewStatus": "approved",
       "technicalReviewStatus": "approved",
-      "publicationStatus": "shortlisted",
+      "publicationStatus": "published",
       "licenseCode": "Public-Domain",
       "licenseCategory": "public-domain",
       "licenseUrl": "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2",
@@ -125,7 +125,8 @@
         "height": 1800,
         "bytes": 861237,
         "sha256": "5b2f4e6fa4c33022aa0ba3265b821e43226b1804d0456f12f382ed2d5d6fd36c",
-        "derivedPath": "data-derived/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png"
+        "derivedPath": "data-derived/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
+        "publicPath": "/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png"
       }
     }
   ]

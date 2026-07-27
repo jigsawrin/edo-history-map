@@ -4,14 +4,19 @@ import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 
 export const FILE = "src/historical-reference-panel-registry.json";
-const ENTRY_KEYS = ["id","assetId","sourceId","regionId","sourceEraId","sourceDateDisplayJa","historicalPeriodJa","titleJa","descriptionJa","altJa","image","trigger","priority","attributionJa","derivativeDisclosureJa","sourceUrl","licenseCode","licenseUrl","cautionJa"];
+const ENTRY_KEYS = ["id","assetId","sourceId","regionId","sourceEraId","sourceDateDisplayJa","historicalPeriodJa","titleJa","promptLabelJa","descriptionJa","altJa","image","trigger","priority","attributionJa","derivativeDisclosureJa","sourceUrl","licenseCode","licenseUrl","cautionJa"];
 const IMAGE_KEYS = ["publicPath","mimeType","width","height","bytes","sha256"];
 const ZOOM_KEYS = ["minimum","maximum","enterDetailAt","leaveDetailBelow"];
 const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const exactKeys = (value, keys) => value && typeof value === "object" && equal(Object.keys(value).sort(), [...keys].sort());
-const safeText = (value) => typeof value === "string" && value.length > 0 && !value.includes("<") && !value.includes(">") && ![...value].some((character) => { const code = character.codePointAt(0); return code !== undefined && (code < 32 || code === 127); });
+const hasControlCharacter = (value) => typeof value === "string" && [...value].some((character) => {
+  const code = character.codePointAt(0);
+  return code !== undefined && (code < 32 || (code >= 127 && code <= 159));
+});
+const safeText = (value, maximumLength = 1000) => typeof value === "string" &&
+  value.length > 0 && value.length <= maximumLength && value === value.trim() &&
+  !value.includes("<") && !value.includes(">") && !hasControlCharacter(value);
 const area = (ring) => Math.abs(ring.slice(0, -1).reduce((sum, point, index) => sum + point[0] * ring[index + 1][1] - ring[index + 1][0] * point[1], 0) / 2);
-const hasControlCharacter = (value) => typeof value === "string" && [...value].some((character) => { const code = character.codePointAt(0); return code !== undefined && (code < 32 || code === 127); });
 const validCanonicalUrl = (value, canonical) => {
   if (typeof value !== "string" || value !== canonical || hasControlCharacter(value)) return false;
   try {
@@ -53,13 +58,20 @@ export function auditHistoricalReferencePanelRegistry(root) {
     return { errors: [`JSONを読めません: ${error.message}`], registry: null };
   }
   const fail = (message) => errors.push(message);
-  if (!exactKeys(registry, ["schemaVersion", "entries"]) || registry.schemaVersion !== 1 || !Array.isArray(registry.entries)) fail("registry schemaが不正です");
+  if (!exactKeys(registry, ["schemaVersion", "entries"]) || registry.schemaVersion !== 2 || !Array.isArray(registry.entries)) fail("registry schemaが不正です");
   const ids = new Set();
+  const assetIds = new Set();
+  const publicPaths = new Set();
   for (const entry of registry.entries ?? []) {
     if (!exactKeys(entry, ENTRY_KEYS)) fail(`${entry.id ?? "entry"}: exact key不一致`);
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(entry.id ?? "") || ids.has(entry.id)) fail(`${entry.id}: ID不正または重複`);
     ids.add(entry.id);
-    for (const key of ["titleJa","descriptionJa","altJa","attributionJa","derivativeDisclosureJa","cautionJa","sourceDateDisplayJa","historicalPeriodJa"]) if (!safeText(entry[key])) fail(`${entry.id}: ${key}にHTMLまたは制御文字`);
+    if (typeof entry.assetId !== "string" || assetIds.has(entry.assetId)) fail(`${entry.id}: assetId不正または重複`);
+    assetIds.add(entry.assetId);
+    if (typeof entry.image?.publicPath !== "string" || publicPaths.has(entry.image.publicPath)) fail(`${entry.id}: publicPath不正または重複`);
+    publicPaths.add(entry.image?.publicPath);
+    for (const key of ["titleJa","descriptionJa","altJa","attributionJa","derivativeDisclosureJa","cautionJa","sourceDateDisplayJa","historicalPeriodJa"]) if (!safeText(entry[key])) fail(`${entry.id}: ${key}に不正な文字・空白・長さ`);
+    if (!safeText(entry.promptLabelJa, 100)) fail(`${entry.id}: promptLabelJaに不正な文字・空白・長さ`);
     if (!exactKeys(entry.image, IMAGE_KEYS) || !exactKeys(entry.trigger, ["geometry", "zoom"]) || !exactKeys(entry.trigger?.zoom, ZOOM_KEYS)) fail(`${entry.id}: image/trigger key不正`);
     if (!new Set(["image/png", "image/webp"]).has(entry.image?.mimeType)) fail(`${entry.id}: MIME不正`);
     if (!/^\/data\/historical-reference-assets\/[a-z0-9-]+\/[a-z0-9-]+\.(png|webp)$/u.test(entry.image?.publicPath ?? "") || /(rawPath|derivedPath|data-raw|data-derived|:\\|\.\.)/u.test(JSON.stringify(entry))) fail(`${entry.id}: private/local path不正`);

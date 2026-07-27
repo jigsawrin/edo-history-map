@@ -325,7 +325,15 @@ describe("古地図候補台帳", () => {
     }
   });
 
-  it("馬場先candidateをapproved assetとprivate displayへ接続し、runtime・publicへ接続しない", () => {
+  it("馬場先candidateの状態を変えず、published asset・display・runtime・publicへ接続する", () => {
+    const candidate = loadHistoricalRasterCandidateRegistry(ROOT).candidates.find(
+      (item) => item.candidateId === BABASAKI_ID,
+    );
+    expect(candidate).toMatchObject({
+      rightsReviewStatus: "approved",
+      technicalReviewStatus: "not-started",
+      publicationStatus: "candidate",
+    });
     const assets = JSON.parse(readFileSync(join(ROOT, "data-curation", "historical-reference-assets.json"), "utf8"));
     const displays = JSON.parse(readFileSync(join(ROOT, "data-curation", "historical-map-display-catalog.json"), "utf8"));
     const runtime = JSON.parse(readFileSync(join(ROOT, "src", "historical-reference-panel-registry.json"), "utf8"));
@@ -335,19 +343,19 @@ describe("古地図候補台帳", () => {
       id: "tokyo-archive-4300033114-babasaki-gate-reference-image",
       rightsReviewStatus: "approved",
       technicalReviewStatus: "approved",
-      publicationStatus: "shortlisted",
+      publicationStatus: "published",
     });
-    expect(assets.assets.find((asset: { sourceId: string }) => asset.sourceId === BABASAKI_ID))
-      .not.toHaveProperty("derivedFile.publicPath");
+    expect(assets.assets.find((asset: { sourceId: string }) => asset.sourceId === BABASAKI_ID)
+      .derivedFile.publicPath).toContain("babasaki");
     expect(displays.maps).toHaveLength(2);
     expect(displays.maps.find((display: { sourceId: string }) => display.sourceId === BABASAKI_ID))
       .toMatchObject({
         id: "tokyo-archive-4300033114-babasaki-gate-reference-display",
-        technicalReviewStatus: "in-review",
-        publicationStatus: "shortlisted",
+        technicalReviewStatus: "approved",
+        publicationStatus: "published",
       });
-    expect(runtime.entries).toHaveLength(1);
-    expect(JSON.stringify({ runtime, publicFiles })).not.toContain("babasaki");
+    expect(runtime.entries).toHaveLength(2);
+    expect(JSON.stringify({ runtime, publicFiles })).toContain("babasaki");
   });
 
   it.each(["commercialUseCompatible", "redistributionAllowed", "modificationAllowed", "croppingAllowed", "georeferencingAllowed", "tilingAllowed"])("approvedの%s=falseを拒否する", (field) => {
