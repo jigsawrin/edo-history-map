@@ -1,6 +1,14 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { deflateSync } from "node:zlib";
@@ -445,7 +453,7 @@ function initializeGitFixture(root: string) {
 }
 
 describe("歴史参考画像台帳基盤", () => {
-  it("和田倉publishedと馬場先shortlistedのproduction assetsを読み込む", () => {
+  it("和田倉publishedとtechnical approved / shortlistedの馬場先production assetを読み込む", () => {
     const catalog = loadHistoricalReferenceAssetCatalog(ROOT);
     expect(catalog.schemaVersion).toBe(1);
     expect(catalog.catalogStatus).toBe("reviewed");
@@ -491,7 +499,7 @@ describe("歴史参考画像台帳基盤", () => {
     expect(babasaki).toMatchObject({
       sourceId: "tokyo-archive-4300033114-babasaki-gate",
       rightsReviewStatus: "approved",
-      technicalReviewStatus: "in-review",
+      technicalReviewStatus: "approved",
       publicationStatus: "shortlisted",
       licenseCategory: "public-domain",
       attribution: {
@@ -554,6 +562,19 @@ describe("歴史参考画像台帳基盤", () => {
     expect(
       readFileSync(join(ROOT, "src/historical-reference-panel-registry.json"), "utf8"),
     ).not.toContain("babasaki");
+    expect(
+      existsSync(
+        join(
+          ROOT,
+          "public/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
+        ),
+      ),
+    ).toBe(false);
+    for (const runtimePath of ["index.html", "src/main.ts"]) {
+      const runtimeText = readFileSync(join(ROOT, runtimePath), "utf8");
+      expect(runtimeText).not.toContain("babasaki");
+      expect(runtimeText).not.toContain("馬場先");
+    }
     const summary = summarizeHistoricalReferenceAssetCatalog(catalog);
     expect(summary).toMatchObject({
       assetCount: 2,
@@ -1444,14 +1465,18 @@ describe("歴史参考画像台帳基盤", () => {
     const displayMaps = JSON.parse(
       readFileSync(join(ROOT, "data-curation/historical-map-display-catalog.json"), "utf8"),
     ).maps;
-    expect(displayMaps).toHaveLength(1);
-    expect(displayMaps[0]).toMatchObject({
+    expect(displayMaps).toHaveLength(2);
+    const wadakuraDisplay = displayMaps.find(
+      (map: { id: string }) =>
+        map.id === "tokyo-archive-4300033114-wadakura-gate-reference-display",
+    );
+    expect(wadakuraDisplay).toMatchObject({
       id: "tokyo-archive-4300033114-wadakura-gate-reference-display",
       displayRole: "reference-only",
       displayMode: "reference-panel",
       publicationStatus: "published",
     });
-    expect(displayMaps[0]).not.toHaveProperty("parentMapId");
+    expect(wadakuraDisplay).not.toHaveProperty("parentMapId");
     expect(
       JSON.parse(readFileSync(join(ROOT, "data-curation/historical-control-point-catalog.json"), "utf8")).entries,
     ).toEqual([]);
