@@ -8,10 +8,14 @@ const [wadakura,babasaki] = registry.entries as unknown as ReferenceEntry[];
 
 function setup() {
   document.body.replaceChildren();
-  const names = ["prompt","open","status","dialog","title","date","warning","description","viewport","image","imageStatus","zoomOut","zoomIn","zoomReset","zoomStatus","source","license","attribution","disclosure","close"] as const;
+  const names = ["prompt","open","status","dialog","title","date","warning","description","viewport","stage","image","imageStatus","zoomOut","zoomIn","zoomReset","zoomStatus","source","license","attribution","disclosure","close"] as const;
   const tags:Record<string,string>={open:"button",dialog:"dialog",image:"img",zoomOut:"button",zoomIn:"button",zoomReset:"button",source:"a",license:"a",close:"button"};
   const values = Object.fromEntries(names.map((name)=>[name,document.createElement(tags[name]??"div")])) as unknown as ReferencePanelElements;
-  for (const element of Object.values(values)) document.body.append(element);
+  values.stage.append(values.image);
+  values.viewport.append(values.stage);
+  for (const [name,element] of Object.entries(values)) if(name!=="stage"&&name!=="image") document.body.append(element);
+  Object.defineProperty(values.viewport,"clientWidth",{value:900,configurable:true});
+  Object.defineProperty(values.viewport,"clientHeight",{value:600,configurable:true});
   Object.defineProperty(values.dialog,"showModal",{value:()=>values.dialog.setAttribute("open","")});
   Object.defineProperty(values.dialog,"close",{value:()=>{values.dialog.removeAttribute("open");values.dialog.dispatchEvent(new Event("close"));}});
   values.prompt.hidden=true;
@@ -34,6 +38,10 @@ describe("historical reference panel controller",()=>{
     values.open.click();
     expect(values.dialog.open).toBe(true);
     expect(values.image.getAttribute("src")).toContain(wadakura!.image.publicPath);
+    expect(values.image.style.transform).toContain("rotate(90deg)");
+    expect(parseFloat(values.stage.style.height)).toBeCloseTo(600);
+    expect(parseFloat(values.stage.style.width)/parseFloat(values.stage.style.height)).toBeCloseTo(1800/2450);
+    expect(parseFloat(values.image.style.width)/parseFloat(values.image.style.height)).toBeCloseTo(2450/1800);
     expect(values.imageStatus.textContent).toBe("画像を読み込んでいます。");
     values.image.onload?.(new Event("load"));
     expect(values.imageStatus.textContent).toBe("画像を読み込みました。");
@@ -45,6 +53,16 @@ describe("historical reference panel controller",()=>{
     values.open.click();
     values.image.onload?.(new Event("load"));
     values.zoomIn.click();
+    expect(parseFloat(values.stage.style.height)).toBeCloseTo(900);
+    expect(parseFloat(values.image.style.width)).toBeCloseTo(900);
+    expect(values.image.style.transform).toContain("rotate(90deg)");
+    values.zoomIn.click();
+    expect(parseFloat(values.stage.style.height)).toBeCloseTo(1200);
+    expect(parseFloat(values.image.style.width)).toBeCloseTo(1200);
+    expect(parseFloat(values.stage.style.height)).toBeGreaterThan(values.viewport.clientHeight);
+    values.zoomReset.click();
+    expect(parseFloat(values.stage.style.height)).toBeCloseTo(600);
+    expect(values.image.style.transform).toContain("rotate(90deg)");
     values.viewport.scrollLeft=320;
     values.viewport.scrollTop=180;
     values.close.click();
@@ -55,6 +73,8 @@ describe("historical reference panel controller",()=>{
     expect(values.image.alt).toBe("");
     expect(values.image.hasAttribute("width")).toBe(false);
     expect(values.image.hasAttribute("height")).toBe(false);
+    expect(values.stage.style.width).toBe("");
+    expect(values.image.style.transform).toBe("");
     expect(values.imageStatus.textContent).toBe("");
     expect(values.title.textContent).toBe("");
     expect(values.source.hasAttribute("href")).toBe(false);
@@ -66,12 +86,16 @@ describe("historical reference panel controller",()=>{
     expect(values.image.getAttribute("src")).toContain(babasaki!.image.publicPath);
     expect(values.title.textContent).toBe(babasaki!.titleJa);
     expect(values.image.alt).toBe(babasaki!.altJa);
+    expect(values.image.style.transform).toContain(`rotate(${babasaki!.displayRotationDegrees}deg)`);
+    expect(parseFloat(values.image.style.width)/parseFloat(values.image.style.height)).toBeCloseTo(2450/1800);
     expect(values.attribution.textContent).toContain("第2図 馬場先御門");
     values.close.click();
     controller.setEntry(wadakura!);
     values.open.click();
     expect(values.image.getAttribute("src")).toContain(wadakura!.image.publicPath);
     expect(values.title.textContent).toBe(wadakura!.titleJa);
+    expect(values.image.style.transform).toContain(`rotate(${wadakura!.displayRotationDegrees}deg)`);
+    expect(parseFloat(values.image.style.width)/parseFloat(values.image.style.height)).toBeCloseTo(2450/1800);
   });
 
   it("does not discard a loaded image when the same entry is set again",()=>{

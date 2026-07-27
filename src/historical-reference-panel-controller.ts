@@ -1,6 +1,6 @@
-import type { ReferenceEntry } from "./historical-reference-panel";
+import { calculateReferenceImageLayout, type ReferenceEntry } from "./historical-reference-panel";
 
-export interface ReferencePanelElements { prompt:HTMLElement; open:HTMLButtonElement; status:HTMLElement; dialog:HTMLDialogElement; title:HTMLElement; date:HTMLElement; warning:HTMLElement; description:HTMLElement; viewport:HTMLElement; image:HTMLImageElement; imageStatus:HTMLElement; zoomOut:HTMLButtonElement; zoomIn:HTMLButtonElement; zoomReset:HTMLButtonElement; zoomStatus:HTMLElement; source:HTMLAnchorElement; license:HTMLAnchorElement; attribution:HTMLElement; disclosure:HTMLElement; close:HTMLButtonElement }
+export interface ReferencePanelElements { prompt:HTMLElement; open:HTMLButtonElement; status:HTMLElement; dialog:HTMLDialogElement; title:HTMLElement; date:HTMLElement; warning:HTMLElement; description:HTMLElement; viewport:HTMLElement; stage:HTMLElement; image:HTMLImageElement; imageStatus:HTMLElement; zoomOut:HTMLButtonElement; zoomIn:HTMLButtonElement; zoomReset:HTMLButtonElement; zoomStatus:HTMLElement; source:HTMLAnchorElement; license:HTMLAnchorElement; attribution:HTMLElement; disclosure:HTMLElement; close:HTMLButtonElement }
 
 export class HistoricalReferencePanelController {
   private entry:ReferenceEntry|null=null;
@@ -8,6 +8,7 @@ export class HistoricalReferencePanelController {
   private readonly scales=[1,1.5,2];
   private imageRequestGeneration=0;
   private imageEntryId:string|null=null;
+  private readonly resizeObserver:ResizeObserver|null;
 
   constructor(private readonly el:ReferencePanelElements){
     el.open.addEventListener("click",()=>this.open());
@@ -25,6 +26,8 @@ export class HistoricalReferencePanelController {
     el.zoomIn.addEventListener("click",()=>this.zoom(1));
     el.zoomOut.addEventListener("click",()=>this.zoom(-1));
     el.zoomReset.addEventListener("click",()=>this.resetZoom());
+    this.resizeObserver=typeof ResizeObserver==="undefined"?null:new ResizeObserver(()=>this.applyZoom());
+    this.resizeObserver?.observe(el.viewport);
     this.resetZoom();
   }
 
@@ -96,6 +99,7 @@ export class HistoricalReferencePanelController {
     this.el.image.src=imageUrl;
     this.el.open.setAttribute("aria-expanded","true");
     this.el.dialog.showModal();
+    this.applyZoom();
   }
 
   private isCurrentImageRequest(entryId:string,generation:number,imageUrl:string):boolean {
@@ -114,6 +118,7 @@ export class HistoricalReferencePanelController {
     this.el.image.removeAttribute("src");
     this.el.image.removeAttribute("width");
     this.el.image.removeAttribute("height");
+    this.clearImageLayout();
     this.el.image.alt="";
     this.el.imageStatus.textContent="";
     this.el.title.textContent="";
@@ -140,15 +145,40 @@ export class HistoricalReferencePanelController {
 
   private applyZoom():void{
     const scale=this.scales[this.scaleIndex]!;
-    this.el.image.style.width=`${scale*100}%`;
-    this.el.image.style.maxWidth=scale===1?"100%":"none";
+    const entry=this.entry;
+    const layout=entry&&calculateReferenceImageLayout(
+      entry.image.width,
+      entry.image.height,
+      entry.displayRotationDegrees,
+      this.el.viewport.clientWidth,
+      this.el.viewport.clientHeight,
+      scale,
+    );
+    if(layout){
+      this.el.stage.style.width=`${layout.displayWidth}px`;
+      this.el.stage.style.height=`${layout.displayHeight}px`;
+      this.el.image.style.width=`${layout.sourceWidth}px`;
+      this.el.image.style.height=`${layout.sourceHeight}px`;
+      this.el.image.style.transform=`translate(-50%, -50%) rotate(${entry.displayRotationDegrees}deg)`;
+    }else{
+      this.clearImageLayout();
+    }
     this.el.zoomStatus.textContent=scale===1?"全体表示":`${scale*100}%`;
     this.el.zoomOut.disabled=this.scaleIndex===0;
     this.el.zoomIn.disabled=this.scaleIndex===this.scales.length-1;
   }
 
+  private clearImageLayout():void{
+    this.el.stage.style.removeProperty("width");
+    this.el.stage.style.removeProperty("height");
+    this.el.image.style.removeProperty("width");
+    this.el.image.style.removeProperty("height");
+    this.el.image.style.removeProperty("transform");
+  }
+
   dispose():void{
     this.invalidateImageRequest();
+    this.resizeObserver?.disconnect();
     if(this.el.dialog.open)this.el.dialog.close();
   }
 }

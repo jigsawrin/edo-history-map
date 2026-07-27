@@ -443,7 +443,9 @@
         <output id="historical-reference-zoom-status" aria-live="polite">全体表示</output>
       </div>
       <div id="historical-reference-image-viewport" class="historical-reference-image-viewport" tabindex="0" aria-label="参考画像。スクロールして拡大部分を閲覧できます。">
-        <img id="historical-reference-image" decoding="async" alt="" />
+        <div id="historical-reference-image-stage" class="historical-reference-image-stage">
+          <img id="historical-reference-image" class="historical-reference-image" decoding="async" alt="" />
+        </div>
       </div>
       <p id="historical-reference-image-status" role="status" aria-live="polite"></p>
       <h3>出典・利用条件</h3>

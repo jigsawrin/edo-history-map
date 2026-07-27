@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "entries": [
     {
       "id": "tokyo-archive-4300033114-wadakura-gate-reference-display",
@@ -21,6 +21,7 @@
         "bytes": 1680142,
         "sha256": "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81"
       },
+      "displayRotationDegrees": 90,
       "trigger": {
         "geometry": { "type": "Polygon", "coordinates": [[[139.75995,35.6827],[139.7622,35.6827],[139.7622,35.6842],[139.75995,35.6842],[139.75995,35.6827]]] },
         "zoom": { "minimum": 15, "maximum": 20, "enterDetailAt": 17, "leaveDetailBelow": 16.5 }
@@ -53,6 +54,7 @@
         "bytes": 861237,
         "sha256": "5b2f4e6fa4c33022aa0ba3265b821e43226b1804d0456f12f382ed2d5d6fd36c"
       },
+      "displayRotationDegrees": 90,
       "trigger": {
         "geometry": {
           "type": "Polygon",
