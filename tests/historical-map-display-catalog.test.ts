@@ -17,6 +17,7 @@ import {
   summarizeHistoricalMapDisplayCatalog,
   validateHistoricalMapDisplayCatalog,
 } from "../scripts/historical-map-display-catalog.mjs";
+import { pointInGeometry } from "../src/historical-reference-panel";
 
 const ROOT = join(__dirname, "..");
 const sha256 = (path: string) =>
@@ -78,6 +79,19 @@ const WADAKURA_TRIGGER_POLYGON = Object.freeze({
     ],
   ],
 });
+
+const BABASAKI_TRIGGER_POLYGON = {
+  type: "Polygon" as const,
+  coordinates: [
+    [
+      [139.75925, 35.67775],
+      [139.76165, 35.67775],
+      [139.76165, 35.67965],
+      [139.75925, 35.67965],
+      [139.75925, 35.67775],
+    ],
+  ],
+} as const;
 
 /** Test-only fixtures. Never write these into production catalog. */
 function mapFixture(overrides: Record<string, unknown> = {}) {
@@ -234,13 +248,19 @@ function createAuditFixtureRoot(options: {
 }
 
 describe("古地図表示カタログ基盤", () => {
-  it("本番カタログに和田倉御門のpublished reference displayだけを保持する", () => {
+  it("本番カタログに和田倉publishedと馬場先shortlistedのreference displayを保持する", () => {
     const catalog = loadHistoricalMapDisplayCatalog(ROOT);
     expect(catalog.schemaVersion).toBe(1);
     expect(catalog.catalogStatus).toBe("reviewed");
-    expect(catalog.reviewedAt).toBe("2026-07-23");
-    expect(catalog.maps).toHaveLength(1);
-    expect(catalog.maps[0]).toEqual({
+    expect(catalog.reviewedAt).toBe("2026-07-27");
+    expect(catalog.maps).toHaveLength(2);
+    const wadakura = catalog.maps.find(
+      (map) => map.id === "tokyo-archive-4300033114-wadakura-gate-reference-display",
+    );
+    const babasaki = catalog.maps.find(
+      (map) => map.id === "tokyo-archive-4300033114-babasaki-gate-reference-display",
+    );
+    expect(wadakura).toEqual({
       id: "tokyo-archive-4300033114-wadakura-gate-reference-display",
       name: { ja: "江戸城御外郭御門絵図 第1図 和田倉御門" },
       displayRole: "reference-only",
@@ -278,24 +298,122 @@ describe("古地図表示カタログ基盤", () => {
       technicalReviewStatus: "approved",
       publicationStatus: "published",
     });
-    expect(catalog.maps[0]).not.toHaveProperty("parentMapId");
-    const asset = JSON.parse(
+    expect(babasaki).toEqual({
+      id: "tokyo-archive-4300033114-babasaki-gate-reference-display",
+      name: { ja: "江戸城御外郭御門絵図 第2図 馬場先御門" },
+      displayRole: "reference-only",
+      displayMode: "reference-panel",
+      artifactBinding: {
+        kind: "reference-asset",
+        assetId: "tokyo-archive-4300033114-babasaki-gate-reference-image",
+      },
+      spatialBinding: {
+        kind: "display-trigger-area",
+        geometry: BABASAKI_TRIGGER_POLYGON,
+      },
+      crop: {
+        sourceWidth: 3514,
+        sourceHeight: 2500,
+        x: 500,
+        y: 270,
+        width: 2450,
+        height: 1800,
+        rotationDegrees: 0,
+      },
+      cropReview: {
+        removedElements: ["capture-background", "ruler", "color-chart", "shelfmark-label"],
+        preservesHistoricalContent: true,
+        note: {
+          ja: "図面本体、全注記、方角表示、右下の細部図、原本余白、折り目、印・記号、台紙の縁を残した。原本外であることが明確な外側の灰色背景、資料番号札、カラーチャート、グレースケール、定規だけを除去した。",
+        },
+      },
+      zoom: { minimum: 15, maximum: 20, enterDetailAt: 17, leaveDetailBelow: 16.5 },
+      regionId: "edo",
+      eraId: "edo-middle",
+      priority: 71,
+      sourceId: "tokyo-archive-4300033114-babasaki-gate",
+      rightsReviewStatus: "approved",
+      technicalReviewStatus: "in-review",
+      publicationStatus: "shortlisted",
+    });
+    expect(wadakura).not.toHaveProperty("parentMapId");
+    expect(babasaki).not.toHaveProperty("parentMapId");
+    const assets = JSON.parse(
       readFileSync(join(ROOT, "data-curation", "historical-reference-assets.json"), "utf8"),
-    ).assets[0];
-    expect(catalog.maps[0]?.crop).toEqual(asset.crop);
-    expect(catalog.maps[0]?.cropReview).toEqual({
-      removedElements: asset.removedElements,
-      preservesHistoricalContent: asset.preservesHistoricalContent,
-      note: asset.cropReviewNote,
+    ).assets;
+    const wadakuraAsset = assets.find(
+      (asset: { id: string }) =>
+        asset.id === "tokyo-archive-4300033114-wadakura-gate-reference-image",
+    );
+    const babasakiAsset = assets.find(
+      (asset: { id: string }) =>
+        asset.id === "tokyo-archive-4300033114-babasaki-gate-reference-image",
+    );
+    expect(wadakura?.crop).toEqual(wadakuraAsset.crop);
+    expect(wadakura?.cropReview).toEqual({
+      removedElements: wadakuraAsset.removedElements,
+      preservesHistoricalContent: wadakuraAsset.preservesHistoricalContent,
+      note: wadakuraAsset.cropReviewNote,
+    });
+    expect(babasaki?.crop).toEqual(babasakiAsset.crop);
+    expect(babasaki?.cropReview).toEqual({
+      removedElements: babasakiAsset.removedElements,
+      preservesHistoricalContent: babasakiAsset.preservesHistoricalContent,
+      note: babasakiAsset.cropReviewNote,
     });
     expect(summarizeHistoricalMapDisplayCatalog(catalog)).toMatchObject({
       schemaVersion: 1,
       catalogStatus: "reviewed",
-      mapCount: 1,
+      mapCount: 2,
       publishedCount: 1,
+      technicalApprovedCount: 1,
       runtimeEligibleCount: 1,
       runtimeConnected: false,
     });
+  });
+
+  it("馬場先triggerをUI案内用envelopeとして固定し、公式anchor内包と和田倉非重複を確認する", () => {
+    expect(pointInGeometry([139.760527, 35.678426], BABASAKI_TRIGGER_POLYGON)).toBe(true);
+    expect(pointInGeometry([139.765, 35.685], BABASAKI_TRIGGER_POLYGON)).toBe(false);
+    const babasakiLatitudes = BABASAKI_TRIGGER_POLYGON.coordinates[0]!.map(
+      (position) => position[1]!,
+    );
+    const wadakuraLatitudes = WADAKURA_TRIGGER_POLYGON.coordinates[0]!.map(
+      (position) => position[1]!,
+    );
+    expect(Math.max(...babasakiLatitudes)).toBeLessThan(Math.min(...wadakuraLatitudes));
+    const displayGuide = readFileSync(join(ROOT, "docs/HISTORICAL_MAP_DISPLAY.md"), "utf8");
+    expect(displayGuide).toContain("UI案内用envelope");
+    expect(displayGuide).toContain("文化財・法的境界");
+    expect(displayGuide).toContain("1717年図面のcoverage");
+    expect(displayGuide).toContain("georeferenced extent");
+    expect(displayGuide).toContain("control point envelope");
+  });
+
+  it("馬場先triggerの経緯度順入替を拒否する", () => {
+    expect(() =>
+      validateHistoricalMapDisplayCatalog(
+        catalogWithMaps([
+          referenceFixture({
+            spatialBinding: {
+              kind: "display-trigger-area",
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [35.67775, 139.75925],
+                    [35.67775, 139.76165],
+                    [35.67965, 139.76165],
+                    [35.67965, 139.75925],
+                    [35.67775, 139.75925],
+                  ],
+                ],
+              },
+            },
+          }),
+        ]),
+      ),
+    ).toThrow(/coordinates.*範囲外/u);
   });
 
   it("schemaVersion不正を拒否する", () => {
@@ -797,7 +915,7 @@ describe("古地図表示カタログ基盤", () => {
     );
     const audit = auditHistoricalMapDisplayCatalogRepository(ROOT);
     expect(audit.errors).toEqual([]);
-    expect(audit.catalog?.maps).toHaveLength(1);
+    expect(audit.catalog?.maps).toHaveLength(2);
   });
 
   it("src配下の間接参照を監査失敗にする", () => {

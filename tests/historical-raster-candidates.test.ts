@@ -325,7 +325,7 @@ describe("古地図候補台帳", () => {
     }
   });
 
-  it("馬場先candidateをshortlisted assetだけへ接続し、display・runtime・publicへ接続しない", () => {
+  it("馬場先candidateをapproved assetとprivate displayへ接続し、runtime・publicへ接続しない", () => {
     const assets = JSON.parse(readFileSync(join(ROOT, "data-curation", "historical-reference-assets.json"), "utf8"));
     const displays = JSON.parse(readFileSync(join(ROOT, "data-curation", "historical-map-display-catalog.json"), "utf8"));
     const runtime = JSON.parse(readFileSync(join(ROOT, "src", "historical-reference-panel-registry.json"), "utf8"));
@@ -334,14 +334,20 @@ describe("古地図候補台帳", () => {
     expect(assets.assets.find((asset: { sourceId: string }) => asset.sourceId === BABASAKI_ID)).toMatchObject({
       id: "tokyo-archive-4300033114-babasaki-gate-reference-image",
       rightsReviewStatus: "approved",
-      technicalReviewStatus: "in-review",
+      technicalReviewStatus: "approved",
       publicationStatus: "shortlisted",
     });
     expect(assets.assets.find((asset: { sourceId: string }) => asset.sourceId === BABASAKI_ID))
       .not.toHaveProperty("derivedFile.publicPath");
-    expect(displays.maps).toHaveLength(1);
+    expect(displays.maps).toHaveLength(2);
+    expect(displays.maps.find((display: { sourceId: string }) => display.sourceId === BABASAKI_ID))
+      .toMatchObject({
+        id: "tokyo-archive-4300033114-babasaki-gate-reference-display",
+        technicalReviewStatus: "in-review",
+        publicationStatus: "shortlisted",
+      });
     expect(runtime.entries).toHaveLength(1);
-    expect(JSON.stringify({ displays, runtime, publicFiles })).not.toContain("babasaki");
+    expect(JSON.stringify({ runtime, publicFiles })).not.toContain("babasaki");
   });
 
   it.each(["commercialUseCompatible", "redistributionAllowed", "modificationAllowed", "croppingAllowed", "georeferencingAllowed", "tilingAllowed"])("approvedの%s=falseを拒否する", (field) => {
