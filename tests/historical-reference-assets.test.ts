@@ -453,7 +453,7 @@ function initializeGitFixture(root: string) {
 }
 
 describe("歴史参考画像台帳基盤", () => {
-  it("和田倉publishedとtechnical approved / shortlistedの馬場先production assetを読み込む", () => {
+  it("和田倉と馬場先のpublished production assetを読み込む", () => {
     const catalog = loadHistoricalReferenceAssetCatalog(ROOT);
     expect(catalog.schemaVersion).toBe(1);
     expect(catalog.catalogStatus).toBe("reviewed");
@@ -500,7 +500,7 @@ describe("歴史参考画像台帳基盤", () => {
       sourceId: "tokyo-archive-4300033114-babasaki-gate",
       rightsReviewStatus: "approved",
       technicalReviewStatus: "approved",
-      publicationStatus: "shortlisted",
+      publicationStatus: "published",
       licenseCategory: "public-domain",
       attribution: {
         ja: "『江戸城御外郭御門絵図 第2図 馬場先御門』（東京都立中央図書館所蔵）（部分・加工）",
@@ -534,9 +534,10 @@ describe("歴史参考画像台帳基盤", () => {
         sha256: "5b2f4e6fa4c33022aa0ba3265b821e43226b1804d0456f12f382ed2d5d6fd36c",
         derivedPath:
           "data-derived/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
+        publicPath:
+          "/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
       },
     });
-    expect(babasaki?.derivedFile).not.toHaveProperty("publicPath");
     expect(babasaki?.originalFile.sha256).not.toBe(babasaki?.derivedFile?.sha256);
     const candidates = JSON.parse(
       readFileSync(join(ROOT, "data-curation/historical-raster-candidates.json"), "utf8"),
@@ -556,12 +557,12 @@ describe("歴史参考画像台帳基盤", () => {
       croppingAllowed: true,
     });
     const staticManifest = createHistoricalReferenceAssetStaticManifest(catalog);
-    expect(staticManifest.assetCount).toBe(1);
-    expect(staticManifest.files).toHaveLength(1);
-    expect(JSON.stringify(staticManifest)).not.toContain("babasaki");
+    expect(staticManifest.assetCount).toBe(2);
+    expect(staticManifest.files).toHaveLength(2);
+    expect(JSON.stringify(staticManifest)).toContain("babasaki");
     expect(
       readFileSync(join(ROOT, "src/historical-reference-panel-registry.json"), "utf8"),
-    ).not.toContain("babasaki");
+    ).toContain("babasaki");
     expect(
       existsSync(
         join(
@@ -569,7 +570,7 @@ describe("歴史参考画像台帳基盤", () => {
           "public/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
         ),
       ),
-    ).toBe(false);
+    ).toBe(true);
     for (const runtimePath of ["index.html", "src/main.ts"]) {
       const runtimeText = readFileSync(join(ROOT, runtimePath), "utf8");
       expect(runtimeText).not.toContain("babasaki");
@@ -578,7 +579,7 @@ describe("歴史参考画像台帳基盤", () => {
     const summary = summarizeHistoricalReferenceAssetCatalog(catalog);
     expect(summary).toMatchObject({
       assetCount: 2,
-      publishedCount: 1,
+      publishedCount: 2,
       approvedRightsCount: 2,
       runtimeConnected: false,
     });

@@ -248,7 +248,7 @@ function createAuditFixtureRoot(options: {
 }
 
 describe("古地図表示カタログ基盤", () => {
-  it("本番カタログに和田倉publishedと馬場先shortlistedのreference displayを保持する", () => {
+  it("本番カタログに和田倉と馬場先のpublished reference displayを保持する", () => {
     const catalog = loadHistoricalMapDisplayCatalog(ROOT);
     expect(catalog.schemaVersion).toBe(1);
     expect(catalog.catalogStatus).toBe("reviewed");
@@ -333,8 +333,8 @@ describe("古地図表示カタログ基盤", () => {
       priority: 71,
       sourceId: "tokyo-archive-4300033114-babasaki-gate",
       rightsReviewStatus: "approved",
-      technicalReviewStatus: "in-review",
-      publicationStatus: "shortlisted",
+      technicalReviewStatus: "approved",
+      publicationStatus: "published",
     });
     expect(wadakura).not.toHaveProperty("parentMapId");
     expect(babasaki).not.toHaveProperty("parentMapId");
@@ -365,9 +365,9 @@ describe("古地図表示カタログ基盤", () => {
       schemaVersion: 1,
       catalogStatus: "reviewed",
       mapCount: 2,
-      publishedCount: 1,
-      technicalApprovedCount: 1,
-      runtimeEligibleCount: 1,
+      publishedCount: 2,
+      technicalApprovedCount: 2,
+      runtimeEligibleCount: 2,
       runtimeConnected: false,
     });
   });
