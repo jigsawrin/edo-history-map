@@ -170,7 +170,7 @@ describe("江戸地名キュレーション候補", () => {
     ["javascript URL", (c) => { c.evidence.urls = ["javascript:alert(1)"]; }],
     ["data URL", (c) => { c.evidence.urls = ["data:text/plain,x"]; }],
     ["file URL", (c) => { c.evidence.urls = ["file:///tmp/x"]; }],
-    ["credentials付きURL", (c) => { c.evidence.urls = ["https://user:pass@example.com/"]; }],
+    ["credentials付きURL", (c) => { c.evidence.urls = ["https://user:pass@127.0.0.1/"]; }],
     ["重複URL", (c) => { c.evidence.urls = [c.target.sourceUrl, c.target.sourceUrl]; }],
     ["URL 11件", (c) => { c.evidence.urls = Array.from({ length: 11 }, (_, i) => `https://example.com/${i}`); }],
     ["evidence extra key", (c) => { c.evidence.extra = true; }],

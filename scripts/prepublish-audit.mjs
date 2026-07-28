@@ -1234,6 +1234,7 @@ for (const file of allFiles) {
       HISTORICAL_CONTROL_POINT_CATALOG_FILE,
       HISTORICAL_MAP_DISPLAY_CATALOG_FILE,
       HISTORICAL_REFERENCE_ASSETS_FILE,
+      EDO_PLACE_CURATION_CATALOG_FILE,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
