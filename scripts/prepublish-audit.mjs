@@ -40,6 +40,10 @@ import {
   summarizeHistoricalReferenceAssetCatalog,
 } from "./historical-reference-assets.mjs";
 import { auditHistoricalReferencePanelRegistry } from "./historical-reference-panel-registry.mjs";
+import {
+  auditEdoPlaceCurationCandidateRepository,
+  summarizeEdoPlaceCurationCandidates,
+} from "./edo-place-curation-candidates.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -230,6 +234,8 @@ const HISTORICAL_MAP_DISPLAY_CATALOG_FILE =
   "data-curation/historical-map-display-catalog.json";
 const HISTORICAL_REFERENCE_ASSETS_FILE =
   "data-curation/historical-reference-assets.json";
+const EDO_PLACE_CURATION_CATALOG_FILE =
+  "data-curation/edo-place-curation-candidates.json";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -1228,6 +1234,7 @@ for (const file of allFiles) {
       HISTORICAL_CONTROL_POINT_CATALOG_FILE,
       HISTORICAL_MAP_DISPLAY_CATALOG_FILE,
       HISTORICAL_REFERENCE_ASSETS_FILE,
+      EDO_PLACE_CURATION_CATALOG_FILE,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
@@ -1517,6 +1524,15 @@ for (const message of historicalRasterAudit.errors) {
   addFinding("error", "古地図ラスターパック", "src/historical-raster-registry.json", 0, message);
 }
 infos.push(...historicalRasterAudit.infos.map((message) => `古地図ラスタ: ${message}`));
+
+const edoPlaceCurationAudit = auditEdoPlaceCurationCandidateRepository(ROOT);
+for (const message of edoPlaceCurationAudit.errors) {
+  addFinding("error", "江戸地名キュレーション候補", EDO_PLACE_CURATION_CATALOG_FILE, 0, message);
+}
+if (edoPlaceCurationAudit.catalog) {
+  const summary = summarizeEdoPlaceCurationCandidates(edoPlaceCurationAudit.catalog);
+  infos.push(`江戸地名キュレーション候補: ${summary.count}件、approved ${summary.approvedCount}`);
+}
 
 const historicalRasterCandidateAudit = auditHistoricalRasterCandidateRepository(ROOT);
 for (const message of historicalRasterCandidateAudit.errors) {

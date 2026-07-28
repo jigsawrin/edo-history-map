@@ -12,6 +12,7 @@
     "build:static-themes": "node scripts/build-static-theme-pages.mjs",
     "build:static-timeline": "node scripts/build-static-timeline-pages.mjs",
     "audit:static-links": "node scripts/audit-static-place-links.mjs",
+    "audit:edo-place-curation-candidates": "node scripts/edo-place-curation-candidates.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint .",
