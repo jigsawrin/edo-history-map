@@ -34,6 +34,8 @@ jobs:
         run: npm run audit:static-links
       - name: Edo place curation candidate audit
         run: npm run audit:edo-place-curation-candidates
+      - name: Edo source identity relation audit
+        run: npm run audit:edo-place-source-identity-relations
       - name: Historical raster candidate audit
         run: npm run audit:historical-raster-candidates
       - name: Historical raster audit

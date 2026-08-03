@@ -13,6 +13,8 @@
     "build:static-timeline": "node scripts/build-static-timeline-pages.mjs",
     "audit:static-links": "node scripts/audit-static-place-links.mjs",
     "audit:edo-place-curation-candidates": "node scripts/edo-place-curation-candidates.mjs",
+    "data:build:edo-place-source-identity-relations": "node scripts/edo-place-source-identity-relations.mjs --build",
+    "audit:edo-place-source-identity-relations": "node scripts/edo-place-source-identity-relations.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint .",
