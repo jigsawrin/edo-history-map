@@ -30,6 +30,11 @@ fetchを行いません。
 - SHA-256: `b83960ac1e4f1061c84a23580ed41282be230ff2f3f4f0335308434ac6620161`
 - bytes: `1554363`
 
+生成済みcatalog自体もfile-level integrityで固定します。
+
+- catalog bytes: `1239092`
+- catalog SHA-256: `dcbf603181e36325139b3f951f436c16ec6a4747ae2b9c4742841dba4ab38558`
+
 生成前にSHA、bytes、12列header、8,788 IDと公開GeoJSONの全snapshotを検査します。
 
 ```powershell
@@ -38,7 +43,10 @@ npm run audit:edo-place-source-identity-relations
 ```
 
 CIでは元CSVを取得せず、committed catalogとprotected GeoJSONだけを監査します。外部配布物の
-可用性や内容変化にCIを依存させず、入力由来は固定SHAで再現します。
+可用性や内容変化にCIを依存させず、入力由来は固定SHAで再現します。CIはcatalogのbytes/SHAと
+protected GeoJSON上のtarget snapshotの両方を検査します。catalog更新時は公式CSVの再取得、
+入力SHA確認、決定的再生成、catalog SHA/bytes更新、人間レビューが必要です。summary件数だけでは
+公式関係全体の完全性を証明できないため、file-level integrityを使用します。
 
 ## 出典とライセンス
 

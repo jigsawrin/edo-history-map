@@ -19,6 +19,9 @@ import {
 
 export const EDO_SOURCE_IDENTITY_CATALOG_PATH =
   "data-curation/edo-place-source-identity-relations.json";
+export const EDO_SOURCE_IDENTITY_CATALOG_SHA256 =
+  "dcbf603181e36325139b3f951f436c16ec6a4747ae2b9c4742841dba4ab38558";
+export const EDO_SOURCE_IDENTITY_CATALOG_BYTE_LENGTH = 1239092;
 export const EDO_SOURCE_CSV_OFFICIAL_URL =
   "https://codh.rois.ac.jp/edo-maps/dataset/owariya.csv";
 export const EDO_SOURCE_CSV_SHA256 =
@@ -49,10 +52,13 @@ export const EDO_SOURCE_IDENTITY_EXPECTED = Object.freeze({
   sameSheetMemberGroups: 2,
   anomalies: 2,
 });
-export const EDO_SOURCE_IDENTITY_ANOMALY_IDS = Object.freeze([
-  "20-358",
-  "20-369",
-]);
+export const EDO_SOURCE_IDENTITY_ANOMALIES = Object.freeze({
+  "20-358": "hqugGh",
+  "20-369": "ONCq65",
+});
+export const EDO_SOURCE_IDENTITY_ANOMALY_IDS = Object.freeze(
+  Object.keys(EDO_SOURCE_IDENTITY_ANOMALIES),
+);
 
 const TOP_KEYS = [
   "schemaVersion",
@@ -456,6 +462,8 @@ export function validateEdoPlaceSourceIdentityCatalog(
 ) {
   const expected = options.expected ?? EDO_SOURCE_IDENTITY_EXPECTED;
   const anomalyIds = options.anomalyIds ?? EDO_SOURCE_IDENTITY_ANOMALY_IDS;
+  const anomalyPreferredIds = options.anomalyPreferredIds ??
+    (options.anomalyIds ? null : EDO_SOURCE_IDENTITY_ANOMALIES);
   const featureCount = options.featureCount ?? EDO_SOURCE_FEATURE_COUNT;
   const sourceDataSha256 = options.sourceDataSha256 ?? EDO_SOURCE_SHA256;
   const csvSha256 = options.csvSha256 ?? EDO_SOURCE_CSV_SHA256;
@@ -536,6 +544,12 @@ export function validateEdoPlaceSourceIdentityCatalog(
     assert(anomaly.disposition === "preserved-not-grouped", `${label}.disposition is invalid`);
     assert(CODH_PREFERRED_ID_PATTERN.test(anomaly.declaredPreferredId), `${label}.declaredPreferredId is invalid`);
     assert(anomaly.declaredPreferredEntryId === anomaly.target.entryId, `${label} is not a self-preference`);
+    if (anomalyPreferredIds) {
+      assert(
+        anomaly.declaredPreferredId === anomalyPreferredIds[anomaly.target.entryId],
+        `${label}.declaredPreferredId does not match the protected value`,
+      );
+    }
     validateTarget(anomaly.target, sourceGeoJson, `${label}.target`);
     assert(!memberEntryIds.has(anomaly.target.entryId), `${label} is also a group member`);
     actualAnomalyIds.push(anomaly.target.entryId);
@@ -620,9 +634,19 @@ export function auditEdoPlaceSourceIdentityRepository(root = process.cwd()) {
       "protected Edo GeoJSON SHA-256 changed",
     );
     const sourceGeoJson = JSON.parse(sourceBytes.toString("utf8"));
-    catalog = JSON.parse(
-      readFileSync(resolve(root, EDO_SOURCE_IDENTITY_CATALOG_PATH), "utf8"),
+    const catalogBytes = readFileSync(
+      resolve(root, EDO_SOURCE_IDENTITY_CATALOG_PATH),
     );
+    assert(
+      catalogBytes.length === EDO_SOURCE_IDENTITY_CATALOG_BYTE_LENGTH,
+      "Edo source identity catalog byte length changed",
+    );
+    assert(
+      createHash("sha256").update(catalogBytes).digest("hex") ===
+        EDO_SOURCE_IDENTITY_CATALOG_SHA256,
+      "Edo source identity catalog SHA-256 changed",
+    );
+    catalog = JSON.parse(catalogBytes.toString("utf8"));
     validateEdoPlaceSourceIdentityCatalog(catalog, sourceGeoJson);
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));
@@ -651,6 +675,16 @@ function buildMode(args) {
     JSON.parse(sourceBytes.toString("utf8")),
   );
   const output = `${JSON.stringify(catalog, null, 2)}\n`;
+  const outputBytes = Buffer.from(output, "utf8");
+  assert(
+    outputBytes.length === EDO_SOURCE_IDENTITY_CATALOG_BYTE_LENGTH,
+    "generated Edo source identity catalog byte length changed",
+  );
+  assert(
+    createHash("sha256").update(outputBytes).digest("hex") ===
+      EDO_SOURCE_IDENTITY_CATALOG_SHA256,
+    "generated Edo source identity catalog SHA-256 changed",
+  );
   writeFileSync(resolve(outputPath), output, "utf8");
   console.log(`wrote ${catalog.groups.length} source identity groups -> ${resolve(outputPath)}`);
 }

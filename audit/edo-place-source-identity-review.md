@@ -14,6 +14,9 @@ preferredを表示上の正解、削除、非表示、表記訂正とは解釈�
 - CSV行・一意ID: 8,788
 - 公開GeoJSON SHA-256:
   `7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4`
+- relation catalog bytes: 1,239,092
+- relation catalog SHA-256:
+  `dcbf603181e36325139b3f951f436c16ec6a4747ae2b9c4742841dba4ab38558`
 
 ## 監査結果
 
@@ -36,7 +39,9 @@ preferredを表示上の正解、削除、非表示、表記訂正とは解釈�
 | 20-369 | 水久寺 | ONCq65 | 20-369 | preserved-not-grouped |
 
 公式関係外の同一座標group `12-182`（妙典寺）/ `24-133`（妙伝寺）は、関係列が空欄のため
-catalogへ収録しない。名称やcategoryの差を誤記と推測せず、元snapshotを保持する。
+catalogへ収録しない。名称やcategoryの差を誤記と推測せず、元snapshotを保持する。summary件数だけでは
+source relation全体の完全性を証明できないため、committed catalog bytesのSHA-256とbyte lengthも
+固定して監査する。
 
 ## 公開境界
 

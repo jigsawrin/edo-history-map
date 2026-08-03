@@ -1,10 +1,20 @@
 import { createHash } from "node:crypto";
 /* eslint-disable @typescript-eslint/no-explicit-any -- mutation tests exercise untyped JSON schema failures */
-import { readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   EDO_SOURCE_CSV_HEADER,
+  EDO_SOURCE_IDENTITY_CATALOG_BYTE_LENGTH,
+  EDO_SOURCE_IDENTITY_CATALOG_SHA256,
+  auditEdoPlaceSourceIdentityRepository,
   auditEdoPlaceSourceIdentityLeakage,
   generateEdoPlaceSourceIdentityCatalog,
   parseEdoSourceIdentityCsv,
@@ -24,7 +34,59 @@ const committed = JSON.parse(
     "utf8",
   ),
 );
+const committedBytes = readFileSync(
+  join(ROOT, "data-curation/edo-place-source-identity-relations.json"),
+);
 const clone = <T>(value: T): T => structuredClone(value);
+
+function expectCommittedCatalogIntegrity(): void {
+  expect(committedBytes).toHaveLength(EDO_SOURCE_IDENTITY_CATALOG_BYTE_LENGTH);
+  expect(createHash("sha256").update(committedBytes).digest("hex")).toBe(
+    EDO_SOURCE_IDENTITY_CATALOG_SHA256,
+  );
+  expect(repositoryAuditForCatalog(committedBytes)).toEqual([]);
+}
+
+function repositoryAuditForCatalog(catalogBytes: Buffer): string[] {
+  const temporaryRoot = mkdtempSync(join(tmpdir(), "edo-source-identity-integrity-"));
+  try {
+    mkdirSync(join(temporaryRoot, "public/data"), { recursive: true });
+    mkdirSync(join(temporaryRoot, "data-curation"), { recursive: true });
+    mkdirSync(join(temporaryRoot, "src"), { recursive: true });
+    writeFileSync(
+      join(temporaryRoot, "public/data/edo-places.geojson"),
+      readFileSync(join(ROOT, "public/data/edo-places.geojson")),
+    );
+    writeFileSync(
+      join(temporaryRoot, "data-curation/edo-place-source-identity-relations.json"),
+      catalogBytes,
+    );
+    return auditEdoPlaceSourceIdentityRepository(temporaryRoot).errors;
+  } finally {
+    rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+}
+
+function expectStructurallyValidMutationRejectedByRepositoryAudit(): void {
+  const mutated = clone(committed);
+  const [first, second] = mutated.groups.slice(0, 2);
+  [first.codhPreferredId, second.codhPreferredId] = [
+    second.codhPreferredId,
+    first.codhPreferredId,
+  ];
+  for (const item of [first, second]) {
+    for (const member of item.members.slice(1)) {
+      member.declaredPreferredId = item.codhPreferredId;
+    }
+  }
+  expect(validateEdoPlaceSourceIdentityCatalog(mutated, source)).toBe(mutated);
+
+  expect(
+    repositoryAuditForCatalog(
+      Buffer.from(`${JSON.stringify(mutated, null, 2)}\n`, "utf8"),
+    ),
+  ).toContain("Edo source identity catalog SHA-256 changed");
+}
 
 function invalid(mutate: (value: any) => void): void {
   const value = clone(committed);
@@ -91,6 +153,14 @@ function synthetic(): {
 }
 
 describe("江戸 source identity relation catalog", () => {
+  it("committed catalogのbyte lengthとSHA-256を固定する", () => {
+    expectCommittedCatalogIntegrity();
+  });
+
+  it("構造上有効でもsource relationが異なるcatalogをrepository auditで拒否する", () => {
+    expectStructurallyValidMutationRejectedByRepositoryAudit();
+  });
+
   it("committed catalogが合格する", () => {
     expect(validateEdoPlaceSourceIdentityCatalog(committed, source)).toBe(committed);
   });
@@ -210,6 +280,7 @@ describe("江戸 source identity relation catalog", () => {
     ["anomaly missing", (v: any) => { v.sourceAnomalies.pop(); }],
     ["anomaly extra", (v: any) => { v.sourceAnomalies.push(clone(v.sourceAnomalies[0])); }],
     ["anomaly target mismatch", (v: any) => { v.sourceAnomalies[0].target.name = "差分"; }],
+    ["anomaly preferred ID mismatch", (v: any) => { v.sourceAnomalies[0].declaredPreferredId = "Ab12Cd"; }],
     ["self-reference in group", (v: any) => { v.groups[0].members.push({ role: "nonpreferred", declaredPreferredId: v.groups[0].codhPreferredId, declaredPreferredEntryId: v.groups[0].preferredEntryId, target: clone(v.sourceAnomalies[0].target) }); }],
     ["prohibited coordinate pair", (v: any) => {
       const targets = ["12-182", "24-133"].map((id) => {
