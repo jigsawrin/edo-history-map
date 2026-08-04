@@ -75,6 +75,8 @@
 
 ## 古地図ラスタとの接続
 
+候補台帳のapprovedは`historicalRasterIds`へ直接追加しない。原本SHA、位置合わせ、誤差、タイルmanifest、具体的なDATA_SOURCES sourceが揃い、本番ラスタ監査を通ったシートだけを地域・年代へ接続する。2026-07-18時点の`edo-late`は本番ラスタ0件で、既存`reconstructed`を維持する。
+
 `RegionEraDefinition`の`historicalRasterIds`と`defaultHistoricalRasterId`は、承認済み画像がある年代だけ
 同時に定義する。ID重複、default配列外、存在しないID、region/era/source/attribution不一致、
 pending/rejected、古地図なしの`historical-map`をRegistryが拒否する。複数IDは配列と固定priorityで扱うが、

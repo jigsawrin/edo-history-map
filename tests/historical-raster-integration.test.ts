@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { auditHistoricalRasterRepository } from "../scripts/audit-historical-rasters.mjs";
+import { auditHistoricalRasterRepository, validateHistoricalRasterSourceCandidates } from "../scripts/audit-historical-rasters.mjs";
 import { HISTORICAL_VIEW_MODES, VISUAL_LAYER_ENABLED, VISUAL_LAYER_IDS } from "../src/eras";
 import { createMapPanes, MAP_PANES } from "../src/leaflet-layers";
 
@@ -59,6 +59,12 @@ describe("古地図ラスタ基盤の本番統合", () => {
     const audit = auditHistoricalRasterRepository(ROOT);
     expect(audit.errors).toEqual([]);
     expect(audit.definitions).toHaveLength(0);
+  });
+
+  it("historical rasterはoverlay用途sourceだけを受理する", () => {
+    const definitions = [{ id: "test-raster", sourceId: "test-source" }];
+    expect(validateHistoricalRasterSourceCandidates(definitions, [{ candidateId: "test-source", intendedUses: ["georeferenced-overlay"] }])).toEqual([]);
+    expect(validateHistoricalRasterSourceCandidates(definitions, [{ candidateId: "test-source", intendedUses: ["reference-panel"] }])[0]).toMatch(/georeferenced-overlay/u);
   });
 
   it("test fixture、原本、未承認画像をpublic/distへ含めない", () => {

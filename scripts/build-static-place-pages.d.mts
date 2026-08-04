@@ -44,6 +44,11 @@ export interface StaticPlaceGeneration {
     readonly kyoto: { readonly placeCount: number; readonly pageCount: number };
     readonly shiga: { readonly placeCount: number; readonly pageCount: number };
     readonly files: Readonly<Record<string, string>>;
+    readonly historicalReferenceAssets?: {
+      readonly schemaVersion: 1;
+      readonly assetCount: number;
+      readonly files: readonly { readonly publicPath: string; readonly sha256: string; readonly bytes: number }[];
+    };
   };
   readonly edoPlaces: readonly Readonly<Record<string, unknown>>[];
   readonly kyotoPlaces: readonly Readonly<Record<string, unknown>>[];
@@ -60,6 +65,11 @@ export function generateStaticPlaceFiles(options: {
   shigaPresentation: Record<string, unknown>;
   css: string;
   inputSha256: Readonly<Record<string, string>>;
+  historicalReferenceAssets?: {
+    readonly schemaVersion: 1;
+    readonly assetCount: number;
+    readonly files: readonly { readonly publicPath: string; readonly sha256: string; readonly bytes: number }[];
+  };
 }): StaticPlaceGeneration;
 export function buildStaticPlacePages(
   root?: string,

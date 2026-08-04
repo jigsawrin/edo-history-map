@@ -13,6 +13,7 @@ export function rasterDefinition(
     attributionId: "gsi-tiles", sourceId: "project-generated-fixture",
     georeferenceMethod: "projective", controlPointCount: 4,
     estimatedErrorMeters: 12, maximumErrorMeters: 25,
+    qualityGateVersion: 1, qualityGatePassed: true,
     sourceDateDisplayJa: "テスト用（実在資料ではありません）",
     geographicCoverageJa: "テスト専用格子範囲",
     georeferenceNoteJa: "四隅の自作基準点で検証します。",

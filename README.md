@@ -49,6 +49,7 @@
   対象年代・位置の確度・出典・ライセンス)
 - 「現在地を表示」ボタン(押した時のみ位置情報を1回取得。保存しない)
 - アプリ内の出典・ライセンス画面、プライバシー画面
+- 和田倉・馬場先周辺をズーム17以上で閲覧したときだけ案内する、1717年「和田倉御門」「馬場先御門」参考画像パネル（自動表示なし、拡大・縮小・全体表示、スクロール閲覧、キーボード・モバイル対応）
 
 ## 使用データと出典
 
@@ -84,10 +85,10 @@
 
 ### 古地図画像について
 
-江戸切絵図などの古地図「画像」そのものは、画像単位の利用条件確認が
-完了していないため **本アプリには含まれていません**。コードは画像レイヤーの
-追加に対応した設計ですが、現在は無効です。今後、権利確認済み
-(DATA_SOURCES.yml で `review_status: approved`)の画像のみ追加できます。
+現代地図へ測地同期する古地図overlay画像は、**本アプリには含まれていません**。
+公式一次ソース15候補のうち13件は商用利用を含む権利条件を確認しましたが、
+十分に分散した基準点と独立誤差評価を終えた本番ラスタはまだ0件です。台東区版「御大名小路辰之口辺図」はCC BY 4.0の権利ゲートを通過しましたが、公式根拠でtransform 8点と独立validation 4点を確定できず、画像・タイル・UIを公開していません。コードは
+画像レイヤーに対応していますが、権利・位置精度・manifestの全ゲートを通るまで無効です。一方、享保2年（1717）の「江戸城御外郭御門絵図 第1図 和田倉御門」「第2図 馬場先御門」は、東京都立中央図書館所蔵のパブリックドメイン画像を部分・加工した参考閲覧専用PNGとして公開しています。地図中心とzoomに応じて各局所図を案内し、パネル内に出典・所蔵・部分加工・Public Domainと[公式資料URL](https://archive.library.metro.tokyo.lg.jp/da/detail?tilcod=0000000002-00006960)を表示します。どちらも現代地図や選択可能な江戸後期表示（1849–1862）へ位置合わせした図ではありません。
 
 現在表示できる「歴史背景＋江戸地名」は、プロジェクト独自の装飾的な
 和紙風CSS背景、承認済み町家領域、承認済み江戸末期海岸線、承認済み地名ポイントで
@@ -172,6 +173,8 @@ npm run build:static-places # 承認済みGeoJSONから静的地点一覧を生�
 npm run build:static-themes # 固定テーマ定義から静的テーマ索引と地点逆リンクを生成
 npm run build:static-timeline # 監査済み年表と地点・テーマ逆リンクを生成
 npm run audit:static-links  # 静的一覧のリンク・HTML・manifestを監査
+npm run audit:edo-place-curation-candidates # 非公開の江戸地名候補台帳を監査
+npm run audit:edo-derived-place-model # 共通派生地点モデルの件数・reverse mapping・SHA・非公開境界を監査
 npm run audit:prepublish  # 公開前監査(秘密情報・ライセンス・出典検査)
 ```
 
@@ -211,8 +214,16 @@ URL、Cookie、ブラウザストレージへ保存しません。
 - [docs/HISTORICAL_TIMELINE.md](docs/HISTORICAL_TIMELINE.md) — 歴史年表の日付モデル、採用原則、地図UI、静的ページ
 - [docs/HISTORICAL_BASEMAP.md](docs/HISTORICAL_BASEMAP.md) — 年代・pane・歴史画像の安全な拡張設計
 - [docs/HISTORICAL_RASTER_PACKS.md](docs/HISTORICAL_RASTER_PACKS.md) — 1シート単位の古地図ラスターパック、権利・manifest・位置誤差監査
+- [docs/HISTORICAL_RASTER_SOURCES.md](docs/HISTORICAL_RASTER_SOURCES.md) — 候補台帳、商用利用ゲート、同題別所蔵の分離
+- [docs/HISTORICAL_CONTROL_POINT_CATALOG.md](docs/HISTORICAL_CONTROL_POINT_CATALOG.md) — 公式根拠付き歴史基準点カタログの空基盤
+- [docs/HISTORICAL_MAP_DISPLAY.md](docs/HISTORICAL_MAP_DISPLAY.md) — 表示範囲・ズーム別の古地図表示カタログ空基盤
+- [docs/HISTORICAL_REFERENCE_ASSETS.md](docs/HISTORICAL_REFERENCE_ASSETS.md) — reference-panel向け歴史参考画像台帳の空基盤
 - [docs/REGION_PACKS.md](docs/REGION_PACKS.md) — 地域パックの構造と安全な追加手順
 - [docs/BROWSER_QA.md](docs/BROWSER_QA.md) — Canvas操作とPagesキャッシュの実ブラウザ確認手順
+- [docs/EDO_PLACE_CURATION.md](docs/EDO_PLACE_CURATION.md) — 江戸地名の非表示・表記修正・補足追記候補の非公開管理
+- [docs/EDO_DERIVED_PLACE_MODEL.md](docs/EDO_DERIVED_PLACE_MODEL.md) — 江戸地名の共通派生地点モデル（non-runtime foundation）
+
+江戸地名キュレーションcatalogは現在0件の空基盤で、公開表示・検索・静的地点ページ・元GeoJSONへの効果はありません。
 
 ## ライセンス
 
@@ -228,8 +239,9 @@ URL、Cookie、ブラウザストレージへ保存しません。
 出典、加工履歴を固定metadataとmanifestで監査します。複数シートを見た目だけで
 一枚に接続したり、隙間をAI画像や推定道路で補完したりしません。
 
-2026-07-18時点では候補画像の画像単位の取得・再配布・加工・タイル化条件を確認できず、
-公開画像は0件です。承認source一覧と実行時レジストリは空で、既存の江戸後期、京都、
+2026-07-18時点では15候補・4所蔵機関を調査し、13件で画像単位の商用・再配布・加工・
+タイル化条件を確認しました。1件をGit除外の`data-raw/`で技術検査しましたが、基準点と
+誤差評価が未完のため測地同期ラスタの公開画像は0件です。本番承認source一覧と測地同期ラスタregistryは空で、既存の江戸後期、京都、
 滋賀のUIに空の古地図操作は表示されません。検証にはプロジェクトが決定的に生成する
 テスト専用格子PNGを使い、fixtureは`dist/`やPages artifactへ含めません。古地図選択、
-不透明度、読込状態はURL、Cookie、localStorage、sessionStorage、IndexedDBへ保存しません。
+不透明度、読込状態はURL、Cookie、localStorage、sessionStorage、IndexedDBへ保存しません。和田倉御門・馬場先御門の参考画像2件は別系統のreference panelであり、tileやoverlayではありません。

@@ -49,6 +49,18 @@ letter、colon、backslash、`..`、重複、欠損、orphan、symlink、SVG、H
 承認せず、変換方式と範囲に応じて四隅を含む空間分布と誤差評価を確認する。georeference metadataは
 方式、基準点数、ソフトとversion、平均・中央値・最大誤差、範囲、歪み、隣接シート不一致、入力SHAを固定する。
 
+複数古地図から参照する現代側の歴史的ランドマーク候補は、古地図pixel基準点とは別に
+`docs/HISTORICAL_CONTROL_POINT_CATALOG.md`のカタログで管理する。カタログ登録だけでは
+transform/validationへ昇格しない。
+
+schema v2では点を`transform`、`validation`、`hold`、`rejected`へ事前分離する。transform/validationへlowを使わず、移設点・不確実点をtransformへ使わない。公式evidence URLとapproved sourceを要求する。品質ゲートv1はtransform 8点、独立validation 4点、双方の分布、validation平均150m以下・中央値100m以下・最大350m以下に加え、端部反転・局所折れ、文字可読性、bounds、attribution、100MiB上限、package検証をすべて要求する。
+
+残差は対象緯度を考慮した測地距離をメートルで算出する。公開用推定・最大誤差は原則として独立validationから得る。数値を満たすためにTPS等で局所的な折れや過度な伸縮を作らない。
+
+## 固定ローカライズ
+
+日本語を正本とし、`LocaleId = "ja" | "en"`と`LocalizedText`で監査可能な固定英訳を保持する。英訳がない場合は日本語へfallbackし、HTML、制御文字、空文字を拒否する。実行時翻訳API、外部翻訳script、Cookie、storage、Accept-Languageによる強制リダイレクトは使わない。`HistoricalRasterDefinition.sheetLabelEn`は任意で、日本語UIを壊さない。
+
 UIでは推定誤差と最大誤差を区別し、nullを0mにしない。古地図は地籍、所有権、境界、測量、防災判断に
 使えず、隣接シートと一致しないことを明示する。不適切表現を肯定せず、研究・歴史資料として原本表記を
 保持した旨を別テキストで説明する。
@@ -70,6 +82,8 @@ Service Worker、Cookie、localStorage、sessionStorage、IndexedDB、URL保存�
 manifest、bounds、zoom、opacity、欠損、orphan、SHA、bytes、magic bytes、寸法、基準点分布を検証する。
 本番レジストリや`dist/`へ入れず、利用者向けに古地図と表示しない。
 
-2026-07-18の候補「大名小路神田橋内内桜田之図」（NDL書誌ID `000007297269`）は紙資料の書誌情報までしか
-確認できず、画像単位の取得・権利条件が不足したため不承認とした。公開画像、tile、静的説明ページは0件で、
-江戸後期の`reconstructed`表示と京都・滋賀を維持する。東京8,788地点の整理は別フェーズである。
+2026-07-18の次フェーズでは15候補・4所蔵機関を公式一次ソースで調査し、パブリックドメインまたはCC BY 4.0を
+画像単位で確認できた13件を権利面approvedとした。台東区版「御大名小路辰之口辺図」1件をGit除外の`data-raw/`
+で技術検査したが、十分に分散した基準点と独立誤差評価が未完のため本番へ昇格していない。公開画像、tile、
+静的説明ページは0件で、江戸後期の`reconstructed`表示と京都・滋賀を維持する。候補正本と商用利用ゲートは
+`docs/HISTORICAL_RASTER_SOURCES.md`を参照する。東京8,788地点の整理は別フェーズである。

@@ -12,6 +12,10 @@
     "build:static-themes": "node scripts/build-static-theme-pages.mjs",
     "build:static-timeline": "node scripts/build-static-timeline-pages.mjs",
     "audit:static-links": "node scripts/audit-static-place-links.mjs",
+    "audit:edo-place-curation-candidates": "node scripts/edo-place-curation-candidates.mjs",
+    "data:build:edo-place-source-identity-relations": "node scripts/edo-place-source-identity-relations.mjs --build",
+    "audit:edo-place-source-identity-relations": "node scripts/edo-place-source-identity-relations.mjs",
+    "audit:edo-derived-place-model": "node scripts/edo-derived-place-model.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint .",
@@ -23,16 +27,23 @@
     "data:build:shiga": "node scripts/build-shiga-sengoku-places.mjs",
     "audit:prepublish": "node scripts/prepublish-audit.mjs",
     "audit:historical-rasters": "node scripts/audit-historical-rasters.mjs",
-    "verify:historical-raster-package": "node scripts/historical-raster-package.mjs"
+    "audit:historical-raster-candidates": "node scripts/historical-raster-candidates.mjs",
+    "audit:historical-control-points": "node scripts/historical-control-point-catalog.mjs",
+    "audit:historical-map-display": "node scripts/historical-map-display-catalog.mjs",
+    "audit:historical-reference-assets": "node scripts/historical-reference-assets.mjs",
+    "audit:historical-reference-panels": "node scripts/historical-reference-panel-registry.mjs",
+    "verify:historical-reference-assets-local": "node scripts/historical-reference-assets.mjs --verify-local",
+    "verify:historical-raster-package": "node scripts/historical-raster-package.mjs",
+    "analyze:historical-raster-image": "node scripts/inspect-jpeg.mjs data-raw/historical-rasters/taito-2017-chi-009/2017_chi_009_002-canvas-002.jpg"
   },
   "dependencies": {
     "leaflet": "^1.9.4"
   },
   "devDependencies": {
-    "@eslint/js": "^9.20.0",
+    "@eslint/js": "^10.0.1",
     "@types/leaflet": "^1.9.12",
     "@types/node": "^26.1.1",
-    "eslint": "^9.20.0",
+    "eslint": "^10.8.0",
     "jsdom": "^26.0.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.24.0",

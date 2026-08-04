@@ -22,11 +22,12 @@ const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 // eslint-disable-next-line no-control-regex
 const FORBIDDEN_TEXT = /[\u0000-\u001f\u007f<>]/u;
 const DEFINITION_KEYS = new Set([
-  "id", "regionId", "eraId", "titleJa", "titleEn", "sheetLabelJa",
+  "id", "regionId", "eraId", "titleJa", "titleEn", "sheetLabelJa", "sheetLabelEn",
   "sourceId", "attributionId", "localTilePath", "tileManifestPath",
   "tileFormat", "tileSize", "minZoom", "maxZoom", "maxNativeZoom",
   "bounds", "defaultOpacity", "georeferenceMethod", "controlPointCount",
   "estimatedErrorMeters", "maximumErrorMeters", "sourceDateDisplayJa",
+  "qualityGateVersion", "qualityGatePassed",
   "geographicCoverageJa", "georeferenceNoteJa", "contextNoteJa",
   "seamPolicy", "priority", "reviewStatus",
 ]);
@@ -78,6 +79,7 @@ export function validateHistoricalRasterDefinition(input, label = "historicalRas
     titleJa: text(value.titleJa, `${label}.titleJa`, 160),
     ...(value.titleEn === undefined ? {} : { titleEn: text(value.titleEn, `${label}.titleEn`, 160, true) }),
     sheetLabelJa: text(value.sheetLabelJa, `${label}.sheetLabelJa`, 160),
+    ...(value.sheetLabelEn === undefined ? {} : { sheetLabelEn: text(value.sheetLabelEn, `${label}.sheetLabelEn`, 160, true) }),
     sourceId: id(value.sourceId, `${label}.sourceId`),
     attributionId: id(value.attributionId, `${label}.attributionId`),
     localTilePath: safeLocalPath(value.localTilePath, `${label}.localTilePath`, `/{z}/{x}/{y}.${tileFormat}`),
@@ -93,6 +95,8 @@ export function validateHistoricalRasterDefinition(input, label = "historicalRas
     controlPointCount: integer(value.controlPointCount, `${label}.controlPointCount`, 0, 10000),
     estimatedErrorMeters,
     maximumErrorMeters,
+    qualityGateVersion: value.qualityGateVersion === undefined ? undefined : integer(value.qualityGateVersion, `${label}.qualityGateVersion`, 1, 1),
+    qualityGatePassed: value.qualityGatePassed === true,
     sourceDateDisplayJa: text(value.sourceDateDisplayJa, `${label}.sourceDateDisplayJa`, 160),
     geographicCoverageJa: text(value.geographicCoverageJa, `${label}.geographicCoverageJa`, 500),
     georeferenceNoteJa: text(value.georeferenceNoteJa, `${label}.georeferenceNoteJa`, 1000),
@@ -101,7 +105,7 @@ export function validateHistoricalRasterDefinition(input, label = "historicalRas
     priority: integer(value.priority, `${label}.priority`, 0, 1000000),
     reviewStatus: enumValue(value.reviewStatus, `${label}.reviewStatus`, HISTORICAL_RASTER_REVIEW_STATUSES),
   };
-  if (definition.reviewStatus === "approved" && (definition.controlPointCount === 0 || definition.estimatedErrorMeters === null || definition.maximumErrorMeters === null)) fail(`${label}のapproved定義には基準点と誤差評価が必要です`);
+  if (definition.reviewStatus === "approved" && (definition.controlPointCount === 0 || definition.estimatedErrorMeters === null || definition.maximumErrorMeters === null || definition.qualityGateVersion !== 1 || !definition.qualityGatePassed)) fail(`${label}のapproved定義には基準点・誤差評価・品質ゲート合格が必要です`);
   return Object.freeze(definition);
 }
 

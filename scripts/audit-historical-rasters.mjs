@@ -21,12 +21,31 @@ function walkFiles(root) {
   walk(root); return files;
 }
 
+export function validateHistoricalRasterSourceCandidates(definitions, candidates) {
+  const candidatesById = new Map(candidates.map((candidate) => [candidate.candidateId, candidate]));
+  const errors = [];
+  for (const definition of definitions) {
+    const candidate = candidatesById.get(definition.sourceId);
+    if (!candidate) errors.push(`${definition.id}: source candidateが候補台帳に存在しません`);
+    else if (!candidate.intendedUses?.includes("georeferenced-overlay")) errors.push(`${definition.id}: source candidateにintendedUses=georeferenced-overlayがありません`);
+  }
+  return Object.freeze(errors);
+}
+
 export function auditHistoricalRasterRepository(root) {
   const errors = []; const infos = [];
   const error = (message) => errors.push(message);
+  let candidates = [];
+  try {
+    const registry = JSON.parse(readFileSync(join(root, "data-curation", "historical-raster-candidates.json"), "utf8"));
+    candidates = registry.candidates;
+  } catch (cause) {
+    error(cause instanceof Error ? cause.message : "古地図候補台帳を解析できません");
+  }
   let definitions = [];
   try { definitions = [...validateHistoricalRasterDefinitions(JSON.parse(readFileSync(join(root, "src", "historical-raster-registry.json"), "utf8")))]; }
   catch (cause) { error(cause instanceof Error ? cause.message : "古地図ラスターレジストリを解析できません"); }
+  for (const message of validateHistoricalRasterSourceCandidates(definitions, candidates)) error(message);
   const runtimeSource = readFileSync(join(root, "src", "historical-raster.ts"), "utf8");
   const approvalBlock = runtimeSource.match(/APPROVED_HISTORICAL_RASTER_SOURCE_IDS[\s\S]*?=\s*\[([\s\S]*?)\];/u)?.[1];
   if (approvalBlock === undefined) error("承認済み古地図source一覧を解析できません");

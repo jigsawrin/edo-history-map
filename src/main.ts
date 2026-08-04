@@ -1,6 +1,9 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./style.css";
+import referenceRegistry from "./historical-reference-panel-registry.json";
+import { selectReferenceEntry, type ReferenceEntry } from "./historical-reference-panel";
+import { HistoricalReferencePanelController } from "./historical-reference-panel-controller";
 
 import {
   MIN_ZOOM,
@@ -80,6 +83,11 @@ import {
   type HistoricalRasterDefinition,
   type HistoricalRasterLayer,
 } from "./historical-raster";
+import {
+  fitHistoricalRasterExtent,
+  historicalRasterControlState,
+  historicalRasterViewportStatus,
+} from "./historical-raster-ui";
 
 const ERA_TRANSITION_MS = 220;
 
@@ -121,6 +129,14 @@ function main(): void {
     preferCanvas: true,
   });
   map.attributionControl.setPrefix(false);
+
+  const referenceEntries = referenceRegistry.entries as unknown as readonly ReferenceEntry[];
+  const referenceController = new HistoricalReferencePanelController({
+    prompt:byId("historical-reference-prompt"), open:byId("historical-reference-open"), status:byId("historical-reference-status"), dialog:byId("historical-reference-dialog"), title:byId("historical-reference-title"), date:byId("historical-reference-date"), warning:byId("historical-reference-warning"), description:byId("historical-reference-description"), viewport:byId("historical-reference-image-viewport"), stage:byId("historical-reference-image-stage"), image:byId("historical-reference-image"), imageStatus:byId("historical-reference-image-status"), zoomOut:byId("historical-reference-zoom-out"), zoomIn:byId("historical-reference-zoom-in"), zoomReset:byId("historical-reference-zoom-reset"), zoomStatus:byId("historical-reference-zoom-status"), source:byId("historical-reference-source"), license:byId("historical-reference-license"), attribution:byId("historical-reference-attribution"), disclosure:byId("historical-reference-disclosure"), close:byId("historical-reference-close"),
+  });
+  let visibleReferenceId:string|null=null;
+  const updateReferencePrompt=():void=>{const center=map.getCenter();const entry=selectReferenceEntry(referenceEntries,{regionId:currentRegion.region.id,center:[center.lng,center.lat],zoom:map.getZoom(),visibleId:visibleReferenceId});visibleReferenceId=entry?.id??null;referenceController.setEntry(entry);};
+  map.on("moveend zoomend",updateReferencePrompt);
 
   const panes = createMapPanes(map);
 
@@ -183,6 +199,7 @@ function main(): void {
   const historicalRasterSelect = byId<HTMLSelectElement>("historical-raster-select");
   const historicalRasterOpacity = byId<HTMLInputElement>("historical-raster-opacity");
   const historicalRasterOpacityValue = byId<HTMLOutputElement>("historical-raster-opacity-value");
+  const historicalRasterFit = byId<HTMLButtonElement>("historical-raster-fit");
   const historicalRasterStatus = byId<HTMLElement>("historical-raster-status");
   const historicalRasterDetails = byId<HTMLElement>("historical-raster-details");
   const historicalOriginalNote = byId<HTMLElement>("historical-original-note");
@@ -477,18 +494,21 @@ function main(): void {
   ): readonly Readonly<HistoricalRasterDefinition>[] {
     const rasters = historicalRastersForEra(era);
     syncHistoricalMapOption(rasters.length > 0, allowedViews);
-    historicalRasterControls.hidden = rasters.length === 0;
-    historicalOriginalNote.hidden = rasters.length === 0;
-    if (rasters.length === 0) {
+    const controlState = historicalRasterControlState(
+      rasters,
+      historicalRasterSelect.value,
+      era.defaultHistoricalRasterId,
+    );
+    historicalRasterControls.hidden = !controlState.showControls;
+    historicalOriginalNote.hidden = !controlState.showControls;
+    if (!controlState.selected) {
       historicalRasterSelect.replaceChildren();
       historicalRasterStatus.textContent = "";
       historicalRasterDetails.textContent = "";
       opacityRasterId = null;
       return rasters;
     }
-    const selected = rasters.find((raster) => raster.id === historicalRasterSelect.value)
-      ?? rasters.find((raster) => raster.id === era.defaultHistoricalRasterId)
-      ?? rasters[0] as Readonly<HistoricalRasterDefinition>;
+    const selected = controlState.selected;
     const options = rasters.map((raster) => {
       const option = document.createElement("option");
       option.value = raster.id;
@@ -497,7 +517,7 @@ function main(): void {
     });
     historicalRasterSelect.replaceChildren(...options);
     historicalRasterSelect.value = selected.id;
-    historicalRasterSheetControl.hidden = rasters.length === 1;
+    historicalRasterSheetControl.hidden = !controlState.showSheetSelect;
     if (opacityRasterId !== selected.id) {
       const value = Math.round(selected.defaultOpacity * 100);
       historicalRasterOpacity.value = String(value);
@@ -514,8 +534,18 @@ function main(): void {
       : `最大誤差 ${selected.maximumErrorMeters}m`;
     historicalRasterDetails.textContent =
       `${selected.titleJa}。原本年代：${selected.sourceDateDisplayJa}。位置合わせ：${selected.georeferenceMethod}、基準点 ${selected.controlPointCount}点、${estimated}、${maximum}。対象範囲：${selected.geographicCoverageJa}。${selected.georeferenceNoteJa} ${selected.contextNoteJa} シート境界や隣接地図とは一致しない場合があります。現代の地籍・境界ではなく、測量・所有権・防災判断には使えません。研究・歴史資料として原本表記を保持しており、現在では不適切な名称・表現を含む可能性があります。出典ID：${selected.sourceId}。`;
-    if (!map.getBounds().intersects(L.latLngBounds([[...selected.bounds[0]], [...selected.bounds[1]]]))) {
-      historicalRasterStatus.textContent = "現在の表示範囲は、この古地図シートの対象範囲外です。";
+    const viewport = map.getBounds();
+    const viewportStatus = historicalRasterViewportStatus({
+      south: viewport.getSouth(),
+      west: viewport.getWest(),
+      north: viewport.getNorth(),
+      east: viewport.getEast(),
+    }, selected.bounds);
+    if (
+      viewportStatus ||
+      historicalRasterStatus.textContent.includes("対象範囲外")
+    ) {
+      historicalRasterStatus.textContent = viewportStatus;
     }
     return rasters;
   }
@@ -1129,6 +1159,7 @@ function main(): void {
     rasterRequestId = null;
     syncAttributions(["gsi-tiles"]);
     currentRegion = pack;
+    visibleReferenceId = null;
     regionToken = loadCoordinator.begin(pack.region.id);
     historicalPointsLayer = null;
     activeHistoricalPointsDatasetId = null;
@@ -1145,6 +1176,7 @@ function main(): void {
       announceRegionChange(regionStatus, pack);
     }
     loadRegionLayers(pack);
+    updateReferencePrompt();
   }
 
   applyRegionPresentation(currentRegion);
@@ -1164,6 +1196,7 @@ function main(): void {
     curatedSelectionGeneration += 1;
     applyEra(true);
     requestHistoricalRaster();
+    updateReferencePrompt();
   });
   historyViewSelect.addEventListener("change", () => {
     machiyaVisible.checked = defaultMachiyaVisibilityForView(
@@ -1180,6 +1213,14 @@ function main(): void {
     rasterRequestId = null;
     applyEra(true);
     requestHistoricalRaster();
+  });
+  historicalRasterFit.addEventListener("click", () => {
+    const era = regionRegistry.getEraBinding(currentRegion.region.id, eraSelect.value);
+    const definition = era && historicalRastersForEra(era).find((raster) =>
+      raster.id === historicalRasterSelect.value);
+    if (!definition) return;
+    fitHistoricalRasterExtent(map, definition);
+    historicalRasterStatus.textContent = "この古地図シートの対象範囲を表示しました。";
   });
   historicalRasterOpacity.addEventListener("input", applyHistoricalRasterOpacity);
   opacitySlider.addEventListener("input", applyHistoricalOpacity);
@@ -1330,6 +1371,7 @@ function main(): void {
   window.addEventListener("beforeunload", () => {
     transitions.dispose();
     activeHistoricalRaster?.historical.dispose();
+    referenceController.dispose();
   }, {
     once: true,
   });

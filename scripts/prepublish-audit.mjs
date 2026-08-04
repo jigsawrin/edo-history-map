@@ -26,6 +26,29 @@ import { auditStaticPlaceLinks } from "./audit-static-place-links.mjs";
 import { validateHistoricalThemeData } from "./build-static-theme-pages.mjs";
 import { validateTimelineData } from "./build-static-timeline-pages.mjs";
 import { auditHistoricalRasterRepository } from "./audit-historical-rasters.mjs";
+import { auditHistoricalRasterCandidateRepository, summarizeHistoricalRasterCandidates } from "./historical-raster-candidates.mjs";
+import {
+  auditHistoricalControlPointCatalogRepository,
+  summarizeHistoricalControlPointCatalog,
+} from "./historical-control-point-catalog.mjs";
+import {
+  auditHistoricalMapDisplayCatalogRepository,
+  summarizeHistoricalMapDisplayCatalog,
+} from "./historical-map-display-catalog.mjs";
+import {
+  auditHistoricalReferenceAssetRepository,
+  summarizeHistoricalReferenceAssetCatalog,
+} from "./historical-reference-assets.mjs";
+import { auditHistoricalReferencePanelRegistry } from "./historical-reference-panel-registry.mjs";
+import {
+  auditEdoPlaceCurationCandidateRepository,
+  summarizeEdoPlaceCurationCandidates,
+} from "./edo-place-curation-candidates.mjs";
+import {
+  auditEdoPlaceSourceIdentityRepository,
+  summarizeEdoPlaceSourceIdentityRelations,
+} from "./edo-place-source-identity-relations.mjs";
+import { auditEdoDerivedPlaceRepository } from "./edo-derived-place-model.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -104,7 +127,7 @@ const SECRET_PATTERNS = [
  * - ツールの定型 Co-Authored-By アドレス
  */
 const ALLOWED_EMAILS = P(
-  "([A-Za-z0-9._%+-]+@users\\.noreply\\.github\\.com|dependabot\\[bot\\]@users\\.noreply\\.github\\.com|support@github\\.com|noreply@anthropic\\.com)",
+  "([A-Za-z0-9._%+-]+@users\\.noreply\\.github\\.com|dependabot\\[bot\\]@users\\.noreply\\.github\\.com|support@github\\.com|noreply@anthropic\\.com|cursoragent@cursor\\.com)",
 );
 
 const PII_PATTERNS = [
@@ -138,6 +161,10 @@ const ALLOWED_HOSTS = new Set([
   "ndlsearch.ndl.go.jp",
   "id.ndl.go.jp",
   "archive.library.metro.tokyo.jp",
+  "archive.library.metro.tokyo.lg.jp",
+  "adeac.jp",
+  "iiif.adeac.jp",
+  "www.digital.archives.go.jp",
   "github.com",
   "jigsawrin.github.io",
   "registry.npmjs.org",
@@ -204,6 +231,20 @@ const SHIGA_CURATION_FILE = "data-curation/shiga-sengoku-places.json";
 const SHIGA_PUBLIC_FILE = "public/data/shiga-sengoku-places.geojson";
 const HISTORICAL_THEME_CURATION_FILE = "data-curation/historical-themes.json";
 const HISTORICAL_TIMELINE_CURATION_FILE = "data-curation/historical-timeline.json";
+const HISTORICAL_RASTER_CANDIDATE_CURATION_FILE =
+  "data-curation/historical-raster-candidates.json";
+const HISTORICAL_CONTROL_POINT_CATALOG_FILE =
+  "data-curation/historical-control-point-catalog.json";
+const HISTORICAL_MAP_DISPLAY_CATALOG_FILE =
+  "data-curation/historical-map-display-catalog.json";
+const HISTORICAL_REFERENCE_ASSETS_FILE =
+  "data-curation/historical-reference-assets.json";
+const EDO_PLACE_CURATION_CATALOG_FILE =
+  "data-curation/edo-place-curation-candidates.json";
+const EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE =
+  "data-curation/edo-place-source-identity-relations.json";
+const EDO_DERIVED_PLACE_SNAPSHOT_FILE =
+  "scripts/edo-derived-place-model.mjs";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -553,7 +594,7 @@ if (!existsSync(dsPath)) {
   }
   // public/data 配下のファイルはすべて台帳の approved に載っていること
   for (const f of allFiles) {
-    if (f.rel.startsWith("public/data/") && !approvedFiles.has(f.rel)) {
+    if (f.rel.startsWith("public/data/") && !f.rel.startsWith("public/data/historical-reference-assets/") && !approvedFiles.has(f.rel)) {
       addFinding("error", "台帳未登録データ", f.rel, 0, "DATA_SOURCES.yml の approved エントリに未登録");
     }
   }
@@ -1191,7 +1232,21 @@ for (const file of allFiles) {
   if (lower.endsWith(".map")) {
     addFinding("error", "ソースマップ露出", file.rel, 0, "source mapは公開・追跡禁止です");
   }
-  if (lower.startsWith("data-curation/") && ![KYOTO_CURATION_FILE, SHIGA_CURATION_FILE, HISTORICAL_THEME_CURATION_FILE, HISTORICAL_TIMELINE_CURATION_FILE].includes(file.rel)) {
+  if (
+    lower.startsWith("data-curation/") &&
+    ![
+      KYOTO_CURATION_FILE,
+      SHIGA_CURATION_FILE,
+      HISTORICAL_THEME_CURATION_FILE,
+      HISTORICAL_TIMELINE_CURATION_FILE,
+      HISTORICAL_RASTER_CANDIDATE_CURATION_FILE,
+      HISTORICAL_CONTROL_POINT_CATALOG_FILE,
+      HISTORICAL_MAP_DISPLAY_CATALOG_FILE,
+      HISTORICAL_REFERENCE_ASSETS_FILE,
+      EDO_PLACE_CURATION_CATALOG_FILE,
+      EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE,
+    ].includes(file.rel)
+  ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
   }
   if (
@@ -1480,6 +1535,217 @@ for (const message of historicalRasterAudit.errors) {
 }
 infos.push(...historicalRasterAudit.infos.map((message) => `古地図ラスタ: ${message}`));
 
+const edoPlaceCurationAudit = auditEdoPlaceCurationCandidateRepository(ROOT);
+for (const message of edoPlaceCurationAudit.errors) {
+  addFinding("error", "江戸地名キュレーション候補", EDO_PLACE_CURATION_CATALOG_FILE, 0, message);
+}
+if (edoPlaceCurationAudit.catalog) {
+  const summary = summarizeEdoPlaceCurationCandidates(edoPlaceCurationAudit.catalog);
+  infos.push(`江戸地名キュレーション候補: ${summary.count}件、approved ${summary.approvedCount}`);
+}
+
+const edoPlaceSourceIdentityAudit =
+  auditEdoPlaceSourceIdentityRepository(ROOT);
+for (const message of edoPlaceSourceIdentityAudit.errors) {
+  addFinding(
+    "error",
+    "江戸地名source identity関係",
+    EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE,
+    0,
+    message,
+  );
+}
+if (edoPlaceSourceIdentityAudit.catalog) {
+  const summary = summarizeEdoPlaceSourceIdentityRelations(
+    edoPlaceSourceIdentityAudit.catalog,
+  );
+  infos.push(
+    `江戸地名source identity: ${summary.groups}group、${summary.members}member、nonpreferred ${summary.nonpreferred}、source anomaly ${summary.anomalies}`,
+  );
+}
+
+const edoDerivedPlaceAudit = auditEdoDerivedPlaceRepository(ROOT);
+for (const message of edoDerivedPlaceAudit.errors) {
+  addFinding(
+    "error",
+    "江戸地名 共通派生地点モデル",
+    EDO_DERIVED_PLACE_SNAPSHOT_FILE,
+    0,
+    message,
+  );
+}
+if (edoDerivedPlaceAudit.summary) {
+  const summary = edoDerivedPlaceAudit.summary;
+  infos.push(
+    `江戸地名 共通派生地点モデル: ${summary.derivedPlaceCount} places, reverse ${summary.reverseMappedSourceRecordCount}, runtime ${summary.runtimeApplicableDerivedPlaceCount}, SHA-256 ${summary.canonicalOutputSha256}`,
+  );
+}
+
+const historicalRasterCandidateAudit = auditHistoricalRasterCandidateRepository(ROOT);
+for (const message of historicalRasterCandidateAudit.errors) {
+  addFinding("error", "古地図候補台帳", "data-curation/historical-raster-candidates.json", 0, message);
+}
+if (historicalRasterCandidateAudit.registry) {
+  const summary = summarizeHistoricalRasterCandidates(historicalRasterCandidateAudit.registry);
+  infos.push(`古地図候補: ${summary.total}件、${summary.institutions}機関、approved ${summary.approved}、pending ${summary.pending}、rejected ${summary.rejected}`);
+}
+
+const historicalControlPointCatalogAudit = auditHistoricalControlPointCatalogRepository(ROOT);
+for (const message of historicalControlPointCatalogAudit.errors) {
+  addFinding("error", "歴史基準点カタログ", HISTORICAL_CONTROL_POINT_CATALOG_FILE, 0, message);
+}
+if (historicalControlPointCatalogAudit.catalog) {
+  const summary = summarizeHistoricalControlPointCatalog(historicalControlPointCatalogAudit.catalog);
+  infos.push(
+    `歴史基準点カタログ: schema ${summary.schemaVersion}、${summary.entryCount}件、status ${summary.catalogStatus}`,
+  );
+  if (existsSync(join(ROOT, "public", "data", "historical-control-point-catalog.json"))) {
+    addFinding(
+      "error",
+      "歴史基準点カタログ公開",
+      "public/data/historical-control-point-catalog.json",
+      0,
+      "カタログをpublicへ出力してはいけません",
+    );
+  }
+  const distCatalogLeak = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .some((name) => name.includes("historical-control-point-catalog") || name.includes("test-fixture-control-point"))
+    : false;
+  if (distCatalogLeak) {
+    addFinding("error", "歴史基準点カタログ混入", "dist/", 0, "カタログまたはtest fixtureがdistへ混入しています");
+  }
+  const bundleHasCatalogName = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .filter((name) => name.endsWith(".js"))
+        .some((name) => {
+          const content = readFileSync(join(ROOT, "dist", name), "utf8");
+          return (
+            content.includes("historical-control-point-catalog") ||
+            content.includes("test-fixture-control-point") ||
+            content.includes("試験用基準点")
+          );
+        })
+    : false;
+  if (bundleHasCatalogName) {
+    addFinding("error", "歴史基準点カタログruntime混入", "dist/", 0, "runtime bundleへカタログ候補名が混入しています");
+  }
+}
+
+const historicalMapDisplayCatalogAudit = auditHistoricalMapDisplayCatalogRepository(ROOT);
+for (const message of historicalMapDisplayCatalogAudit.errors) {
+  addFinding("error", "古地図表示カタログ", HISTORICAL_MAP_DISPLAY_CATALOG_FILE, 0, message);
+}
+if (historicalMapDisplayCatalogAudit.catalog) {
+  const summary = summarizeHistoricalMapDisplayCatalog(historicalMapDisplayCatalogAudit.catalog);
+  infos.push(
+    `古地図表示カタログ: schema ${summary.schemaVersion}、${summary.mapCount}件、status ${summary.catalogStatus}`,
+  );
+  if (existsSync(join(ROOT, "public", "data", "historical-map-display-catalog.json"))) {
+    addFinding(
+      "error",
+      "古地図表示カタログ公開",
+      "public/data/historical-map-display-catalog.json",
+      0,
+      "カタログをpublicへ出力してはいけません",
+    );
+  }
+  const distDisplayLeak = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .some(
+          (name) =>
+            name.includes("historical-map-display-catalog") ||
+            name.includes("test-fixture-display-map"),
+        )
+    : false;
+  if (distDisplayLeak) {
+    addFinding("error", "古地図表示カタログ混入", "dist/", 0, "カタログまたはtest fixtureがdistへ混入しています");
+  }
+  const bundleHasDisplayCatalogName = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .filter((name) => name.endsWith(".js"))
+        .some((name) => {
+          const content = readFileSync(join(ROOT, "dist", name), "utf8");
+          return (
+            content.includes("historical-map-display-catalog") ||
+            content.includes("test-fixture-display-map") ||
+            content.includes("試験用表示地図")
+          );
+        })
+    : false;
+  if (bundleHasDisplayCatalogName) {
+    addFinding("error", "古地図表示カタログruntime混入", "dist/", 0, "runtime bundleへ表示カタログ名が混入しています");
+  }
+}
+
+const historicalReferenceAssetAudit = auditHistoricalReferenceAssetRepository(ROOT);
+for (const message of historicalReferenceAssetAudit.errors) {
+  addFinding("error", "歴史参考画像台帳", HISTORICAL_REFERENCE_ASSETS_FILE, 0, message);
+}
+if (historicalReferenceAssetAudit.catalog) {
+  const summary = summarizeHistoricalReferenceAssetCatalog(historicalReferenceAssetAudit.catalog);
+  infos.push(
+    `歴史参考画像台帳: schema ${summary.schemaVersion}、${summary.assetCount}件、status ${summary.catalogStatus}`,
+  );
+  if (existsSync(join(ROOT, "public", "data", "historical-reference-assets.json"))) {
+    addFinding(
+      "error",
+      "歴史参考画像台帳公開",
+      "public/data/historical-reference-assets.json",
+      0,
+      "台帳をpublicへ出力してはいけません",
+    );
+  }
+  const distReferenceLeak = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .some(
+          (name) => {
+            const normalized = name.replace(/\\/gu, "/");
+            return (
+              normalized.split("/").at(-1) === "historical-reference-assets.json" ||
+              normalized.includes("test-fixture-reference-asset")
+            );
+          },
+        )
+    : false;
+  if (distReferenceLeak) {
+    addFinding("error", "歴史参考画像台帳混入", "dist/", 0, "台帳またはtest fixtureがdistへ混入しています");
+  }
+  const bundleHasReferenceAssetName = existsSync(join(ROOT, "dist"))
+    ? readdirSync(join(ROOT, "dist"), { recursive: true })
+        .map(String)
+        .filter((name) => name.endsWith(".js"))
+        .some((name) => {
+          const content = readFileSync(join(ROOT, "dist", name), "utf8");
+          return (
+            content.includes("historical-reference-assets.json") ||
+            content.includes("test-fixture-reference-asset") ||
+            content.includes("試験用参考画像") ||
+            [
+              "rawPath",
+              "derivedPath",
+              "cropReviewNote",
+              "tokyo-archive-4300033114-wadakura-gate-reference-image",
+            ].every((needle) => content.includes(needle))
+          );
+        })
+    : false;
+  if (bundleHasReferenceAssetName) {
+    addFinding("error", "歴史参考画像台帳runtime混入", "dist/", 0, "runtime bundleへ参考画像台帳名が混入しています");
+  }
+}
+
+const historicalReferencePanelAudit = auditHistoricalReferencePanelRegistry(ROOT);
+for (const message of historicalReferencePanelAudit.errors) {
+  addFinding("error", "歴史参考パネルregistry", "src/historical-reference-panel-registry.json", 0, message);
+}
+infos.push(`歴史参考パネルregistry: ${historicalReferencePanelAudit.registry?.entries?.length ?? 0}件`);
+
 // ---- 4. 出典表示の確認 -------------------------------------------------------
 
 const attrChecks = [
@@ -1647,7 +1913,7 @@ if (historyNames !== null) {
 
 // 追跡ファイルと .gitignore の整合(追跡中の除外対象がないか)
 for (const t of tracked) {
-  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && !["audit/shiga-sengoku-place-review.md", "audit/historical-theme-review.md", "audit/historical-timeline-review.md", "audit/historical-raster-pilot-review.md"].includes(t))) {
+  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && !["audit/shiga-sengoku-place-review.md", "audit/historical-theme-review.md", "audit/historical-timeline-review.md", "audit/historical-raster-pilot-review.md", "audit/historical-raster-source-survey.md", "audit/historical-raster-first-import.md", "audit/taito-daimyo-koji-control-points.md", "audit/taito-daimyo-koji-georeference-review.md", "audit/edo-place-source-identity-review.md"].includes(t))) {
     addFinding("error", "追跡対象違反", t, 0, "公開対象外ファイルが Git 追跡されています");
   }
 }

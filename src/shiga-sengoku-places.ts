@@ -163,6 +163,8 @@ export async function loadShigaSengokuPlaces(baseUrl = import.meta.env.BASE_URL)
     return parseShigaSengokuGeoJson(await response.text());
   } catch (error) {
     if (error instanceof ValidationError) throw error;
-    throw new Error("滋賀・戦国データを取得できませんでした");
+    throw new Error("滋賀・戦国データを取得できませんでした", {
+      cause: error,
+    });
   } finally { clearTimeout(timeout); }
 }

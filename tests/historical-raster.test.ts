@@ -48,6 +48,15 @@ describe("歴史画像の実行時登録ゲート", () => {
     expect(HISTORICAL_RASTER_DEFINITIONS).toHaveLength(0);
     expect(getApprovedHistoricalRasters()).toHaveLength(0);
   });
+
+  it("qualityGatePassed=falseの定義を本番登録しない", () => {
+    expect(getApprovedHistoricalRasters([raster({ qualityGatePassed: false })], ["project-generated-fixture"])).toHaveLength(0);
+  });
+
+  it("任意のsheetLabelEnを後方互換で検証する", () => {
+    expect(validateHistoricalRasterDefinitions([raster({ sheetLabelEn: "Project grid" })])[0]).toMatchObject({ sheetLabelEn: "Project grid" });
+    expect(() => validateHistoricalRasterDefinitions([raster({ sheetLabelEn: "<b>grid</b>" })])).toThrow();
+  });
 });
 
 describe("Leaflet古地図ラスターレイヤー", () => {
