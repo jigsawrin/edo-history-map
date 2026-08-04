@@ -27,6 +27,7 @@ describe("公開ワークフローの退行防止", () => {
     const staticAudit = source.indexOf("run: npm run audit:static-links");
     const edoCurationAudit = source.indexOf("run: npm run audit:edo-place-curation-candidates");
     const edoSourceIdentityAudit = source.indexOf("run: npm run audit:edo-place-source-identity-relations");
+    const edoDerivedPlaceAudit = source.indexOf("run: npm run audit:edo-derived-place-model");
     const candidateAudit = source.indexOf("run: npm run audit:historical-raster-candidates");
     const rasterAudit = source.indexOf("run: npm run audit:historical-rasters");
     const audit = source.indexOf("run: npm run audit:prepublish");
@@ -34,7 +35,8 @@ describe("公開ワークフローの退行防止", () => {
     expect(staticAudit).toBeGreaterThan(build);
     expect(edoCurationAudit).toBeGreaterThan(staticAudit);
     expect(edoSourceIdentityAudit).toBeGreaterThan(edoCurationAudit);
-    expect(candidateAudit).toBeGreaterThan(edoSourceIdentityAudit);
+    expect(edoDerivedPlaceAudit).toBeGreaterThan(edoSourceIdentityAudit);
+    expect(candidateAudit).toBeGreaterThan(edoDerivedPlaceAudit);
     expect(rasterAudit).toBeGreaterThan(candidateAudit);
     expect(audit).toBeGreaterThan(rasterAudit);
   });
@@ -43,6 +45,7 @@ describe("公開ワークフローの退行防止", () => {
     const source = workflow("ci.yml");
     expect(source).toContain("run: npm ci --ignore-scripts");
     expect(source).toContain("run: npm run audit:edo-place-source-identity-relations");
+    expect(source).toContain("run: npm run audit:edo-derived-place-model");
     expect(source).toContain("run: npm audit --audit-level=high");
     expect(source).toContain("fail-on-severity: moderate");
     expect(source).not.toContain("owariya.csv");

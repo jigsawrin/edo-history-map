@@ -174,6 +174,7 @@ npm run build:static-themes # 固定テーマ定義から静的テーマ索引�
 npm run build:static-timeline # 監査済み年表と地点・テーマ逆リンクを生成
 npm run audit:static-links  # 静的一覧のリンク・HTML・manifestを監査
 npm run audit:edo-place-curation-candidates # 非公開の江戸地名候補台帳を監査
+npm run audit:edo-derived-place-model # 共通派生地点モデルの件数・reverse mapping・SHA・非公開境界を監査
 npm run audit:prepublish  # 公開前監査(秘密情報・ライセンス・出典検査)
 ```
 
@@ -220,6 +221,7 @@ URL、Cookie、ブラウザストレージへ保存しません。
 - [docs/REGION_PACKS.md](docs/REGION_PACKS.md) — 地域パックの構造と安全な追加手順
 - [docs/BROWSER_QA.md](docs/BROWSER_QA.md) — Canvas操作とPagesキャッシュの実ブラウザ確認手順
 - [docs/EDO_PLACE_CURATION.md](docs/EDO_PLACE_CURATION.md) — 江戸地名の非表示・表記修正・補足追記候補の非公開管理
+- [docs/EDO_DERIVED_PLACE_MODEL.md](docs/EDO_DERIVED_PLACE_MODEL.md) — 江戸地名の共通派生地点モデル（non-runtime foundation）
 
 江戸地名キュレーションcatalogは現在0件の空基盤で、公開表示・検索・静的地点ページ・元GeoJSONへの効果はありません。
 

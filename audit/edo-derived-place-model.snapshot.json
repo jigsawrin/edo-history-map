@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "snapshotStatus": "non-runtime-foundation",
+  "sourceDataSha256": "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
+  "sourceFeatureCount": 8788,
+  "sourceIdentityGroupCount": 825,
+  "sourceIdentityMemberCount": 1693,
+  "curationCandidateCount": 0,
+  "derivedPlaceCount": 8788,
+  "reverseMappedSourceRecordCount": 8788,
+  "multiMemberDerivedPlaceCount": 0,
+  "hiddenDerivedPlaceCount": 0,
+  "renamedDerivedPlaceCount": 0,
+  "annotatedDerivedPlaceCount": 0,
+  "runtimeApplicableDerivedPlaceCount": 0,
+  "canonicalOutputSha256": "6c32a29fb1ff960ef5b4c888d0d7ec532156b6f7dd24b743ebb685ebc541f98a"
+}
