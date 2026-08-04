@@ -6,6 +6,7 @@ import {
   auditEdoDerivedPlaceRepository,
   canonicalEdoDerivedPlacesSha256,
   deriveEdoPlaces,
+  EDO_DERIVED_PLACE_SNAPSHOT,
   validateEdoDerivedPlaces,
   validateEdoDerivedPlaceSnapshot,
 } from "../scripts/edo-derived-place-model.mjs";
@@ -71,9 +72,8 @@ describe("Edo derived place non-runtime foundation", () => {
   });
 
   it("rejects snapshot drift", () => {
-    const snapshot = JSON.parse(readFileSync(join(ROOT, "audit/edo-derived-place-model.snapshot.json"), "utf8"));
-    const changed = { ...snapshot, derivedPlaceCount: 8787 };
-    expect(() => validateEdoDerivedPlaceSnapshot(changed, snapshot)).toThrow(/does not match deterministic output/);
+    const changed = { ...EDO_DERIVED_PLACE_SNAPSHOT, derivedPlaceCount: 8787 as const };
+    expect(() => validateEdoDerivedPlaceSnapshot(changed as unknown as typeof EDO_DERIVED_PLACE_SNAPSHOT, EDO_DERIVED_PLACE_SNAPSHOT)).toThrow(/does not match deterministic output/);
   });
 
   it("passes the repository audit without leaking into public or dist", () => {

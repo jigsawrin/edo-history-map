@@ -244,7 +244,7 @@ const EDO_PLACE_CURATION_CATALOG_FILE =
 const EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE =
   "data-curation/edo-place-source-identity-relations.json";
 const EDO_DERIVED_PLACE_SNAPSHOT_FILE =
-  "audit/edo-derived-place-model.snapshot.json";
+  "scripts/edo-derived-place-model.mjs";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,

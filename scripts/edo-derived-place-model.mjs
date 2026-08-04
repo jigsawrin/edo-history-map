@@ -18,9 +18,24 @@ import {
   validateEdoPlaceSourceIdentityCatalog,
 } from "./edo-place-source-identity-relations.mjs";
 
-export const EDO_DERIVED_PLACE_SNAPSHOT_PATH =
-  "audit/edo-derived-place-model.snapshot.json";
 export const EDO_DERIVED_PLACE_SCHEMA_VERSION = 1;
+export const EDO_DERIVED_PLACE_SNAPSHOT = Object.freeze({
+  schemaVersion: 1,
+  snapshotStatus: "non-runtime-foundation",
+  sourceDataSha256: EDO_SOURCE_SHA256,
+  sourceFeatureCount: 8788,
+  sourceIdentityGroupCount: 825,
+  sourceIdentityMemberCount: 1693,
+  curationCandidateCount: 0,
+  derivedPlaceCount: 8788,
+  reverseMappedSourceRecordCount: 8788,
+  multiMemberDerivedPlaceCount: 0,
+  hiddenDerivedPlaceCount: 0,
+  renamedDerivedPlaceCount: 0,
+  annotatedDerivedPlaceCount: 0,
+  runtimeApplicableDerivedPlaceCount: 0,
+  canonicalOutputSha256: "6c32a29fb1ff960ef5b4c888d0d7ec532156b6f7dd24b743ebb685ebc541f98a",
+});
 
 const PLACE_KEYS = [
   "schemaVersion", "derivedPlaceId", "sourceDatasetId", "sourceIdentityGroupId",
@@ -45,7 +60,7 @@ const SNAPSHOT_KEYS = [
   "runtimeApplicableDerivedPlaceCount", "canonicalOutputSha256",
 ];
 const PRIVATE_MARKERS = [
-  "edo-derived-place-model.snapshot.json",
+  "EDO_DERIVED_PLACE_SNAPSHOT",
   "derivedPlaceId",
   "sourceIdentityGroupId",
   "canonicalOutputSha256",
@@ -297,11 +312,10 @@ export function auditEdoDerivedPlaceRepository(root = process.cwd()) {
     const source = JSON.parse(readFileSync(resolve(root, EDO_SOURCE_DATA_PATH), "utf8"));
     const identity = JSON.parse(readFileSync(resolve(root, EDO_SOURCE_IDENTITY_CATALOG_PATH), "utf8"));
     const curation = JSON.parse(readFileSync(resolve(root, EDO_CURATION_CATALOG_PATH), "utf8"));
-    const snapshot = JSON.parse(readFileSync(resolve(root, EDO_DERIVED_PLACE_SNAPSHOT_PATH), "utf8"));
     const places = deriveEdoPlaces(source, identity, curation);
     validateEdoDerivedPlaces(places, source, identity);
     summary = summarizeEdoDerivedPlaces(places, identity, curation);
-    validateEdoDerivedPlaceSnapshot(snapshot, summary);
+    validateEdoDerivedPlaceSnapshot(EDO_DERIVED_PLACE_SNAPSHOT, summary);
     assert(summary.sourceIdentityGroupCount === EDO_SOURCE_IDENTITY_EXPECTED.groups, "source identity group count changed");
     assert(summary.sourceIdentityMemberCount === EDO_SOURCE_IDENTITY_EXPECTED.members, "source identity member count changed");
     assert(summary.multiMemberDerivedPlaceCount === 0, "identity groups must not automatically merge derived places");

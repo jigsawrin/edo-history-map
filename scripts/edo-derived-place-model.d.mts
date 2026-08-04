@@ -73,8 +73,8 @@ export interface EdoDerivedPlaceAuditSnapshot {
   canonicalOutputSha256: string;
 }
 
-export const EDO_DERIVED_PLACE_SNAPSHOT_PATH: string;
 export const EDO_DERIVED_PLACE_SCHEMA_VERSION: 1;
+export const EDO_DERIVED_PLACE_SNAPSHOT: Readonly<EdoDerivedPlaceAuditSnapshot>;
 export function deriveEdoPlaces(sourceGeoJson: unknown, identityCatalog: unknown, curationCatalog: unknown): EdoDerivedPlace[];
 export function validateEdoDerivedPlaces(places: EdoDerivedPlace[], sourceGeoJson: unknown, identityCatalog: unknown): void;
 export function canonicalEdoDerivedPlacesSha256(places: EdoDerivedPlace[]): string;

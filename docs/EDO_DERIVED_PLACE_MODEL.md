@@ -28,7 +28,7 @@ curation catalogが`empty-foundation` / 0 candidatesでも同じ8,788件とcanon
 
 ## deterministic auditとsnapshot
 
-`npm run audit:edo-derived-place-model`は3入力をread-onlyで検証し、full outputをmemory内だけで構築する。`audit/edo-derived-place-model.snapshot.json`は件数、reverse mapping coverage、runtime適用0件、canonical JSON SHA-256だけを固定し、full derived catalogをcommitまたは公開しない。
+`npm run audit:edo-derived-place-model`は3入力をread-onlyで検証し、full outputをmemory内だけで構築する。型付きの`EDO_DERIVED_PLACE_SNAPSHOT`定数は件数、reverse mapping coverage、runtime適用0件、canonical JSON SHA-256だけを固定し、full derived catalogをcommitまたは公開しない。定数は既存の追跡禁止`audit/*`へ出力せずvalidatorと同じnon-runtime moduleに置く。
 
 snapshot更新は入力SHA・既存catalog検証・差分理由・人間reviewを伴う単独PRで行う。件数またはSHAだけを手修正してvalidatorを通してはならない。
 
