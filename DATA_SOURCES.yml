@@ -48,6 +48,17 @@ sources:
     accessed_at: "2026-07-15"
     downloaded_at: "2026-07-15"
     sha256: b83960ac1e4f1061c84a23580ed41282be230ff2f3f4f0335308434ac6620161
+    source_identity_relation:
+      catalog: data-curation/edo-place-source-identity-relations.json
+      source_columns:
+        - preferred_id
+        - preferred_entry_id
+      generator: scripts/edo-place-source-identity-relations.mjs
+      web_runtime: false
+      license: CC BY 4.0
+      note: >-
+        元CSVの公式preferred/nonpreferred関係だけを固定SHA入力から決定的に抽出する。
+        manual curationや公開表示の採否ではなく、元レコードを削除・統合しない。
     local_files:
       - public/data/edo-places.geojson
     review_status: approved
@@ -58,6 +69,7 @@ sources:
       本データセット個別ページの表記を根拠とする。原資料の江戸切絵図
       「画像」は本データセットの対象外であり、本アプリでは使用しない。
       原CSVはリポジトリに含めず、変換後 GeoJSON のみ同梱。
+      preferred関係のnon-runtime catalogは元CSVを同梱せず、固定SHAと生成方法を記録して収録。
 
   - id: kiriezu-images
     asset_type: historical-raster
