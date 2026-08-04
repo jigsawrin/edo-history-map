@@ -32,6 +32,14 @@ jobs:
         run: npm run build
       - name: Static place link audit
         run: npm run audit:static-links
+      - name: Edo place curation candidate audit
+        run: npm run audit:edo-place-curation-candidates
+      - name: Edo source identity relation audit
+        run: npm run audit:edo-place-source-identity-relations
+      - name: Edo derived place non-runtime model audit
+        run: npm run audit:edo-derived-place-model
+      - name: Historical raster candidate audit
+        run: npm run audit:historical-raster-candidates
       - name: Historical raster audit
         run: npm run audit:historical-rasters
       - name: Historical control-point catalog audit
@@ -40,6 +48,8 @@ jobs:
         run: npm run audit:historical-map-display
       - name: Historical reference asset catalog audit
         run: npm run audit:historical-reference-assets
+      - name: Historical reference panel registry audit
+        run: npm run audit:historical-reference-panels
       - name: Prepublish audit (公開ビルドを含む)
         run: npm run audit:prepublish
       - name: npm audit (high 以上で失敗)

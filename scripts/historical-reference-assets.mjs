@@ -1197,6 +1197,7 @@ function auditGitState(root, catalog, errors) {
 function auditStaticManifest(root, catalog, errors) {
   const expected = createHistoricalReferenceAssetStaticManifest(catalog);
   const manifestPath = join(root, ...STATIC_MANIFEST_RELATIVE_PATH.split("/"));
+  if (!existsSync(join(root, "dist"))) return;
   if (expected.assetCount === 0) {
     if (!existsSync(manifestPath)) return;
     try {
@@ -1280,12 +1281,23 @@ export function auditHistoricalReferenceAssetRepository(root, options = {}) {
         .filter((asset) => asset.publicationStatus === "published")
         .map((asset) => `dist${asset.derivedFile.publicPath}`),
     );
+    const privateFieldNeedles = [
+      "rawPath",
+      "derivedPath",
+      "cropReviewNote",
+    ];
+    const assetIdNeedles = (catalog?.assets ?? []).map((asset) => asset.id);
     const leaked = collectFiles(distPath).some((file) => {
       const normalized = relative(root, file).replace(/\\/gu, "/");
-      return (
-        (normalized.includes("historical-reference-assets") && !allowedPublishedDistPaths.has(normalized)) ||
-        normalized.includes("test-fixture-reference-asset")
-      );
+      if (allowedPublishedDistPaths.has(normalized)) return false;
+      const basename = normalized.split("/").at(-1);
+      if (basename === "historical-reference-assets.json" ||
+          normalized.includes("test-fixture-reference-asset") ||
+          normalized.includes("historical-reference-assets")) return true;
+      if (!normalized.endsWith(".js")) return false;
+      const content = readFileSync(file, "utf8");
+      return privateFieldNeedles.every((needle) => content.includes(needle)) &&
+        assetIdNeedles.some((assetId) => content.includes(assetId));
     });
     if (leaked) errors.push("歴史参考画像台帳またはtest fixtureがdistへ混入しています");
   }

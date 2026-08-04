@@ -1,6 +1,14 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { deflateSync } from "node:zlib";
@@ -445,17 +453,20 @@ function initializeGitFixture(root: string) {
 }
 
 describe("歴史参考画像台帳基盤", () => {
-  it("和田倉御門のshortlisted reference assetを読み込む", () => {
+  it("和田倉と馬場先のpublished production assetを読み込む", () => {
     const catalog = loadHistoricalReferenceAssetCatalog(ROOT);
     expect(catalog.schemaVersion).toBe(1);
     expect(catalog.catalogStatus).toBe("reviewed");
-    expect(catalog.assets).toHaveLength(1);
-    expect(catalog.assets[0]).toMatchObject({
+    expect(catalog.assets).toHaveLength(2);
+    const wadakura = catalog.assets.find(
+      (asset) => asset.id === "tokyo-archive-4300033114-wadakura-gate-reference-image",
+    );
+    expect(wadakura).toMatchObject({
       id: "tokyo-archive-4300033114-wadakura-gate-reference-image",
       sourceId: "tokyo-archive-4300033114-wadakura-gate",
       rightsReviewStatus: "approved",
-      technicalReviewStatus: "in-review",
-      publicationStatus: "shortlisted",
+      technicalReviewStatus: "approved",
+      publicationStatus: "published",
       licenseCategory: "public-domain",
       licenseUrl: "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2",
       originalFile: {
@@ -478,14 +489,98 @@ describe("歴史参考画像台帳基盤", () => {
         sha256: "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81",
         derivedPath:
           "data-derived/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
+        publicPath:
+          "/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
       },
     });
-    expect(catalog.assets[0]?.derivedFile).not.toHaveProperty("publicPath");
+    const babasaki = catalog.assets.find(
+      (asset) => asset.id === "tokyo-archive-4300033114-babasaki-gate-reference-image",
+    );
+    expect(babasaki).toMatchObject({
+      sourceId: "tokyo-archive-4300033114-babasaki-gate",
+      rightsReviewStatus: "approved",
+      technicalReviewStatus: "approved",
+      publicationStatus: "published",
+      licenseCategory: "public-domain",
+      attribution: {
+        ja: "『江戸城御外郭御門絵図 第2図 馬場先御門』（東京都立中央図書館所蔵）（部分・加工）",
+      },
+      originalFile: {
+        fileName: "babasaki-gate-source.jpg",
+        mimeType: "image/jpeg",
+        width: 3514,
+        height: 2500,
+        bytes: 211124,
+        sha256: "5235617d8deb9a77cef9326a85f4e9b54bc7be9211d4179d4edf7d1ffbf12195",
+        rawPath:
+          "data-raw/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-source.jpg",
+      },
+      crop: {
+        sourceWidth: 3514,
+        sourceHeight: 2500,
+        x: 500,
+        y: 270,
+        width: 2450,
+        height: 1800,
+        rotationDegrees: 0,
+      },
+      removedElements: ["capture-background", "ruler", "color-chart", "shelfmark-label"],
+      preservesHistoricalContent: true,
+      derivedFile: {
+        mimeType: "image/png",
+        width: 2450,
+        height: 1800,
+        bytes: 861237,
+        sha256: "5b2f4e6fa4c33022aa0ba3265b821e43226b1804d0456f12f382ed2d5d6fd36c",
+        derivedPath:
+          "data-derived/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
+        publicPath:
+          "/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
+      },
+    });
+    expect(babasaki?.originalFile.sha256).not.toBe(babasaki?.derivedFile?.sha256);
+    const candidates = JSON.parse(
+      readFileSync(join(ROOT, "data-curation/historical-raster-candidates.json"), "utf8"),
+    ).candidates;
+    const babasakiCandidate = candidates.find(
+      (candidate: { candidateId: string }) =>
+        candidate.candidateId === "tokyo-archive-4300033114-babasaki-gate",
+    );
+    expect(babasakiCandidate).toMatchObject({
+      intendedUses: ["reference-panel"],
+      rightsReviewStatus: "approved",
+      technicalReviewStatus: "not-started",
+      publicationStatus: "candidate",
+      commercialUseCompatible: true,
+      redistributionAllowed: true,
+      modificationAllowed: true,
+      croppingAllowed: true,
+    });
+    const staticManifest = createHistoricalReferenceAssetStaticManifest(catalog);
+    expect(staticManifest.assetCount).toBe(2);
+    expect(staticManifest.files).toHaveLength(2);
+    expect(JSON.stringify(staticManifest)).toContain("babasaki");
+    expect(
+      readFileSync(join(ROOT, "src/historical-reference-panel-registry.json"), "utf8"),
+    ).toContain("babasaki");
+    expect(
+      existsSync(
+        join(
+          ROOT,
+          "public/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
+        ),
+      ),
+    ).toBe(true);
+    for (const runtimePath of ["index.html", "src/main.ts"]) {
+      const runtimeText = readFileSync(join(ROOT, runtimePath), "utf8");
+      expect(runtimeText).not.toContain("babasaki");
+      expect(runtimeText).not.toContain("馬場先");
+    }
     const summary = summarizeHistoricalReferenceAssetCatalog(catalog);
     expect(summary).toMatchObject({
-      assetCount: 1,
-      publishedCount: 0,
-      approvedRightsCount: 1,
+      assetCount: 2,
+      publishedCount: 2,
+      approvedRightsCount: 2,
       runtimeConnected: false,
     });
     const audit = auditHistoricalReferenceAssetRepository(ROOT);
@@ -1222,6 +1317,73 @@ describe("歴史参考画像台帳基盤", () => {
     expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
   });
 
+  it("build前でdist自体がない場合はstatic manifestを要求しない", () => {
+    const { root } = createCompletePublishedRoot();
+    rmSync(join(root, "dist"), { recursive: true, force: true });
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
+  it("ネストされたprivate catalogを拒否する", () => {
+    const { root } = createCompletePublishedRoot();
+    const privateCatalog = join(root, "dist", "data-curation", "historical-reference-assets.json");
+    mkdirSync(dirname(privateCatalog), { recursive: true });
+    writeFileSync(privateCatalog, "{}\n", "utf8");
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("distへ混入"))).toBe(true);
+  });
+
+  it("private asset台帳をインライン化したbundleを拒否する", () => {
+    const { root } = createCompletePublishedRoot();
+    const bundle = join(root, "dist", "assets", "index.js");
+    mkdirSync(dirname(bundle), { recursive: true });
+    writeFileSync(bundle, 'const leaked={"rawPath":"","derivedPath":"","cropReviewNote":"","id":"test-fixture-reference-asset-a"};\n', "utf8");
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("distへ混入"))).toBe(true);
+  });
+
+  it("馬場先assetだけをインライン化したbundleを拒否する", () => {
+    const { root } = createCompletePublishedRoot();
+    const catalogPath = join(root, "data-curation", "historical-reference-assets.json");
+    const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
+    catalog.assets.push(assetFixture({
+      id: "tokyo-archive-4300033114-babasaki-gate-reference-image",
+      sourceId: "test-fixture-candidate-b",
+      rightsReviewStatus: "approved",
+      publicationStatus: "shortlisted",
+    }));
+    writeFileSync(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
+    const candidatePath = join(root, "data-curation", "historical-raster-candidates.json");
+    const candidates = JSON.parse(readFileSync(candidatePath, "utf8"));
+    candidates.candidates.push(candidateFixture({ candidateId: "test-fixture-candidate-b" }));
+    writeFileSync(candidatePath, `${JSON.stringify(candidates, null, 2)}\n`, "utf8");
+    const bundle = join(root, "dist", "assets", "index.js");
+    mkdirSync(dirname(bundle), { recursive: true });
+    writeFileSync(
+      bundle,
+      'const leaked={"rawPath":"","derivedPath":"","cropReviewNote":"","id":"tokyo-archive-4300033114-babasaki-gate-reference-image"};\n',
+      "utf8",
+    );
+    expect(auditHistoricalReferenceAssetRepository(root).errors.some((message) => message.includes("distへ混入"))).toBe(true);
+  });
+
+  it("sanitized runtime registryをprivate catalogとして誤検出しない", () => {
+    const { root } = createCompletePublishedRoot();
+    const bundle = join(root, "dist", "assets", "index.js");
+    mkdirSync(dirname(bundle), { recursive: true });
+    writeFileSync(
+      bundle,
+      'const publicEntry={"assetId":"tokyo-archive-4300033114-wadakura-gate-reference-image","titleJa":"江戸城御外郭御門絵図 第1図 和田倉御門","attributionJa":"東京都立中央図書館所蔵"};\n',
+      "utf8",
+    );
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
+  it("公開用reference PNGはprivate catalogとして誤検出しない", () => {
+    const { root, fixture } = createCompletePublishedRoot();
+    const publicDistPath = join(root, "dist", "data", "historical-reference-assets", "test-fixture-reference-asset-a", "derived.png");
+    mkdirSync(dirname(publicDistPath), { recursive: true });
+    writeFileSync(publicDistPath, fixture.derivedBuffer);
+    expect(auditHistoricalReferenceAssetRepository(root).errors).toEqual([]);
+  });
+
   it("published publicPathとstatic manifest SHA不一致を拒否する", () => {
     const { root } = createCompletePublishedRoot();
     const manifestPath = join(root, "dist/places/manifest.json");
@@ -1304,14 +1466,18 @@ describe("歴史参考画像台帳基盤", () => {
     const displayMaps = JSON.parse(
       readFileSync(join(ROOT, "data-curation/historical-map-display-catalog.json"), "utf8"),
     ).maps;
-    expect(displayMaps).toHaveLength(1);
-    expect(displayMaps[0]).toMatchObject({
+    expect(displayMaps).toHaveLength(2);
+    const wadakuraDisplay = displayMaps.find(
+      (map: { id: string }) =>
+        map.id === "tokyo-archive-4300033114-wadakura-gate-reference-display",
+    );
+    expect(wadakuraDisplay).toMatchObject({
       id: "tokyo-archive-4300033114-wadakura-gate-reference-display",
       displayRole: "reference-only",
       displayMode: "reference-panel",
-      publicationStatus: "shortlisted",
+      publicationStatus: "published",
     });
-    expect(displayMaps[0]).not.toHaveProperty("parentMapId");
+    expect(wadakuraDisplay).not.toHaveProperty("parentMapId");
     expect(
       JSON.parse(readFileSync(join(ROOT, "data-curation/historical-control-point-catalog.json"), "utf8")).entries,
     ).toEqual([]);

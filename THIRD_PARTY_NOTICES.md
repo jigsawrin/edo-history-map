@@ -34,6 +34,10 @@
   - 東京23区周辺(緯度 35.4–35.95、経度 139.4–140.05)の範囲に限定
   - 制御文字の除去、フィールド長の制限
 - 改変版のライセンス: 原データセットと同じ CC BY 4.0 で再配布
+- 元CSVの `preferred_id` / `preferred_entry_id` から抽出したsource identity関係を、
+  non-runtime catalog（`data-curation/edo-place-source-identity-relations.json`）として収録。
+  preferredは表示上の正解や削除指定とは解釈せず、nonpreferredを含む全8,788元レコードを保持。
+  relation catalogも原データセットと同じCC BY 4.0で再配布。
 
 注意: このデータセットの位置情報は古地図のジオリファレンスによる推定であり、
 測量成果ではありません。

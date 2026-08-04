@@ -375,7 +375,9 @@ export async function loadKyotoBakumatsuPlaces(
     return parseKyotoBakumatsuGeoJson(await response.text());
   } catch (error) {
     if (error instanceof ValidationError) throw error;
-    throw new Error("京都・幕末データを取得できませんでした");
+    throw new Error("京都・幕末データを取得できませんでした", {
+      cause: error,
+    });
   } finally {
     clearTimeout(timer);
   }

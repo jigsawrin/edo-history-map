@@ -196,6 +196,17 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   ) {
     fail("静的一覧manifestの件数が不正です");
   }
+  if (
+    manifest.historicalReferenceAssets?.schemaVersion !== 1 ||
+    manifest.historicalReferenceAssets?.assetCount !== 2 ||
+    manifest.historicalReferenceAssets?.files?.length !== 2 ||
+    manifest.historicalReferenceAssets.files[0]?.publicPath !== "/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png" ||
+    manifest.historicalReferenceAssets.files[0]?.sha256 !== "5b2f4e6fa4c33022aa0ba3265b821e43226b1804d0456f12f382ed2d5d6fd36c" ||
+    manifest.historicalReferenceAssets.files[0]?.bytes !== 861237 ||
+    manifest.historicalReferenceAssets.files[1]?.publicPath !== "/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png" ||
+    manifest.historicalReferenceAssets.files[1]?.sha256 !== "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81" ||
+    manifest.historicalReferenceAssets.files[1]?.bytes !== 1680142
+  ) fail("静的一覧manifestの歴史参考画像が不正です");
   const themeData = JSON.parse(
     readFileSync(join(root, "data-curation/historical-themes.json"), "utf8"),
   );

@@ -13,6 +13,7 @@ import {
   type ShigaSengokuPlace,
 } from "../src/shiga-sengoku-places";
 import { SHIGA_SOURCE_DEFINITIONS } from "../src/shiga-source-registry";
+import { ValidationError } from "../src/validate";
 
 const ROOT = join(__dirname, "..");
 const RAW = readFileSync(join(ROOT, "public/data/shiga-sengoku-places.geojson"), "utf8");
@@ -98,6 +99,38 @@ describe("滋賀・戦国GeoJSON", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 200, redirected: false, headers: new Headers({ "content-type": "application/geo+json", "content-length": String(1024 * 1024 + 1) }), text }));
     await expect(loadShigaSengokuPlaces("/")).rejects.toThrow("サイズ");
     expect(text).not.toHaveBeenCalled();
+  });
+
+  it("取得失敗を安全なmessageで包み元例外をcauseに保持する", async () => {
+    expect.assertions(3);
+    const original = new Error("internal network detail");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(original));
+
+    try {
+      await loadShigaSengokuPlaces("/");
+    } catch (error) {
+      expect(error).not.toBe(original);
+      expect(error).toMatchObject({
+        message: "滋賀・戦国データを取得できませんでした",
+        cause: original,
+      });
+      expect((error as Error).message).not.toContain(original.message);
+    }
+  });
+
+  it("ValidationErrorは包まず同一インスタンスを再throwする", async () => {
+    const original = new ValidationError("検証エラー");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        status: 200,
+        redirected: false,
+        headers: new Headers({ "content-type": "application/geo+json" }),
+        text: () => Promise.reject(original),
+      }),
+    );
+
+    await expect(loadShigaSengokuPlaces("/")).rejects.toBe(original);
   });
 });
 
