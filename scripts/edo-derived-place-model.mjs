@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -60,6 +60,8 @@ const SNAPSHOT_KEYS = [
   "runtimeApplicableDerivedPlaceCount", "canonicalOutputSha256",
 ];
 const PRIVATE_MARKERS = [
+  "edo-derived-place-model",
+  "deriveEdoPlaces",
   "EDO_DERIVED_PLACE_SNAPSHOT",
   "derivedPlaceId",
   "sourceIdentityGroupId",
@@ -68,6 +70,9 @@ const PRIVATE_MARKERS = [
 // eslint-disable-next-line no-control-regex
 const UNSAFE_TEXT = /[\u0000-\u001f\u007f-\u009f<>]/u;
 const SHA256 = /^[0-9a-f]{64}$/u;
+const PUBLIC_DERIVED_PATH = /(?:^|[/\\])[^/\\]*(?:edo[-_.]?derived[-_.]?place|derived[-_.]?place[-_.]?model)[^/\\]*(?:$|[/\\])/iu;
+const PUBLIC_TEXT_FILE = /\.(?:cjs|css|htm|html|js|json|jsx|map|md|mjs|mts|svg|ts|tsx|txt|xml)$/iu;
+const RUNTIME_TEXT_FILE = /\.(?:js|json|jsx|mjs|mts|ts|tsx)$/iu;
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -183,7 +188,10 @@ export function deriveEdoPlaces(sourceGeoJson, identityCatalog, curationCatalog)
   });
 }
 
-export function validateEdoDerivedPlaces(places, sourceGeoJson, identityCatalog) {
+export function validateEdoDerivedPlaces(places, sourceGeoJson, identityCatalog, curationCatalog) {
+  validateEdoPlaceSourceIdentityCatalog(identityCatalog, sourceGeoJson);
+  validateEdoPlaceCurationCatalog(curationCatalog, sourceGeoJson);
+  const expectedPlaces = deriveEdoPlaces(sourceGeoJson, identityCatalog, curationCatalog);
   assert(Array.isArray(places), "derived places must be an array");
   assert(places.length === sourceGeoJson.features.length, "derived place count must preserve every source record");
   const sourceIds = new Set(sourceGeoJson.features.map((feature) => feature.properties.id));
@@ -243,6 +251,10 @@ export function validateEdoDerivedPlaces(places, sourceGeoJson, identityCatalog)
       const feature = sourceGeoJson.features[reverse.sourceIndex];
       assert(feature?.properties?.id === reverse.sourceRecordId && calculateEdoSourceFeatureSha256(feature) === reverse.sourceFeatureSha256, `${label}.reverseMapping does not match source GeoJSON`);
     }
+    assert(
+      JSON.stringify(place) === JSON.stringify(expectedPlaces[index]),
+      `${label} does not match the authoritative source, identity, and curation inputs`,
+    );
   }
   assert(reverseIds.size === sourceIds.size && [...sourceIds].every((id) => reverseIds.has(id)), "reverse mapping must cover all source records exactly once");
 }
@@ -290,13 +302,18 @@ export function auditEdoDerivedPlaceLeakage(root) {
   const errors = [];
   for (const area of ["public", "dist"]) {
     for (const path of filesUnder(resolve(root, area))) {
-      if (statSync(path).size > 10_000_000) continue;
+      const rel = relative(root, path).replace(/\\/gu, "/");
+      if (PUBLIC_DERIVED_PATH.test(`/${rel}`)) {
+        errors.push(`non-runtime derived place file path leaked into ${rel}`);
+        continue;
+      }
+      if (!PUBLIC_TEXT_FILE.test(path)) continue;
       const text = readFileSync(path, "utf8");
-      if (PRIVATE_MARKERS.some((marker) => text.includes(marker))) errors.push(`non-runtime derived place marker leaked into ${relative(root, path)}`);
+      if (PRIVATE_MARKERS.some((marker) => text.includes(marker))) errors.push(`non-runtime derived place marker leaked into ${rel}`);
     }
   }
   for (const path of filesUnder(resolve(root, "src"))) {
-    if (!/\.(?:ts|json)$/u.test(path)) continue;
+    if (!RUNTIME_TEXT_FILE.test(path)) continue;
     const text = readFileSync(path, "utf8");
     if (PRIVATE_MARKERS.some((marker) => text.includes(marker))) {
       errors.push(`runtime source imports non-runtime derived place data: ${relative(root, path)}`);
@@ -313,7 +330,7 @@ export function auditEdoDerivedPlaceRepository(root = process.cwd()) {
     const identity = JSON.parse(readFileSync(resolve(root, EDO_SOURCE_IDENTITY_CATALOG_PATH), "utf8"));
     const curation = JSON.parse(readFileSync(resolve(root, EDO_CURATION_CATALOG_PATH), "utf8"));
     const places = deriveEdoPlaces(source, identity, curation);
-    validateEdoDerivedPlaces(places, source, identity);
+    validateEdoDerivedPlaces(places, source, identity, curation);
     summary = summarizeEdoDerivedPlaces(places, identity, curation);
     validateEdoDerivedPlaceSnapshot(EDO_DERIVED_PLACE_SNAPSHOT, summary);
     assert(summary.sourceIdentityGroupCount === EDO_SOURCE_IDENTITY_EXPECTED.groups, "source identity group count changed");

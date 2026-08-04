@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { afterEach, describe, expect, it } from "vitest";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   auditEdoDerivedPlaceLeakage,
@@ -10,6 +11,10 @@ import {
   validateEdoDerivedPlaces,
   validateEdoDerivedPlaceSnapshot,
 } from "../scripts/edo-derived-place-model.mjs";
+import {
+  calculateEdoSourceFeatureSha256,
+  EDO_SOURCE_DATASET_ID,
+} from "../scripts/edo-place-curation-candidates.mjs";
 
 const ROOT = join(__dirname, "..");
 const source = JSON.parse(readFileSync(join(ROOT, "public/data/edo-places.geojson"), "utf8"));
@@ -18,16 +23,66 @@ const curation = JSON.parse(readFileSync(join(ROOT, "data-curation/edo-place-cur
 type IdentityMember = { target: { entryId: string } };
 type IdentityGroup = { groupId: string; members: IdentityMember[] };
 const identityGroups = identity.groups as IdentityGroup[];
+const temporaryRoots: string[] = [];
 
 function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
+type CurationType = "hide" | "rename" | "annotation";
+
+function approvedCandidate(type: CurationType, sourceIndex: number) {
+  const feature = source.features[sourceIndex];
+  const proposals = {
+    hide: { visibility: "hidden" },
+    rename: { displayNameJa: `${feature.properties.name}（表示名）`, preserveOriginalName: true },
+    annotation: { noteType: "clarification", noteJa: "根拠資料に基づく補足です。" },
+  };
+  return {
+    candidateId: `edo-derived-test-${type}-${sourceIndex}`,
+    sourceDatasetId: EDO_SOURCE_DATASET_ID,
+    target: {
+      sourceIndex,
+      entryId: feature.properties.id,
+      sourceFeatureSha256: calculateEdoSourceFeatureSha256(feature),
+      name: feature.properties.name,
+      category: feature.properties.category,
+      sheet: feature.properties.sheet,
+      sourceUrl: feature.properties.source,
+      longitude: feature.geometry.coordinates[0],
+      latitude: feature.geometry.coordinates[1],
+    },
+    proposalType: type,
+    proposal: proposals[type],
+    reasonCode: type === "rename" ? "orthography-normalization" : type === "annotation" ? "context-needed" : "duplicate",
+    reasonJa: "派生モデルの承認済み判断を検証するfixtureです。",
+    evidence: {
+      basis: type === "rename" ? "official-source" : "source-record-comparison",
+      urls: [feature.properties.source],
+      noteJa: "source recordとの一致を確認しました。",
+    },
+    review: {
+      status: "approved",
+      reviewedBy: "fixture-reviewer",
+      reviewedAt: "2026-08-04",
+      reviewNoteJa: "テスト用に承認しました。",
+    },
+  };
+}
+
+function activeCuration(...candidates: ReturnType<typeof approvedCandidate>[]) {
+  return { ...clone(curation), catalogStatus: "active", candidates };
+}
+
+afterEach(() => {
+  for (const root of temporaryRoots.splice(0)) rmSync(root, { recursive: true, force: true });
+});
+
 describe("Edo derived place non-runtime foundation", () => {
   const places = deriveEdoPlaces(source, identity, curation);
 
   it("keeps all 8,788 source records independently reverse-mappable", () => {
-    expect(() => validateEdoDerivedPlaces(places, source, identity)).not.toThrow();
+    expect(() => validateEdoDerivedPlaces(places, source, identity, curation)).not.toThrow();
     expect(places).toHaveLength(8788);
     expect(new Set(places.flatMap((place) => place.reverseMapping.map((item) => item.sourceRecordId))).size).toBe(8788);
   });
@@ -56,19 +111,19 @@ describe("Edo derived place non-runtime foundation", () => {
   it("rejects unknown keys", () => {
     const invalid = clone(places) as Array<(typeof places)[number] & { unexpected?: boolean }>;
     invalid[0]!.unexpected = true;
-    expect(() => validateEdoDerivedPlaces(invalid, source, identity)).toThrow(/unknown or missing keys/);
+    expect(() => validateEdoDerivedPlaces(invalid, source, identity, curation)).toThrow(/unknown or missing keys/);
   });
 
   it("rejects missing source reverse mappings", () => {
     const invalid = clone(places);
     invalid[0]!.reverseMapping = [];
-    expect(() => validateEdoDerivedPlaces(invalid, source, identity)).toThrow(/reverseMapping is incomplete/);
+    expect(() => validateEdoDerivedPlaces(invalid, source, identity, curation)).toThrow(/reverseMapping is incomplete/);
   });
 
   it("rejects a preferred record being silently substituted as display representative", () => {
     const invalid = clone(places);
     invalid[0]!.displayRepresentativeSourceRecordId = identityGroups[0]!.members[1]!.target.entryId;
-    expect(() => validateEdoDerivedPlaces(invalid, source, identity)).toThrow(/display representative must be a member/);
+    expect(() => validateEdoDerivedPlaces(invalid, source, identity, curation)).toThrow(/display representative must be a member/);
   });
 
   it("rejects snapshot drift", () => {
@@ -81,5 +136,90 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(audit.errors).toEqual([]);
     expect(audit.summary?.runtimeApplicableDerivedPlaceCount).toBe(0);
     expect(auditEdoDerivedPlaceLeakage(ROOT)).toEqual([]);
+  });
+
+  it("derives and validates approved rename, hide, and annotation independently", () => {
+    const catalog = activeCuration(
+      approvedCandidate("rename", 1),
+      approvedCandidate("hide", 2),
+      approvedCandidate("annotation", 3),
+    );
+    const curated = deriveEdoPlaces(source, identity, catalog);
+    expect(() => validateEdoDerivedPlaces(curated, source, identity, catalog)).not.toThrow();
+    expect(curated[1]?.displayName.basis).toBe("approved-rename");
+    expect(curated[1]?.curation.rename.decision).toBe("approved");
+    expect(curated[2]?.curation.hide.decision).toBe("approved");
+    expect(curated[3]?.curation.annotations).toEqual([
+      { candidateId: "edo-derived-test-annotation-3", text: "根拠資料に基づく補足です。" },
+    ]);
+    expect(curated.slice(1, 4).every((place) => place.reviewState === "curation-approved")).toBe(true);
+  });
+
+  const authoritativeMutations: Array<[string, (items: ReturnType<typeof deriveEdoPlaces>) => void]> = [
+    ["fake displayName", (items) => { items[0]!.displayName.value = "偽表示名"; }],
+    ["shifted coordinate", (items) => { items[0]!.location.longitude += 0.001; }],
+    ["wrong existing group ID", (items) => { items[0]!.sourceIdentityGroupId = identityGroups[1]!.groupId; }],
+    ["applicability true", (items) => { items[0]!.applicability.map = true; }],
+    ["inconsistent evidence", (items) => { items[0]!.evidence[0]!.sourceUrl = "https://example.com/"; }],
+    ["inconsistent rights", (items) => { items[0]!.rights.attribution = "Other"; }],
+    ["inconsistent reviewState", (items) => { items[0]!.reviewState = "needs-human-review"; }],
+  ];
+  for (const [name, mutate] of authoritativeMutations) {
+    it(`rejects authoritative mismatch: ${name}`, () => {
+      const invalid = clone(places);
+      mutate(invalid);
+      expect(() => validateEdoDerivedPlaces(invalid, source, identity, curation)).toThrow(/authoritative source/);
+    });
+  }
+
+  it("rejects a nonexistent approved candidate ID", () => {
+    const catalog = activeCuration(approvedCandidate("rename", 1));
+    const invalid = deriveEdoPlaces(source, identity, catalog);
+    invalid[1]!.displayName.curationCandidateId = "missing-candidate";
+    invalid[1]!.curation.rename.candidateId = "missing-candidate";
+    invalid[1]!.evidence.find((item) => item.kind === "manual-curation")!.id = "missing-candidate";
+    expect(() => validateEdoDerivedPlaces(invalid, source, identity, catalog)).toThrow(/authoritative source/);
+  });
+
+  it("rejects runtime import of deriveEdoPlaces", () => {
+    const root = mkdtempSync(join(tmpdir(), "edo-derived-leak-"));
+    temporaryRoots.push(root);
+    mkdirSync(join(root, "src"), { recursive: true });
+    writeFileSync(join(root, "src/main.ts"), 'import { deriveEdoPlaces } from "../scripts/edo-derived-place-model.mjs";');
+    expect(auditEdoDerivedPlaceLeakage(root)).toEqual([
+      expect.stringContaining("runtime source imports non-runtime derived place data"),
+    ]);
+  });
+
+  it("rejects a derived JSON larger than 10 MB in public", () => {
+    const root = mkdtempSync(join(tmpdir(), "edo-derived-leak-"));
+    temporaryRoots.push(root);
+    mkdirSync(join(root, "public/data"), { recursive: true });
+    writeFileSync(
+      join(root, "public/data/places.json"),
+      JSON.stringify({ derivedPlaceId: "edo-derived-source-1-001", padding: "x".repeat(10_500_000) }),
+    );
+    expect(auditEdoDerivedPlaceLeakage(root)).toEqual([
+      expect.stringContaining("non-runtime derived place marker leaked"),
+    ]);
+  });
+
+  it("rejects a derived-looking public path regardless of size", () => {
+    const root = mkdtempSync(join(tmpdir(), "edo-derived-leak-"));
+    temporaryRoots.push(root);
+    mkdirSync(join(root, "dist/data"), { recursive: true });
+    writeFileSync(join(root, "dist/data/edo-derived-place-model.json"), "{}");
+    expect(auditEdoDerivedPlaceLeakage(root)).toEqual([
+      expect.stringContaining("non-runtime derived place file path leaked"),
+    ]);
+  });
+
+  it("does not read or reject ordinary images and unrelated large binary files", () => {
+    const root = mkdtempSync(join(tmpdir(), "edo-derived-leak-"));
+    temporaryRoots.push(root);
+    mkdirSync(join(root, "public/assets"), { recursive: true });
+    writeFileSync(join(root, "public/assets/photo.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0xff, 0xfe]));
+    writeFileSync(join(root, "public/assets/archive.bin"), Buffer.alloc(10_500_000, 0xff));
+    expect(auditEdoDerivedPlaceLeakage(root)).toEqual([]);
   });
 });

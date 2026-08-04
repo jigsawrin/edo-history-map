@@ -18,6 +18,8 @@ read-only adapterは上記3ファイルを読み、それぞれ既存validator�
 
 型はderived/source/group ID、member、表示代表、表示名と根拠、元表記、category/sheet差、位置と確度、curation decision、evidence、license/attribution、4 surfaceの適用可否、review state、reverse mappingを明示する。exact-key validatorは未知key・欠落keyを拒否し、全source recordが重複なくexactly onceでreverse mappingされることを検証する。
 
+validatorはsource GeoJSON、source identity catalog、manual curation catalogをauthoritative inputとして必須で受け取る。既存の両catalog validatorを先に実行し、同じ入力から純粋関数で再導出した期待placeと、ID、配列順、表示、位置、判断、evidence、rights、review、applicabilityを含む全fieldが一致する場合だけ受理する。実在する別group IDやcandidate IDへ差し替えただけでも受理しない。
+
 ## 現在の決定規則
 
 現在のdeterministic projectionは「source record 1件につきderived place 1件」であり、8,788件を生成する。825 identity groupsはevidenceとrelation IDとして参照するだけでmemberを統合しない。したがってCODHの`preferred`を正解表記・表示代表・削除指定として扱わない。
@@ -29,6 +31,8 @@ curation catalogが`empty-foundation` / 0 candidatesでも同じ8,788件とcanon
 ## deterministic auditとsnapshot
 
 `npm run audit:edo-derived-place-model`は3入力をread-onlyで検証し、full outputをmemory内だけで構築する。型付きの`EDO_DERIVED_PLACE_SNAPSHOT`定数は件数、reverse mapping coverage、runtime適用0件、canonical JSON SHA-256だけを固定し、full derived catalogをcommitまたは公開しない。定数は既存の追跡禁止`audit/*`へ出力せずvalidatorと同じnon-runtime moduleに置く。
+
+漏洩監査は`public/`と`dist/`の派生モデルらしいpathをsizeに関係なく拒否し、JSON・JavaScript・HTML等のtext fileをsize上限なしで検査する。`src/`ではTypeScript/JavaScript/JSON系を検査し、module名だけでなく`deriveEdoPlaces`参照も拒否する。通常画像や無関係なbinaryはUTF-8 textとして読み込まない。
 
 snapshot更新は入力SHA・既存catalog検証・差分理由・人間reviewを伴う単独PRで行う。件数またはSHAだけを手修正してvalidatorを通してはならない。
 
