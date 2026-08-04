@@ -48,6 +48,7 @@ import {
   auditEdoPlaceSourceIdentityRepository,
   summarizeEdoPlaceSourceIdentityRelations,
 } from "./edo-place-source-identity-relations.mjs";
+import { auditEdoDerivedPlaceRepository } from "./edo-derived-place-model.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -242,6 +243,8 @@ const EDO_PLACE_CURATION_CATALOG_FILE =
   "data-curation/edo-place-curation-candidates.json";
 const EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE =
   "data-curation/edo-place-source-identity-relations.json";
+const EDO_DERIVED_PLACE_SNAPSHOT_FILE =
+  "scripts/edo-derived-place-model.mjs";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -1558,6 +1561,23 @@ if (edoPlaceSourceIdentityAudit.catalog) {
   );
   infos.push(
     `江戸地名source identity: ${summary.groups}group、${summary.members}member、nonpreferred ${summary.nonpreferred}、source anomaly ${summary.anomalies}`,
+  );
+}
+
+const edoDerivedPlaceAudit = auditEdoDerivedPlaceRepository(ROOT);
+for (const message of edoDerivedPlaceAudit.errors) {
+  addFinding(
+    "error",
+    "江戸地名 共通派生地点モデル",
+    EDO_DERIVED_PLACE_SNAPSHOT_FILE,
+    0,
+    message,
+  );
+}
+if (edoDerivedPlaceAudit.summary) {
+  const summary = edoDerivedPlaceAudit.summary;
+  infos.push(
+    `江戸地名 共通派生地点モデル: ${summary.derivedPlaceCount} places, reverse ${summary.reverseMappedSourceRecordCount}, runtime ${summary.runtimeApplicableDerivedPlaceCount}, SHA-256 ${summary.canonicalOutputSha256}`,
   );
 }
 

@@ -36,6 +36,8 @@ jobs:
         run: npm run audit:edo-place-curation-candidates
       - name: Edo source identity relation audit
         run: npm run audit:edo-place-source-identity-relations
+      - name: Edo derived place non-runtime model audit
+        run: npm run audit:edo-derived-place-model
       - name: Historical raster candidate audit
         run: npm run audit:historical-raster-candidates
       - name: Historical raster audit
