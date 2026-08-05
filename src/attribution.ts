@@ -1,8 +1,10 @@
 import { KYOTO_SOURCE_REGISTRY } from "./kyoto-source-registry";
 import { SHIGA_SOURCE_DEFINITIONS } from "./shiga-source-registry";
 import {
+  GSI_ADDITIONAL_CONDITIONS_SECTION_ID,
   GSI_ADDITIONAL_SOURCE_IDS,
   GSI_ADDITIONAL_SOURCE_LINKS,
+  GSI_ADDITIONAL_SOURCE_TEXTS,
 } from "./gsi-attribution";
 
 /** 出典・ライセンス画面とプライバシー画面。DOMは安全なAPIだけで構築する。 */
@@ -52,6 +54,7 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
     title: "背景地図",
     paragraphs: [
       "背景地図には国土地理院の「地理院タイル」(標準地図・淡色地図)を使用しています。地理院タイルは出典の明示により利用できます。",
+      "このプロジェクトは地理院タイルに独自の歴史情報を追加して掲載しています。地理院タイル自体の出典・利用条件と、歴史情報の出典・利用条件は分けて確認してください。",
     ],
     links: [
       {
@@ -69,11 +72,29 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
     ],
   },
   {
+    id: GSI_ADDITIONAL_CONDITIONS_SECTION_ID,
+    title: "GSI low-zoom source conditions",
+    paragraphs: [
+      "The additional source notices apply only while a visible GSI standard or pale basemap is shown at zoom levels 5–8. The active base-specific sections in this dialog carry the notices; at zoom level 9 and above no additional source entry is required.",
+      "地理院タイルは公式に記載されたXYZエンドポイントからリアルタイムに読み込みます。このプロジェクトはタイルをキャッシュまたは一括ダウンロードせず、地理院タイルの印刷・画像書き出し機能を提供しません。",
+    ],
+    links: [
+      {
+        text: "GSI tile list and source notes",
+        href: "https://maps.gsi.go.jp/development/",
+      },
+      {
+        text: "GSI tile usage/content guidance",
+        href: "https://maps.gsi.go.jp/development/siyou.html",
+      },
+    ],
+  },
+  {
     id: GSI_ADDITIONAL_SOURCE_IDS.paleVmap0,
     title: "GSI pale basemap: zoom 5–8 shoreline source",
     paragraphs: [
       "This additional source applies only to the GSI pale basemap at zoom levels 5–8. It is not inferred from map bounds and is not used for historical or reconstructed layers.",
-      "Shoreline data is derived from: United States. National Imagery and Mapping Agency. \"Vector Map Level 0 (VMAP0).\" Bethesda, MD: Denver, CO: The Agency; USGS Information Services, 1997.",
+      GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.paleVmap0],
     ],
     links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.paleVmap0]],
   },
@@ -82,7 +103,7 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
     title: "GSI standard basemap: zoom 5–8 bathymetric contours",
     paragraphs: [
       "This additional source applies only to the GSI standard basemap at zoom levels 5–8.",
-      "The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net).",
+      GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.stdGebco],
     ],
     links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.stdGebco]],
   },
@@ -90,7 +111,9 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
     id: GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard,
     title: "GSI standard basemap: Japan Coast Guard permit",
     paragraphs: [
-      "海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）",
+      GSI_ADDITIONAL_SOURCE_TEXTS[
+        GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard
+      ],
     ],
     links: [
       GSI_ADDITIONAL_SOURCE_LINKS[
@@ -102,7 +125,7 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
     id: GSI_ADDITIONAL_SOURCE_IDS.stdVmap0,
     title: "GSI standard basemap: zoom 5–8 shoreline source",
     paragraphs: [
-      "Shoreline data is derived from: United States. National Imagery and Mapping Agency. \"Vector Map Level 0 (VMAP0).\" Bethesda, MD: Denver, CO: The Agency; USGS Information Services, 1997.",
+      GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.stdVmap0],
     ],
     links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.stdVmap0]],
   },
@@ -203,6 +226,9 @@ export function renderAttribution(
 ): void {
   container.replaceChildren();
   const allowed = new Set(attributionIds);
+  if (allowed.has("gsi-tiles")) {
+    allowed.add(GSI_ADDITIONAL_CONDITIONS_SECTION_ID);
+  }
   for (const section of ATTRIBUTION_SECTIONS) {
     if (!allowed.has(section.id)) continue;
     container.append(heading(section.title));

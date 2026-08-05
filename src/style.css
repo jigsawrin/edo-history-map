@@ -326,6 +326,18 @@ a:focus-visible,
   min-height: 55vh;
 }
 
+/* GSI's low-zoom source notices can be long; keep the live Leaflet notice readable without horizontal overflow. */
+.leaflet-control-attribution {
+  max-width: min(32rem, calc(100% - 0.5rem));
+  overflow-wrap: anywhere;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.leaflet-control-attribution a {
+  overflow-wrap: anywhere;
+}
+
 .map-workspace {
   position: relative;
   display: flex;
@@ -605,6 +617,15 @@ dialog::backdrop {
     left: 1rem;
     right: 1rem;
     max-width: none;
+  }
+
+  .leaflet-control-attribution {
+    max-width: calc(100vw - 1rem);
+    margin-right: 0.25rem;
+    margin-bottom: max(0.25rem, env(safe-area-inset-bottom));
+    padding: 0.2rem 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
   }
 
   .map-workspace {

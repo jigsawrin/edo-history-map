@@ -1,7 +1,4 @@
-/**
- * 出典表示だけを決める純粋なGSI低ズーム判定。
- * LeafletやDOMを参照せず、表示中の基図状態から固定順で出所を返す。
- */
+/** Pure decision rules and fixed source strings for GSI low-zoom attribution. */
 
 export type GsiBaseLayer = "pale" | "std";
 
@@ -29,15 +26,26 @@ export const GSI_ADDITIONAL_SOURCE_IDS = {
 export type GsiAdditionalSourceId =
   (typeof GSI_ADDITIONAL_SOURCE_IDS)[keyof typeof GSI_ADDITIONAL_SOURCE_IDS];
 
-const PALE_VMAP0_TEXT =
-  'Shoreline data is derived from: United States. National Imagery and Mapping Agency. "Vector Map Level 0 (VMAP0)." Bethesda, MD: Denver, CO: The Agency; USGS Information Services, 1997.';
-const STD_GEBCO_TEXT =
-  "The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net).";
-const STD_JAPAN_COAST_GUARD_TEXT =
-  "海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）";
+export const GSI_ADDITIONAL_SOURCE_TEXTS: Readonly<
+  Record<GsiAdditionalSourceId, string>
+> = Object.freeze({
+  [GSI_ADDITIONAL_SOURCE_IDS.paleVmap0]:
+    'Shoreline data is derived from: United States. National Imagery and Mapping Agency. "Vector Map Level 0 (VMAP0)." Bethesda, MD: Denver, CO: The Agency; USGS Information Services, 1997.',
+  [GSI_ADDITIONAL_SOURCE_IDS.stdGebco]:
+    "The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net)",
+  [GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard]:
+    "海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）",
+  [GSI_ADDITIONAL_SOURCE_IDS.stdVmap0]:
+    'Shoreline data is derived from: United States. National Imagery and Mapping Agency. "Vector Map Level 0 (VMAP0)." Bethesda, MD: Denver, CO: The Agency; USGS Information Services, 1997.',
+});
+
+export const GSI_ADDITIONAL_CONDITIONS_SECTION_ID = "gsi-low-zoom-conditions";
 
 export const GSI_ADDITIONAL_SOURCE_LINKS: Readonly<
-  Record<GsiAdditionalSourceId, Readonly<{ readonly text: string; readonly href: string }>>
+  Record<
+    GsiAdditionalSourceId,
+    Readonly<{ readonly text: string; readonly href: string }>
+  >
 > = Object.freeze({
   [GSI_ADDITIONAL_SOURCE_IDS.paleVmap0]: Object.freeze({
     text: "GSI official tile list (VMAP0 shoreline source)",
@@ -74,22 +82,24 @@ export const GSI_ADDITIONAL_SOURCE_ATTRIBUTIONS: Readonly<
 const PALE_SOURCES: readonly GsiAdditionalSource[] = Object.freeze([
   Object.freeze({
     id: GSI_ADDITIONAL_SOURCE_IDS.paleVmap0,
-    text: PALE_VMAP0_TEXT,
+    text: GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.paleVmap0],
   }),
 ]);
 
 const STD_SOURCES: readonly GsiAdditionalSource[] = Object.freeze([
   Object.freeze({
     id: GSI_ADDITIONAL_SOURCE_IDS.stdGebco,
-    text: STD_GEBCO_TEXT,
+    text: GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.stdGebco],
   }),
   Object.freeze({
     id: GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard,
-    text: STD_JAPAN_COAST_GUARD_TEXT,
+    text: GSI_ADDITIONAL_SOURCE_TEXTS[
+      GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard
+    ],
   }),
   Object.freeze({
     id: GSI_ADDITIONAL_SOURCE_IDS.stdVmap0,
-    text: PALE_VMAP0_TEXT,
+    text: GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.stdVmap0],
   }),
 ]);
 
