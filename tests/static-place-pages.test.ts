@@ -24,12 +24,19 @@ import { generateStaticTimelineFiles } from "../scripts/build-static-timeline-pa
 const ROOT = join(__dirname, "..");
 const HISTORICAL_REFERENCE_ASSETS = {
   schemaVersion: 1,
-  assetCount: 1,
-  files: [{
-    publicPath: "/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
-    sha256: "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81",
-    bytes: 1680142,
-  }],
+  assetCount: 2,
+  files: [
+    {
+      publicPath: "/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
+      sha256: "5b2f4e6fa4c33022aa0ba3265b821e43226b1804d0456f12f382ed2d5d6fd36c",
+      bytes: 861237,
+    },
+    {
+      publicPath: "/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
+      sha256: "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81",
+      bytes: 1680142,
+    },
+  ],
 } as const;
 let generated: StaticPlaceGeneration;
 let temporaryDist = "";

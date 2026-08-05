@@ -2,9 +2,9 @@
 
 ## 公開中のreference panel
 
-`tokyo-archive-4300033114-wadakura-gate-reference-display`は2026-07-23にtechnical approved / publishedとなった。`displayRole=reference-only`、`displayMode=reference-panel`、`spatialBinding.kind=display-trigger-area`を維持し、trigger polygonは案内判定専用で、史料の測地範囲・史跡境界ではない。東京・江戸、中心点がpolygon内、zoom 17以上で案内し、表示後は16.5未満で解除する。`sourceEraId=edo-middle`は資料metadataであり、現代／江戸後期の選択を制限または変更しない。
+`tokyo-archive-4300033114-wadakura-gate-reference-display`と`tokyo-archive-4300033114-babasaki-gate-reference-display`はtechnical approved / publishedである。`displayRole=reference-only`、`displayMode=reference-panel`、`spatialBinding.kind=display-trigger-area`を維持し、非重複のtrigger polygonは案内判定専用で、史料の測地範囲・史跡境界ではない。東京・江戸、中心点がpolygon内、zoom 17以上で案内し、表示後は16.5未満で解除する。`sourceEraId=edo-middle`は資料metadataであり、現代／江戸後期の選択を制限または変更しない。
 
-runtimeはprivate display catalogを配信・読込みせず、`src/historical-reference-panel-registry.json`の縮約entryを専用監査でcatalogへ照合する。現在はdisplay 1、published 1、runtime eligible 1、runtime registry 1である。
+runtimeはprivate display catalogを配信・読込みせず、schemaVersion 2の`src/historical-reference-panel-registry.json`にある2件の縮約entryを専用監査でcatalogへ照合する。各entryの`promptLabelJa`で案内文言を決め、画像切替時は前entryのsrcと表示状態を再利用しない。現在はdisplay 2、rights approved 2、technical approved 2、published 2、runtime eligible 2、runtime registry 2である。
 
 ## 目的
 
@@ -106,6 +106,21 @@ trigger envelopeの確認根拠は次の公式資料である。
 
 登録polygonはこれら公式図面の境界を複製したものではなく、表示誘導用の保守的な
 trigger envelopeである。公式案内図や地理院タイル画像はリポジトリへ転載しない。
+
+## 馬場先御門reference display
+
+`tokyo-archive-4300033114-babasaki-gate-reference-display`は、technical approved /
+publishedのreference assetを参照する公開`reference-only` / `reference-panel`である。
+`parentMapId`を持たず、display自体もtechnical approved / publication publishedである。
+
+公式位置根拠は、[千代田区文化財サイト「馬場先門跡」](https://www.edo-chiyoda.jp/knainobunkazai/bunkazaisign_hyochu_setsumeiban/1/5/53.html)の皇居外苑1先・馬場先門交差点から皇居外苑方面の歩道植栽内という案内と、[千代田区観光協会「馬場先門橋」](https://visit-chiyoda.tokyo/app/spot/detail/237)の皇居外苑1、丸の内から皇居正面へ通じる土橋、北側の馬場先濠、南側の日比谷濠、現存石垣の説明である。公式ページのGoogle Mapリンクが示す現代側案内点は`[139.760527, 35.678426]`である。
+
+登録するtrigger polygonは`[[[139.75925,35.67775],[139.76165,35.67775],[139.76165,35.67965],[139.75925,35.67965],[139.75925,35.67775]]]`である。2026-07-27に地理院標準地図上で、公式案内点、馬場先門橋・交差点・皇居外苑方向の歩道周辺を含み、和田倉polygonと非重複で、皇居外苑・丸の内・日比谷の広域を覆わないことを確認した。
+
+このpolygonは利用者へ参考資料の存在を知らせるUI案内用envelopeにすぎない。旧門や
+枡形石垣の復元範囲、文化財・法的境界、1717年図面のcoverage、georeferenced extent、
+control pointまたはcontrol point envelopeではない。runtime registry、public PNG、
+公開UIへだけ接続し、marker、overlay、tileへは接続しない。
 
 zoomは`minimum <= maximum`と、`enterDetailAt > leaveDetailBelow`のヒステリシスを必須にする。
 

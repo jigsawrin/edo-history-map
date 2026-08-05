@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogStatus": "reviewed",
-  "reviewedAt": "2026-07-23",
+  "reviewedAt": "2026-07-27",
   "assets": [
     {
       "id": "tokyo-archive-4300033114-wadakura-gate-reference-image",
@@ -64,6 +64,69 @@
         "sha256": "92e7493dc52be2b18670f1b1bd80e1688ba6c7f491d94f3d2f172cce9b4b3e81",
         "derivedPath": "data-derived/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png",
         "publicPath": "/data/historical-reference-assets/tokyo-archive-4300033114-wadakura-gate-reference-image/wadakura-gate-reference.png"
+      }
+    },
+    {
+      "id": "tokyo-archive-4300033114-babasaki-gate-reference-image",
+      "sourceId": "tokyo-archive-4300033114-babasaki-gate",
+      "title": {
+        "ja": "江戸城御外郭御門絵図 第2図 馬場先御門 参考画像"
+      },
+      "description": {
+        "ja": "享保2年（1717）の馬場先御門を描いた局所的な門構造図。現代地図へ測地同期せず、図面・注記・細部を参考パネルで閲覧するための画像。"
+      },
+      "rightsReviewStatus": "approved",
+      "technicalReviewStatus": "approved",
+      "publicationStatus": "published",
+      "licenseCode": "Public-Domain",
+      "licenseCategory": "public-domain",
+      "licenseUrl": "https://archive.library.metro.tokyo.lg.jp/da/windowRequestImage2",
+      "attribution": {
+        "ja": "『江戸城御外郭御門絵図 第2図 馬場先御門』（東京都立中央図書館所蔵）（部分・加工）"
+      },
+      "derivativeDisclosure": {
+        "ja": "原画像から外側の撮影背景、資料番号札、カラーチャート、グレースケール、定規を除く保守的な切り抜きを行った。"
+      },
+      "commercialUseAllowed": true,
+      "redistributionAllowed": true,
+      "modificationAllowed": true,
+      "croppingAllowed": true,
+      "originalFile": {
+        "fileName": "babasaki-gate-source.jpg",
+        "mimeType": "image/jpeg",
+        "width": 3514,
+        "height": 2500,
+        "bytes": 211124,
+        "sha256": "5235617d8deb9a77cef9326a85f4e9b54bc7be9211d4179d4edf7d1ffbf12195",
+        "rawPath": "data-raw/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-source.jpg"
+      },
+      "crop": {
+        "sourceWidth": 3514,
+        "sourceHeight": 2500,
+        "x": 500,
+        "y": 270,
+        "width": 2450,
+        "height": 1800,
+        "rotationDegrees": 0
+      },
+      "removedElements": [
+        "capture-background",
+        "ruler",
+        "color-chart",
+        "shelfmark-label"
+      ],
+      "preservesHistoricalContent": true,
+      "cropReviewNote": {
+        "ja": "図面本体、全注記、方角表示、右下の細部図、原本余白、折り目、印・記号、台紙の縁を残した。原本外であることが明確な外側の灰色背景、資料番号札、カラーチャート、グレースケール、定規だけを除去した。"
+      },
+      "derivedFile": {
+        "mimeType": "image/png",
+        "width": 2450,
+        "height": 1800,
+        "bytes": 861237,
+        "sha256": "5b2f4e6fa4c33022aa0ba3265b821e43226b1804d0456f12f382ed2d5d6fd36c",
+        "derivedPath": "data-derived/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png",
+        "publicPath": "/data/historical-reference-assets/tokyo-archive-4300033114-babasaki-gate-reference-image/babasaki-gate-reference.png"
       }
     }
   ]

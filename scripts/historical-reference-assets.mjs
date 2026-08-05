@@ -1281,12 +1281,12 @@ export function auditHistoricalReferenceAssetRepository(root, options = {}) {
         .filter((asset) => asset.publicationStatus === "published")
         .map((asset) => `dist${asset.derivedFile.publicPath}`),
     );
-    const privateInlineNeedles = [
+    const privateFieldNeedles = [
       "rawPath",
       "derivedPath",
       "cropReviewNote",
-      "tokyo-archive-4300033114-wadakura-gate-reference-image",
     ];
+    const assetIdNeedles = (catalog?.assets ?? []).map((asset) => asset.id);
     const leaked = collectFiles(distPath).some((file) => {
       const normalized = relative(root, file).replace(/\\/gu, "/");
       if (allowedPublishedDistPaths.has(normalized)) return false;
@@ -1296,7 +1296,8 @@ export function auditHistoricalReferenceAssetRepository(root, options = {}) {
           normalized.includes("historical-reference-assets")) return true;
       if (!normalized.endsWith(".js")) return false;
       const content = readFileSync(file, "utf8");
-      return privateInlineNeedles.every((needle) => content.includes(needle));
+      return privateFieldNeedles.every((needle) => content.includes(needle)) &&
+        assetIdNeedles.some((assetId) => content.includes(assetId));
     });
     if (leaked) errors.push("歴史参考画像台帳またはtest fixtureがdistへ混入しています");
   }
