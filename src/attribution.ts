@@ -1,5 +1,9 @@
 import { KYOTO_SOURCE_REGISTRY } from "./kyoto-source-registry";
 import { SHIGA_SOURCE_DEFINITIONS } from "./shiga-source-registry";
+import {
+  GSI_ADDITIONAL_SOURCE_IDS,
+  GSI_ADDITIONAL_SOURCE_LINKS,
+} from "./gsi-attribution";
 
 /** 出典・ライセンス画面とプライバシー画面。DOMは安全なAPIだけで構築する。 */
 
@@ -54,7 +58,53 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
         text: "地理院タイル一覧(国土地理院)",
         href: "https://maps.gsi.go.jp/development/ichiran.html",
       },
+      {
+        text: "GSI tile list and source notes",
+        href: "https://maps.gsi.go.jp/development/",
+      },
+      {
+        text: "GSI tile usage/content guidance",
+        href: "https://maps.gsi.go.jp/development/siyou.html",
+      },
     ],
+  },
+  {
+    id: GSI_ADDITIONAL_SOURCE_IDS.paleVmap0,
+    title: "GSI pale basemap: zoom 5–8 shoreline source",
+    paragraphs: [
+      "This additional source applies only to the GSI pale basemap at zoom levels 5–8. It is not inferred from map bounds and is not used for historical or reconstructed layers.",
+      "Shoreline data is derived from: United States. National Imagery and Mapping Agency. \"Vector Map Level 0 (VMAP0).\" Bethesda, MD: Denver, CO: The Agency; USGS Information Services, 1997.",
+    ],
+    links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.paleVmap0]],
+  },
+  {
+    id: GSI_ADDITIONAL_SOURCE_IDS.stdGebco,
+    title: "GSI standard basemap: zoom 5–8 bathymetric contours",
+    paragraphs: [
+      "This additional source applies only to the GSI standard basemap at zoom levels 5–8.",
+      "The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net).",
+    ],
+    links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.stdGebco]],
+  },
+  {
+    id: GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard,
+    title: "GSI standard basemap: Japan Coast Guard permit",
+    paragraphs: [
+      "海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）",
+    ],
+    links: [
+      GSI_ADDITIONAL_SOURCE_LINKS[
+        GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard
+      ],
+    ],
+  },
+  {
+    id: GSI_ADDITIONAL_SOURCE_IDS.stdVmap0,
+    title: "GSI standard basemap: zoom 5–8 shoreline source",
+    paragraphs: [
+      "Shoreline data is derived from: United States. National Imagery and Mapping Agency. \"Vector Map Level 0 (VMAP0).\" Bethesda, MD: Denver, CO: The Agency; USGS Information Services, 1997.",
+    ],
+    links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.stdVmap0]],
   },
   {
     id: "codh-edo-machiya-areas",

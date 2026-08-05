@@ -4,9 +4,15 @@ import {
   GSI_ATTRIBUTION,
   MACHIYA_ATTRIBUTION,
 } from "./config";
+import {
+  GSI_ADDITIONAL_SOURCE_ATTRIBUTIONS,
+  GSI_ADDITIONAL_SOURCE_IDS,
+  type GsiAdditionalSourceId,
+} from "./gsi-attribution";
 
 export type AttributionId =
   | "gsi-tiles"
+  | GsiAdditionalSourceId
   | "codh-edo-maps-places"
   | "codh-edo-machiya-areas"
   | "codh-edo-coastline"
@@ -16,6 +22,16 @@ export type AttributionId =
 export const ATTRIBUTION_REGISTRY: Readonly<Record<AttributionId, string>> =
   Object.freeze({
     "gsi-tiles": GSI_ATTRIBUTION,
+    [GSI_ADDITIONAL_SOURCE_IDS.paleVmap0]:
+      GSI_ADDITIONAL_SOURCE_ATTRIBUTIONS[GSI_ADDITIONAL_SOURCE_IDS.paleVmap0],
+    [GSI_ADDITIONAL_SOURCE_IDS.stdGebco]:
+      GSI_ADDITIONAL_SOURCE_ATTRIBUTIONS[GSI_ADDITIONAL_SOURCE_IDS.stdGebco],
+    [GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard]:
+      GSI_ADDITIONAL_SOURCE_ATTRIBUTIONS[
+        GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard
+      ],
+    [GSI_ADDITIONAL_SOURCE_IDS.stdVmap0]:
+      GSI_ADDITIONAL_SOURCE_ATTRIBUTIONS[GSI_ADDITIONAL_SOURCE_IDS.stdVmap0],
     "codh-edo-maps-places": CODH_ATTRIBUTION,
     "codh-edo-machiya-areas": MACHIYA_ATTRIBUTION,
     "codh-edo-coastline": COASTLINE_ATTRIBUTION,

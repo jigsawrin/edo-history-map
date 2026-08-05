@@ -139,6 +139,14 @@ export class ModernBaseTransitionLayer implements TransitionLayer {
     };
   }
 
+  get currentBase(): BaseLayerKey {
+    return this.#current;
+  }
+
+  get isVisible(): boolean {
+    return this.#isAdded && this.#opacity > 0;
+  }
+
   setBase(base: BaseLayerKey): void {
     if (base === this.#current) return;
     const previous = this.#layers[this.#current];
