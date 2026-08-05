@@ -44,6 +44,11 @@ import {
   auditEdoPlaceCurationCandidateRepository,
   summarizeEdoPlaceCurationCandidates,
 } from "./edo-place-curation-candidates.mjs";
+import {
+  auditEdoPlaceSourceIdentityRepository,
+  summarizeEdoPlaceSourceIdentityRelations,
+} from "./edo-place-source-identity-relations.mjs";
+import { auditEdoDerivedPlaceRepository } from "./edo-derived-place-model.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -236,6 +241,10 @@ const HISTORICAL_REFERENCE_ASSETS_FILE =
   "data-curation/historical-reference-assets.json";
 const EDO_PLACE_CURATION_CATALOG_FILE =
   "data-curation/edo-place-curation-candidates.json";
+const EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE =
+  "data-curation/edo-place-source-identity-relations.json";
+const EDO_DERIVED_PLACE_SNAPSHOT_FILE =
+  "scripts/edo-derived-place-model.mjs";
 const KYOTO_BOUNDS = Object.freeze({
   minLat: 34.85,
   maxLat: 35.12,
@@ -1235,6 +1244,7 @@ for (const file of allFiles) {
       HISTORICAL_MAP_DISPLAY_CATALOG_FILE,
       HISTORICAL_REFERENCE_ASSETS_FILE,
       EDO_PLACE_CURATION_CATALOG_FILE,
+      EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
@@ -1532,6 +1542,43 @@ for (const message of edoPlaceCurationAudit.errors) {
 if (edoPlaceCurationAudit.catalog) {
   const summary = summarizeEdoPlaceCurationCandidates(edoPlaceCurationAudit.catalog);
   infos.push(`江戸地名キュレーション候補: ${summary.count}件、approved ${summary.approvedCount}`);
+}
+
+const edoPlaceSourceIdentityAudit =
+  auditEdoPlaceSourceIdentityRepository(ROOT);
+for (const message of edoPlaceSourceIdentityAudit.errors) {
+  addFinding(
+    "error",
+    "江戸地名source identity関係",
+    EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE,
+    0,
+    message,
+  );
+}
+if (edoPlaceSourceIdentityAudit.catalog) {
+  const summary = summarizeEdoPlaceSourceIdentityRelations(
+    edoPlaceSourceIdentityAudit.catalog,
+  );
+  infos.push(
+    `江戸地名source identity: ${summary.groups}group、${summary.members}member、nonpreferred ${summary.nonpreferred}、source anomaly ${summary.anomalies}`,
+  );
+}
+
+const edoDerivedPlaceAudit = auditEdoDerivedPlaceRepository(ROOT);
+for (const message of edoDerivedPlaceAudit.errors) {
+  addFinding(
+    "error",
+    "江戸地名 共通派生地点モデル",
+    EDO_DERIVED_PLACE_SNAPSHOT_FILE,
+    0,
+    message,
+  );
+}
+if (edoDerivedPlaceAudit.summary) {
+  const summary = edoDerivedPlaceAudit.summary;
+  infos.push(
+    `江戸地名 共通派生地点モデル: ${summary.derivedPlaceCount} places, reverse ${summary.reverseMappedSourceRecordCount}, runtime ${summary.runtimeApplicableDerivedPlaceCount}, SHA-256 ${summary.canonicalOutputSha256}`,
+  );
 }
 
 const historicalRasterCandidateAudit = auditHistoricalRasterCandidateRepository(ROOT);
@@ -1866,7 +1913,7 @@ if (historyNames !== null) {
 
 // 追跡ファイルと .gitignore の整合(追跡中の除外対象がないか)
 for (const t of tracked) {
-  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && !["audit/shiga-sengoku-place-review.md", "audit/historical-theme-review.md", "audit/historical-timeline-review.md", "audit/historical-raster-pilot-review.md", "audit/historical-raster-source-survey.md", "audit/historical-raster-first-import.md", "audit/taito-daimyo-koji-control-points.md", "audit/taito-daimyo-koji-georeference-review.md"].includes(t))) {
+  if (t.startsWith("dist/") || t.startsWith("node_modules/") || t === "PROMPT.md" || t === "RULES.md" || t.startsWith(".claude/") || (t.startsWith("audit/") && !["audit/shiga-sengoku-place-review.md", "audit/historical-theme-review.md", "audit/historical-timeline-review.md", "audit/historical-raster-pilot-review.md", "audit/historical-raster-source-survey.md", "audit/historical-raster-first-import.md", "audit/taito-daimyo-koji-control-points.md", "audit/taito-daimyo-koji-georeference-review.md", "audit/edo-place-source-identity-review.md"].includes(t))) {
     addFinding("error", "追跡対象違反", t, 0, "公開対象外ファイルが Git 追跡されています");
   }
 }
