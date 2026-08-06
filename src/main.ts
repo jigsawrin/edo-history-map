@@ -38,6 +38,7 @@ import {
 } from "./eras";
 import { ATTRIBUTION_REGISTRY } from "./attribution-registry";
 import { resolveGsiAdditionalSources } from "./gsi-attribution";
+import { createGsiAttributionControl } from "./gsi-attribution-control";
 import { datasetRegistry, type ApprovedDatasetId } from "./datasets";
 import { regionRegistry } from "./regions/registry";
 import type { RegionEraDefinition, RegionPack } from "./regions/types";
@@ -150,6 +151,7 @@ function main(): void {
     panes.get(MAP_PANES.modernBase) as HTMLElement,
     initialBase,
   );
+  const gsiAttributionControl = createGsiAttributionControl(map);
   baseSelect.addEventListener("change", () => {
     const next = baseSelect.value as BaseLayerKey;
     if (!Object.hasOwn(GSI_TILE_URLS, next)) return;
@@ -555,13 +557,14 @@ function main(): void {
 
   function syncAttributions(ids: readonly string[]): void {
     baseAttributionIds = [...new Set(ids)];
-    const additionalIds = baseAttributionIds.includes("gsi-tiles")
+    const additionalSources = baseAttributionIds.includes("gsi-tiles")
       ? resolveGsiAdditionalSources({
           base: modernBase.currentBase,
           zoom: map.getZoom(),
           baseVisible: modernBase.isVisible,
-        }).map((source) => source.id)
+        })
       : [];
+    const additionalIds = additionalSources.map((source) => source.id);
     activeAttributionIds = [
       ...new Set([...baseAttributionIds, ...additionalIds]),
     ];
@@ -585,6 +588,7 @@ function main(): void {
         visibleLeafletAttributions.add(attribution);
       }
     }
+    gsiAttributionControl.update(additionalSources);
   }
 
   map.on("zoomend", () => syncAttributions(baseAttributionIds));
@@ -1387,6 +1391,7 @@ function main(): void {
     transitions.dispose();
     activeHistoricalRaster?.historical.dispose();
     referenceController.dispose();
+    gsiAttributionControl.dispose();
   }, {
     once: true,
   });

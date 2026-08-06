@@ -5,6 +5,7 @@ import {
   GSI_ADDITIONAL_SOURCE_IDS,
   GSI_ADDITIONAL_SOURCE_LINKS,
   GSI_ADDITIONAL_SOURCE_TEXTS,
+  GSI_PROJECT_HISTORY_ADDITION_TEXT,
 } from "./gsi-attribution";
 
 /** 出典・ライセンス画面とプライバシー画面。DOMは安全なAPIだけで構築する。 */
@@ -54,39 +55,39 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
     title: "背景地図",
     paragraphs: [
       "背景地図には国土地理院の「地理院タイル」(標準地図・淡色地図)を使用しています。地理院タイルは出典の明示により利用できます。",
-      "このプロジェクトは地理院タイルに独自の歴史情報を追加して掲載しています。地理院タイル自体の出典・利用条件と、歴史情報の出典・利用条件は分けて確認してください。",
+      `${GSI_PROJECT_HISTORY_ADDITION_TEXT}しています。地理院タイル自体の出典・利用条件と、本プロジェクトの歴史情報の出典・利用条件は分けて確認してください。`,
     ],
     links: [
       {
-        text: "地理院タイル一覧(国土地理院)",
+        text: "地理院タイル一覧",
         href: "https://maps.gsi.go.jp/development/ichiran.html",
       },
       {
-        text: "GSI tile list and source notes",
-        href: "https://maps.gsi.go.jp/development/",
+        text: "地理院タイルについて",
+        href: "https://maps.gsi.go.jp/development/siyou.html",
       },
       {
-        text: "GSI tile usage/content guidance",
-        href: "https://maps.gsi.go.jp/development/siyou.html",
+        text: "国土地理院コンテンツ利用規約",
+        href: "https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html",
+      },
+      {
+        text: "出典の記載",
+        href: "https://www.gsi.go.jp/LAW/2930-meizi.html",
+      },
+      {
+        text: "国土地理院の測量成果の利用手続",
+        href: "https://www.gsi.go.jp/LAW/2930-index.html",
       },
     ],
   },
   {
     id: GSI_ADDITIONAL_CONDITIONS_SECTION_ID,
-    title: "GSI low-zoom source conditions",
+    title: "地理院タイルの利用条件と低ズーム追加出所",
     paragraphs: [
-      "The additional source notices apply only while a visible GSI standard or pale basemap is shown at zoom levels 5–8. The active base-specific sections in this dialog carry the notices; at zoom level 9 and above no additional source entry is required.",
-      "地理院タイルは公式に記載されたXYZエンドポイントからリアルタイムに読み込みます。このプロジェクトはタイルをキャッシュまたは一括ダウンロードせず、地理院タイルの印刷・画像書き出し機能を提供しません。",
-    ],
-    links: [
-      {
-        text: "GSI tile list and source notes",
-        href: "https://maps.gsi.go.jp/development/",
-      },
-      {
-        text: "GSI tile usage/content guidance",
-        href: "https://maps.gsi.go.jp/development/siyou.html",
-      },
+      "地理院タイルは国土地理院の公式XYZエンドポイントから閲覧時にリアルタイムで読み込みます。この利用形態は通常出典を明示することで承認申請不要と評価しています。",
+      "表示中の標準地図・淡色地図がズーム5〜8の場合は、地図上に基図別の追加出所全文を表示します。ズーム9以上、基図非表示、基図の不透明度0、未知の基図では地図上の追加出所を表示しません。",
+      "このプロジェクトは地理院タイルをキャッシュ、proxy、一括ダウンロード、再配布せず、地理院タイルの印刷・画像書き出し機能も提供しません。",
+      "追加出所には第三者の権利情報が含まれます。公式条件が変更された場合は、実行時接続前に再調査します。",
     ],
   },
   {
@@ -99,26 +100,18 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
     links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.paleVmap0]],
   },
   {
-    id: GSI_ADDITIONAL_SOURCE_IDS.stdGebco,
-    title: "GSI standard basemap: zoom 5–8 bathymetric contours",
+    id: GSI_ADDITIONAL_SOURCE_IDS.stdGebcoJcg,
+    title: "標準地図・ズーム5〜8: GEBCO・海上保安庁追加出所",
     paragraphs: [
-      "This additional source applies only to the GSI standard basemap at zoom levels 5–8.",
-      GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.stdGebco],
-    ],
-    links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.stdGebco]],
-  },
-  {
-    id: GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard,
-    title: "GSI standard basemap: Japan Coast Guard permit",
-    paragraphs: [
-      GSI_ADDITIONAL_SOURCE_TEXTS[
-        GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard
-      ],
+      "この追加出所は、表示中の標準地図がズーム5〜8の場合に地図上へ表示します。",
+      GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.stdGebcoJcg],
     ],
     links: [
-      GSI_ADDITIONAL_SOURCE_LINKS[
-        GSI_ADDITIONAL_SOURCE_IDS.stdJapanCoastGuard
-      ],
+      GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.stdGebcoJcg],
+      {
+        text: "GEBCO Digital Atlas",
+        href: "https://www.gebco.net/",
+      },
     ],
   },
   {
@@ -228,6 +221,9 @@ export function renderAttribution(
   const allowed = new Set(attributionIds);
   if (allowed.has("gsi-tiles")) {
     allowed.add(GSI_ADDITIONAL_CONDITIONS_SECTION_ID);
+    allowed.add(GSI_ADDITIONAL_SOURCE_IDS.paleVmap0);
+    allowed.add(GSI_ADDITIONAL_SOURCE_IDS.stdGebcoJcg);
+    allowed.add(GSI_ADDITIONAL_SOURCE_IDS.stdVmap0);
   }
   for (const section of ATTRIBUTION_SECTIONS) {
     if (!allowed.has(section.id)) continue;

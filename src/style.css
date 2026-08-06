@@ -324,6 +324,57 @@ a:focus-visible,
   flex: 1;
   min-width: 0;
   min-height: 55vh;
+  overflow: hidden;
+}
+
+.gsi-source-control {
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(36rem, calc(100vw - 1rem));
+  max-height: min(40dvh, 18rem);
+  margin-top: max(0.5rem, env(safe-area-inset-top));
+  margin-right: max(0.5rem, env(safe-area-inset-right));
+  padding: 0.55rem 0.7rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid #4b5563;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 96%);
+  color: #111827;
+  box-shadow: 0 1px 5px rgb(0 0 0 / 35%);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  pointer-events: auto;
+}
+
+.gsi-source-control[hidden] {
+  display: none;
+}
+
+.gsi-source-control strong {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.gsi-source-control p {
+  margin: 0;
+}
+
+.gsi-source-control p + p {
+  margin-top: 0.45rem;
+}
+
+@media (max-width: 430px) {
+  .gsi-source-control {
+    max-width: calc(
+      100vw - max(0.5rem, env(safe-area-inset-left)) -
+        max(0.5rem, env(safe-area-inset-right))
+    );
+    max-height: min(38dvh, 15rem);
+    font-size: 0.75rem;
+  }
 }
 
 /* GSI's low-zoom source notices can be long; keep the live Leaflet notice readable without horizontal overflow. */
