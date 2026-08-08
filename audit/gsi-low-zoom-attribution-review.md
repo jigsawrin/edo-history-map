@@ -61,4 +61,4 @@ The attribution dialog is intentionally comprehensive and independent of current
 
 No source text comes from URL parameters, fetched data, storage, analytics, proxy, or user input. No `innerHTML`, inline event handler, `eval`, external script, external CSS, font, dependency, workflow, tile URL, public data, region/history dataset, or privacy behavior is added or changed.
 
-The static audit remains tracked by the prepublish audit's exact audit-path allowlist. Human browser verification of desktop and 320/375/430-pixel layouts remains pending; the PR therefore remains Draft.
+The static audit remains tracked by the prepublish audit's exact audit-path allowlist. Human browser verification confirmed the full-text pale/standard transitions, zoom 9 and opacity-zero hiding, comprehensive dialog, and bounded no-horizontal-overflow layout at desktop and 320/375/430-pixel widths on 2026-08-08. The PR remains Draft because this task does not authorize Ready conversion.
