@@ -8,6 +8,7 @@ import presentation from "../kyoto-place-presentation.json";
 import shigaPresentation from "../shiga-place-presentation.json";
 import type { ShigaPlaceCategory, ShigaSengokuPlace } from "../shiga-sengoku-places";
 import { normalizeSearchText } from "./normalize";
+import { applyEdoSearchProjection } from "./edo-search-projection";
 import type {
   SearchableHistoricalPlace,
   SearchablePlaceDatasetId,
@@ -30,11 +31,11 @@ export function createEdoSearchRecords(
     entryIdCounts.set(place.entryId, (entryIdCounts.get(place.entryId) ?? 0) + 1);
   }
   return Object.freeze(
-    places.map((record, sourceIndex) => {
+    applyEdoSearchProjection(places).map(({ record, name, sourceIndex }) => {
       const secondaryText = [record.category, record.sheet]
         .filter(Boolean)
         .join("／");
-      const normalizedName = normalizeSearchText(record.name);
+      const normalizedName = normalizeSearchText(name);
       const normalizedCategory = normalizeSearchText(record.category);
       const normalizedSecondary = normalizeSearchText(record.sheet);
       return Object.freeze({
@@ -45,7 +46,7 @@ export function createEdoSearchRecords(
         datasetId: "codh-edo-maps-places" as const,
         regionId: "edo" as const,
         eraId: "edo-late" as const,
-        name: record.name,
+        name,
         secondaryText,
         detailText: "",
         categoryId: record.category,
@@ -58,7 +59,7 @@ export function createEdoSearchRecords(
         normalizedSecondary,
         normalizedDescription: "",
         normalizedSearchText: combinedNormalizedText([
-          record.name,
+          name,
           record.category,
           record.sheet,
         ]),
