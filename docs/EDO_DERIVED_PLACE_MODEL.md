@@ -1,10 +1,12 @@
-# 江戸地名 共通派生地点モデル（non-runtime foundation）
+# 江戸地名 共通派生地点モデルとSearch consumer pilot
 
 ## 目的と境界
 
-この基盤は、8,788件のsource record、CODH由来の825 source identity groups、プロジェクト独自のmanual curationを破壊的に統合せず、将来の地図・検索・情報カード・静的ページが同じ解釈結果を利用するための設計・型・検証・監査を定義する。
+この基盤は、8,788件のsource record、CODH由来の825 source identity groups、プロジェクト独自のmanual curationを破壊的に統合せず、地図・検索・情報カード・静的ページが段階的に同じ解釈結果を利用するための設計・型・検証・監査を定義する。
 
-今回はruntimeへ接続しない。`src/`からのimport、browser fetch、`public/`・`dist/`へのcatalog出力、marker・検索・カード・静的ページの変更は行わない。全surfaceの`applicability`は`false`であり、監査がこれを固定する。
+完全なDerived Place Model自体は引き続きnon-runtimeである。`scripts/edo-derived-place-model.mjs`のruntime import、full derived catalogの`public/`・`dist/`出力、private curation catalogやidentity・evidence・reviewer情報のruntime/public配信を禁止し、既存の漏洩監査が拒否する。
+
+Search/listだけは最初のpilot consumerとして導入済みである。runtimeは完全モデルを読み込まず、監査済みの最小projectionである`src/place-search/edo-search-projection.json`だけをstatic importしてsource-backed search read modelへ適用する。Map、info card、static place pagesは引き続きsource-backedであり、挙動・ID・URLを変更しない。
 
 ## 三層の分離
 
@@ -28,9 +30,37 @@ validatorはsource GeoJSON、source identity catalog、manual curation catalog�
 
 curation catalogが`empty-foundation` / 0 candidatesでも同じ8,788件とcanonical SHAを生成できる。複数memberのderived placeを導入するには、別の明示的な人間review済みgrouping decisionとschema migrationが必要である。
 
+Search applicabilityは、source 1件からderived 1件を生成し、reverse mappingがそのsourceへ正しく1件存在し、approved hideではなく、`needs-human-review`でもなく、display name basisが`source-record`または`approved-rename`である場合だけ`true`にする。identity relationを理由に複数sourceをmergeしない。
+
+現在のbaselineは次のとおりである。
+
+| 項目 | 件数 |
+| --- | ---: |
+| source records | 8,788 |
+| derived places | 8,788 |
+| reverse mappings | 8,788 |
+| multi-member derived places | 0 |
+| search applicable | 8,788 |
+| map applicable | 0 |
+| card applicable | 0 |
+| static-page applicable | 0 |
+| runtime applicable（いずれかのsurface） | 8,788 |
+
+Derived canonical SHA-256は`703d2acf51fd4507b78d24a1b8d965c8dc70bf8285c9b3a17b4541ebea1339b2`、source GeoJSON SHA-256は`7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4`である。
+
+## Search runtime projection
+
+`src/place-search/edo-search-projection.json`はsourceとの差分だけをruntimeへ渡す。schemaは`schemaVersion`、`sourceDataSha256`、`sourceFeatureCount`、`eligibleSourceCount`、`overrides`から成る。overrideは承認済み判断をsource record ID、source index、Feature SHA-256へ結び付け、必要なdisplay nameとhide stateだけを保持する。
+
+現在はcuration 0件のため`overrides`も0件である。将来、approved renameまたはapproved hideが発生した場合だけ、完全モデルから決定的に生成・検証されたoverrideを追加する。unknown field、重複target、順序違反、source SHA/count/index/ID/Feature SHA不一致、未承認rename/hide、search applicabilityとの不一致を監査で拒否する。
+
+projection適用後もraw source record、CODH source URL、source object identity、category、sheet、座標を保持し、source record自体を書き換えない。legacy search keyも維持するため、map→search同期と既存の検索順・query・paginationを変更しない。
+
 ## deterministic auditとsnapshot
 
-`npm run audit:edo-derived-place-model`は3入力をread-onlyで検証し、full outputをmemory内だけで構築する。型付きの`EDO_DERIVED_PLACE_SNAPSHOT`定数は件数、reverse mapping coverage、runtime適用0件、canonical JSON SHA-256だけを固定し、full derived catalogをcommitまたは公開しない。定数は既存の追跡禁止`audit/*`へ出力せずvalidatorと同じnon-runtime moduleに置く。
+`npm run audit:edo-derived-place-model`は3入力をread-onlyで検証し、full outputをmemory内だけで構築する。型付きの`EDO_DERIVED_PLACE_SNAPSHOT`定数は件数、reverse mapping coverage、surface別applicability、runtime適用8,788件、canonical JSON SHA-256を固定し、full derived catalogをcommitまたは公開しない。定数は既存の追跡禁止`audit/*`へ出力せずvalidatorと同じnon-runtime moduleに置く。
+
+同じauditがchecked-in Search projectionを完全モデルから再生成した期待値と比較し、source GeoJSONへのbindingとSearch applicabilityの一致を検証する。runtimeへ渡るのはprojectionだけであり、完全モデル、private catalog、identity group、evidence、reviewer情報は含めない。
 
 漏洩監査は`public/`と`dist/`の派生モデルらしいpathをsizeに関係なく拒否し、JSON・JavaScript・HTML等のtext fileをsize上限なしで検査する。`src/`ではTypeScript/JavaScript/JSON系を検査し、module名だけでなく`deriveEdoPlaces`参照も拒否する。通常画像や無関係なbinaryはUTF-8 textとして読み込まない。
 
@@ -38,7 +68,9 @@ snapshot更新は入力SHA・既存catalog検証・差分理由・人間review�
 
 ## migration方針
 
-schemaは暗黙に拡張しない。変更時は旧validatorを残したうえで、新schemaVersion、純粋なv1→v2 migration、canonical snapshot、positive/negative/互換testを同一PRに追加する。runtime consumerを追加するPRは本foundationのmigrationとは分離し、map/search/card/static-pageの同一結果とattribution表示を個別に承認・検証する。
+schemaは暗黙に拡張しない。変更時は旧validatorを残したうえで、新schemaVersion、純粋なv1→v2 migration、canonical snapshot、positive/negative/互換testを同一PRに追加する。
+
+Search/listは最初のpilot consumerとして導入済みである。今後の候補順は`Search/list → Static builder → Map → Card/selection`とする。ただし次consumerはそれぞれ別PR、別監査、明示承認を必要とし、applicabilityを一括で有効化しない。relation groupの自動merge、CODH `preferred`の表示代表化、manual curation candidateの自動承認は禁止を維持する。
 
 ## 法的境界と出典保持
 
