@@ -369,7 +369,7 @@ a:focus-visible,
 @media (max-width: 430px) {
   .gsi-source-control {
     max-width: calc(
-      100vw - 1rem - max(0.5rem, env(safe-area-inset-left)) -
+      100vw - 4.5rem - max(0.5rem, env(safe-area-inset-left)) -
         max(0.5rem, env(safe-area-inset-right))
     );
     max-height: min(38dvh, 15rem);
