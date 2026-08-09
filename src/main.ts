@@ -37,6 +37,8 @@ import {
   VISUAL_LAYER_IDS,
 } from "./eras";
 import { ATTRIBUTION_REGISTRY } from "./attribution-registry";
+import { resolveGsiAdditionalSources } from "./gsi-attribution";
+import { createGsiAttributionControl } from "./gsi-attribution-control";
 import { datasetRegistry, type ApprovedDatasetId } from "./datasets";
 import { regionRegistry } from "./regions/registry";
 import type { RegionEraDefinition, RegionPack } from "./regions/types";
@@ -149,10 +151,12 @@ function main(): void {
     panes.get(MAP_PANES.modernBase) as HTMLElement,
     initialBase,
   );
+  const gsiAttributionControl = createGsiAttributionControl(map);
   baseSelect.addEventListener("change", () => {
     const next = baseSelect.value as BaseLayerKey;
     if (!Object.hasOwn(GSI_TILE_URLS, next)) return;
     modernBase.setBase(next);
+    syncAttributions(baseAttributionIds);
   });
 
   // --- 歴史レイヤー ---
@@ -248,6 +252,7 @@ function main(): void {
   let rasterRequestId: string | null = null;
   let opacityRasterId: string | null = null;
   let activeAttributionIds: readonly string[] = ["gsi-tiles"];
+  let baseAttributionIds: readonly string[] = ["gsi-tiles"];
   const visibleLeafletAttributions = new Set<string>();
   const loadCoordinator = new RegionLoadCoordinator();
   let regionToken = loadCoordinator.begin(currentRegion.region.id);
@@ -551,9 +556,20 @@ function main(): void {
   }
 
   function syncAttributions(ids: readonly string[]): void {
-    activeAttributionIds = [...ids];
+    baseAttributionIds = [...new Set(ids)];
+    const additionalSources = baseAttributionIds.includes("gsi-tiles")
+      ? resolveGsiAdditionalSources({
+          base: modernBase.currentBase,
+          zoom: map.getZoom(),
+          baseVisible: modernBase.isVisible,
+        })
+      : [];
+    const additionalIds = additionalSources.map((source) => source.id);
+    activeAttributionIds = [
+      ...new Set([...baseAttributionIds, ...additionalIds]),
+    ];
     const next = new Set(
-      ids.filter((id) => id !== "gsi-tiles").map((id) => {
+      activeAttributionIds.filter((id) => id !== "gsi-tiles").map((id) => {
         const attribution =
           ATTRIBUTION_REGISTRY[id as keyof typeof ATTRIBUTION_REGISTRY];
         if (!attribution) throw new Error("未登録の出典IDです");
@@ -572,7 +588,10 @@ function main(): void {
         visibleLeafletAttributions.add(attribution);
       }
     }
+    gsiAttributionControl.update(additionalSources);
   }
+
+  map.on("zoomend", () => syncAttributions(baseAttributionIds));
 
   function applyEra(animate = true): void {
     const era =
@@ -1372,6 +1391,7 @@ function main(): void {
     transitions.dispose();
     activeHistoricalRaster?.historical.dispose();
     referenceController.dispose();
+    gsiAttributionControl.dispose();
   }, {
     once: true,
   });

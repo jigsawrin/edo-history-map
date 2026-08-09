@@ -1,5 +1,12 @@
 import { KYOTO_SOURCE_REGISTRY } from "./kyoto-source-registry";
 import { SHIGA_SOURCE_DEFINITIONS } from "./shiga-source-registry";
+import {
+  GSI_ADDITIONAL_CONDITIONS_SECTION_ID,
+  GSI_ADDITIONAL_SOURCE_IDS,
+  GSI_ADDITIONAL_SOURCE_LINKS,
+  GSI_ADDITIONAL_SOURCE_TEXTS,
+  GSI_PROJECT_HISTORY_ADDITION_TEXT,
+} from "./gsi-attribution";
 
 /** 出典・ライセンス画面とプライバシー画面。DOMは安全なAPIだけで構築する。 */
 
@@ -48,13 +55,72 @@ const ATTRIBUTION_SECTIONS: readonly AttributionSection[] = [
     title: "背景地図",
     paragraphs: [
       "背景地図には国土地理院の「地理院タイル」(標準地図・淡色地図)を使用しています。地理院タイルは出典の明示により利用できます。",
+      `${GSI_PROJECT_HISTORY_ADDITION_TEXT}しています。地理院タイル自体の出典・利用条件と、本プロジェクトの歴史情報の出典・利用条件は分けて確認してください。`,
     ],
     links: [
       {
-        text: "地理院タイル一覧(国土地理院)",
+        text: "地理院タイル一覧",
         href: "https://maps.gsi.go.jp/development/ichiran.html",
       },
+      {
+        text: "地理院タイルについて",
+        href: "https://maps.gsi.go.jp/development/siyou.html",
+      },
+      {
+        text: "国土地理院コンテンツ利用規約",
+        href: "https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html",
+      },
+      {
+        text: "出典の記載",
+        href: "https://www.gsi.go.jp/LAW/2930-meizi.html",
+      },
+      {
+        text: "国土地理院の測量成果の利用手続",
+        href: "https://www.gsi.go.jp/LAW/2930-index.html",
+      },
     ],
+  },
+  {
+    id: GSI_ADDITIONAL_CONDITIONS_SECTION_ID,
+    title: "地理院タイルの利用条件と低ズーム追加出所",
+    paragraphs: [
+      "地理院タイルは国土地理院の公式XYZエンドポイントから閲覧時にリアルタイムで読み込みます。この利用形態は通常出典を明示することで承認申請不要と評価しています。",
+      "表示中の標準地図・淡色地図がズーム5〜8の場合は、地図上に基図別の追加出所全文を表示します。ズーム9以上、基図非表示、基図の不透明度0、未知の基図では地図上の追加出所を表示しません。",
+      "このプロジェクトは地理院タイルをキャッシュ、proxy、一括ダウンロード、再配布せず、地理院タイルの印刷・画像書き出し機能も提供しません。",
+      "追加出所には第三者の権利情報が含まれます。公式条件が変更された場合は、実行時接続前に再調査します。",
+    ],
+  },
+  {
+    id: GSI_ADDITIONAL_SOURCE_IDS.paleVmap0,
+    title: "GSI pale basemap: zoom 5–8 shoreline source",
+    paragraphs: [
+      "This additional source applies only to the GSI pale basemap at zoom levels 5–8. It is not inferred from map bounds and is not used for historical or reconstructed layers.",
+      GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.paleVmap0],
+    ],
+    links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.paleVmap0]],
+  },
+  {
+    id: GSI_ADDITIONAL_SOURCE_IDS.stdGebcoJcg,
+    title: "標準地図・ズーム5〜8: GEBCO・海上保安庁追加出所",
+    paragraphs: [
+      "この追加出所は、表示中の標準地図がズーム5〜8の場合に地図上へ表示します。",
+      GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.stdGebcoJcg],
+    ],
+    links: [
+      GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.stdGebcoJcg],
+      {
+        text: "GEBCO Digital Atlas",
+        href: "https://www.gebco.net/",
+      },
+    ],
+  },
+  {
+    id: GSI_ADDITIONAL_SOURCE_IDS.stdVmap0,
+    title: "GSI standard basemap: zoom 5–8 shoreline source",
+    paragraphs: [
+      GSI_ADDITIONAL_SOURCE_TEXTS[GSI_ADDITIONAL_SOURCE_IDS.stdVmap0],
+    ],
+    links: [GSI_ADDITIONAL_SOURCE_LINKS[GSI_ADDITIONAL_SOURCE_IDS.stdVmap0]],
   },
   {
     id: "codh-edo-machiya-areas",
@@ -153,6 +219,12 @@ export function renderAttribution(
 ): void {
   container.replaceChildren();
   const allowed = new Set(attributionIds);
+  if (allowed.has("gsi-tiles")) {
+    allowed.add(GSI_ADDITIONAL_CONDITIONS_SECTION_ID);
+    allowed.add(GSI_ADDITIONAL_SOURCE_IDS.paleVmap0);
+    allowed.add(GSI_ADDITIONAL_SOURCE_IDS.stdGebcoJcg);
+    allowed.add(GSI_ADDITIONAL_SOURCE_IDS.stdVmap0);
+  }
   for (const section of ATTRIBUTION_SECTIONS) {
     if (!allowed.has(section.id)) continue;
     container.append(heading(section.title));

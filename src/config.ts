@@ -1,4 +1,5 @@
 import { EDO_REGION_PACK } from "./regions/edo";
+import { GSI_PROJECT_HISTORY_ADDITION_TEXT } from "./gsi-attribution";
 
 /** アプリ全体の定数。外部通信先はここに列挙されたものだけを許可する。 */
 
@@ -19,7 +20,7 @@ export const GSI_TILE_URLS = {
 export type BaseLayerKey = keyof typeof GSI_TILE_URLS;
 
 export const GSI_ATTRIBUTION =
-  '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">地理院タイル</a>';
+  `<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">地理院タイル</a>・${GSI_PROJECT_HISTORY_ADDITION_TEXT}`;
 
 export const CODH_ATTRIBUTION =
   '<a href="https://codh.rois.ac.jp/edo-maps/" target="_blank" rel="noopener noreferrer">江戸マップ地名データセット(CODH) CC BY 4.0</a>';
