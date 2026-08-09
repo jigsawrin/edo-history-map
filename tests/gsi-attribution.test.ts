@@ -131,4 +131,14 @@ describe("GSI low-zoom additional attribution", () => {
     expect(controlCss).not.toContain("line-clamp");
     expect(controlCss).not.toContain("text-overflow: ellipsis");
   });
+
+  it("reserves the mobile zoom-control column beside the top-right source control", () => {
+    const css = readFileSync(join(__dirname, "..", "src", "style.css"), "utf8");
+    const mobileControlCss = css.match(
+      /@media \(max-width: 430px\) \{\s*\.gsi-source-control \{([\s\S]*?)\n {2}\}/,
+    )?.[1];
+    expect(mobileControlCss).toContain("100vw - 4.5rem");
+    expect(mobileControlCss).toContain("env(safe-area-inset-left)");
+    expect(mobileControlCss).toContain("env(safe-area-inset-right)");
+  });
 });
