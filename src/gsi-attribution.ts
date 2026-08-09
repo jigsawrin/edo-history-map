@@ -19,8 +19,8 @@ export const GSI_LOW_ZOOM_MAX = 8;
 export const GSI_VMAP0_SOURCE_TEXT =
   'Shoreline data is derived from: United States. National Imagery and Mapping Agency. "Vector Map Level 0 (VMAP0)." Bethesda, MD: Denver, CO: The Agency; USGS Information Services, 1997.';
 
-export const GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT = `『The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net)
-海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）』`;
+export const GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT = `「The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net)
+海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）」`;
 
 export const GSI_PROJECT_HISTORY_ADDITION_TEXT =
   "地理院タイルに本プロジェクトの歴史情報を追記して掲載";

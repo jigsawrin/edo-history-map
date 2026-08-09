@@ -1,10 +1,12 @@
 # GSI low-zoom attribution review
 
-Review date: 2026-08-06
+Review date: 2026-08-09
 
 ## Official pages and their roles
 
 This review uses the following five official GSI pages. Their roles are deliberately separated:
+
+The official tile list was rechecked on 2026-08-09. The standard-map zoom 5–8 notice begins with `「` and ends with `」`; the UI constant, exact-string regression test, and this review reproduce those characters consistently.
 
 1. [地理院タイル一覧](https://maps.gsi.go.jp/development/ichiran.html) — identifies tile URLs, zoom ranges, ordinary attribution, and tile-specific third-party source notices.
 2. [地理院タイルについて](https://maps.gsi.go.jp/development/siyou.html) — documents the XYZ technical specification. It is a technical reference, not the primary legal basis for this review.
@@ -24,8 +26,8 @@ The ordinary attribution keeps the tile-list link and explicitly states `地理�
 At zoom levels 5–8, the standard map requires the following single quoted, two-line notice. The GEBCO URL is followed immediately by `)` and a newline, with no period added.
 
 ```text
-『The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net)
-海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）』
+「The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net)
+海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）」
 ```
 
 Both the pale and standard maps use the same VMAP0 shoreline source text at zoom levels 5–8:
@@ -61,4 +63,4 @@ The attribution dialog is intentionally comprehensive and independent of current
 
 No source text comes from URL parameters, fetched data, storage, analytics, proxy, or user input. No `innerHTML`, inline event handler, `eval`, external script, external CSS, font, dependency, workflow, tile URL, public data, region/history dataset, or privacy behavior is added or changed.
 
-The static audit remains tracked by the prepublish audit's exact audit-path allowlist. Human browser verification confirmed the full-text pale/standard transitions, zoom 9 and opacity-zero hiding, comprehensive dialog, and bounded no-horizontal-overflow layout at desktop and 320/375/430-pixel widths on 2026-08-08. The PR remains Draft because this task does not authorize Ready conversion.
+The static audit remains tracked by the prepublish audit's exact audit-path allowlist. Human browser verification confirmed the full-text pale/standard transitions, zoom 9 and opacity-zero hiding, comprehensive dialog, and bounded no-horizontal-overflow layout at desktop and 320-pixel width on 2026-08-09. The PR remains Draft because this task does not authorize Ready conversion.

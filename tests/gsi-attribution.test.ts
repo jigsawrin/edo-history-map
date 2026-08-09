@@ -15,12 +15,16 @@ import {
   resolveGsiAdditionalSources,
 } from "../src/gsi-attribution";
 
-const expectedGebcoJcg = `『The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net)
-海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）』`;
+const expectedGebcoJcg = `「The bathymetric contours are derived from those contained within the GEBCO Digital Atlas, published by the BODC on behalf of IOC and IHO (2003) (https://www.gebco.net)
+海上保安庁許可第292502号（水路業務法第25条に基づく類似刊行物）」`;
 
 describe("GSI low-zoom additional attribution", () => {
   it("keeps the official source strings exact", () => {
     expect(GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT).toBe(expectedGebcoJcg);
+    expect(GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT.startsWith("「")).toBe(true);
+    expect(GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT.endsWith("」")).toBe(true);
+    expect(GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT).not.toContain("『");
+    expect(GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT).not.toContain("』");
     expect(GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT.split("\n")).toHaveLength(2);
     expect(GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT).toContain("(https://www.gebco.net)\n");
     expect(GSI_STD_LOW_ZOOM_GEBCO_JCG_TEXT).not.toContain("https://www.gebco.net).\n");
