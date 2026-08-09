@@ -6,17 +6,17 @@ import { PlaceSearchModelCache } from "../src/place-search/model-cache";
 import type { PlaceFeature } from "../src/validate";
 
 function source(): PlaceFeature[] {
-  return [
-    {
-      name: "地点",
-      category: "施設",
-      sheet: "切絵図",
-      entryId: "1",
-      sourceUrl: null,
-      lat: 35,
-      lon: 139,
-    },
-  ];
+  return JSON.parse(
+    readFileSync(join(__dirname, "..", "public/data/edo-places.geojson"), "utf8"),
+  ).features.map((feature: { properties: Record<string, string>; geometry: { coordinates: [number, number] } }) => ({
+    name: feature.properties.name,
+    category: feature.properties.category,
+    sheet: feature.properties.sheet,
+    entryId: feature.properties.id,
+    sourceUrl: feature.properties.source,
+    lat: feature.geometry.coordinates[1],
+    lon: feature.geometry.coordinates[0],
+  }));
 }
 
 function registry(loader: () => Promise<PlaceFeature[]>): DatasetRegistry {
@@ -49,7 +49,7 @@ describe("地点検索モデルキャッシュ", () => {
       .mockResolvedValueOnce(source());
     const cache = new PlaceSearchModelCache(registry(loader));
     await expect(cache.load("codh-edo-maps-places")).rejects.toThrow("失敗");
-    await expect(cache.load("codh-edo-maps-places")).resolves.toHaveLength(1);
+    await expect(cache.load("codh-edo-maps-places")).resolves.toHaveLength(8788);
     expect(loader).toHaveBeenCalledTimes(2);
   });
 });
@@ -60,6 +60,7 @@ describe("地点検索ソースのセキュリティ境界", () => {
     "types.ts",
     "normalize.ts",
     "adapters.ts",
+    "edo-search-projection.ts",
     "query.ts",
     "model-cache.ts",
     "controller.ts",

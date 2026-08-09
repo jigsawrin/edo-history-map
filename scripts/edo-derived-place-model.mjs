@@ -33,8 +33,12 @@ export const EDO_DERIVED_PLACE_SNAPSHOT = Object.freeze({
   hiddenDerivedPlaceCount: 0,
   renamedDerivedPlaceCount: 0,
   annotatedDerivedPlaceCount: 0,
-  runtimeApplicableDerivedPlaceCount: 0,
-  canonicalOutputSha256: "6c32a29fb1ff960ef5b4c888d0d7ec532156b6f7dd24b743ebb685ebc541f98a",
+  mapApplicableDerivedPlaceCount: 0,
+  searchApplicableDerivedPlaceCount: 8788,
+  cardApplicableDerivedPlaceCount: 0,
+  staticPageApplicableDerivedPlaceCount: 0,
+  runtimeApplicableDerivedPlaceCount: 8788,
+  canonicalOutputSha256: "703d2acf51fd4507b78d24a1b8d965c8dc70bf8285c9b3a17b4541ebea1339b2",
 });
 
 const PLACE_KEYS = [
@@ -57,8 +61,13 @@ const SNAPSHOT_KEYS = [
   "sourceIdentityGroupCount", "sourceIdentityMemberCount", "curationCandidateCount",
   "derivedPlaceCount", "reverseMappedSourceRecordCount", "multiMemberDerivedPlaceCount",
   "hiddenDerivedPlaceCount", "renamedDerivedPlaceCount", "annotatedDerivedPlaceCount",
+  "mapApplicableDerivedPlaceCount", "searchApplicableDerivedPlaceCount",
+  "cardApplicableDerivedPlaceCount", "staticPageApplicableDerivedPlaceCount",
   "runtimeApplicableDerivedPlaceCount", "canonicalOutputSha256",
 ];
+const SEARCH_PROJECTION_KEYS = ["schemaVersion", "sourceDataSha256", "sourceFeatureCount", "eligibleSourceCount", "overrides"];
+const SEARCH_OVERRIDE_KEYS = ["sourceRecordId", "sourceIndex", "featureSha256", "displayName", "hidden"];
+const EDO_SEARCH_PROJECTION_PATH = "src/place-search/edo-search-projection.json";
 const PRIVATE_MARKERS = [
   "edo-derived-place-model",
   "deriveEdoPlaces",
@@ -128,6 +137,15 @@ function identityMembership(identityCatalog) {
   return result;
 }
 
+export function isEdoDerivedPlaceSearchEligible(place) {
+  return place.memberSourceRecordIds.length === 1 &&
+    place.reverseMapping.length === 1 &&
+    place.reverseMapping[0].sourceRecordId === place.memberSourceRecordIds[0] &&
+    place.curation.hide.decision !== "approved" &&
+    place.reviewState !== "needs-human-review" &&
+    ["source-record", "approved-rename"].includes(place.displayName.basis);
+}
+
 export function deriveEdoPlaces(sourceGeoJson, identityCatalog, curationCatalog) {
   validateEdoPlaceSourceIdentityCatalog(identityCatalog, sourceGeoJson);
   validateEdoPlaceCurationCatalog(curationCatalog, sourceGeoJson);
@@ -142,8 +160,7 @@ export function deriveEdoPlaces(sourceGeoJson, identityCatalog, curationCatalog)
     for (const candidate of [decisions.hide, decisions.rename, ...decisions.annotations].filter(Boolean)) {
       evidence.push({ kind: "manual-curation", id: candidate.candidateId, sourceUrl: candidate.evidence.urls[0] ?? null });
     }
-    const runtimeApplicable = false;
-    return {
+    const place = {
       schemaVersion: 1,
       derivedPlaceId: `edo-derived-source-${target.entryId}`,
       sourceDatasetId: EDO_SOURCE_DATASET_ID,
@@ -181,11 +198,64 @@ export function deriveEdoPlaces(sourceGeoJson, identityCatalog, curationCatalog)
         attribution: "ROIS-DS Center for Open Data in the Humanities (CODH), Edo Maps Dataset",
         sourceUrl: target.sourceUrl,
       },
-      applicability: { map: runtimeApplicable, search: runtimeApplicable, card: runtimeApplicable, "static-page": runtimeApplicable },
+      applicability: { map: false, search: false, card: false, "static-page": false },
       reviewState: decisions.hide || decisions.rename || decisions.annotations.length ? "curation-approved" : "source-only",
       reverseMapping: [{ sourceRecordId: target.entryId, sourceIndex, sourceFeatureSha256: target.sourceFeatureSha256 }],
     };
+    place.applicability.search = isEdoDerivedPlaceSearchEligible(place);
+    return place;
   });
+}
+
+export function createEdoSearchProjection(places) {
+  const overrides = [];
+  for (const place of places) {
+    const reverse = place.reverseMapping[0];
+    const hidden = !place.applicability.search;
+    const displayName = place.displayName.basis === "approved-rename" ? place.displayName.value : null;
+    if (!hidden && displayName === null) continue;
+    overrides.push({
+      sourceRecordId: reverse.sourceRecordId,
+      sourceIndex: reverse.sourceIndex,
+      featureSha256: reverse.sourceFeatureSha256,
+      displayName,
+      hidden,
+    });
+  }
+  return {
+    schemaVersion: 1,
+    sourceDataSha256: EDO_SOURCE_SHA256,
+    sourceFeatureCount: EDO_SOURCE_FEATURE_COUNT,
+    eligibleSourceCount: places.filter((place) => place.applicability.search).length,
+    overrides,
+  };
+}
+
+export function validateEdoSearchProjection(projection, places, sourceGeoJson) {
+  exactKeys(projection, SEARCH_PROJECTION_KEYS, "search projection");
+  assert(projection.schemaVersion === 1, "search projection schemaVersion must be 1");
+  assert(projection.sourceDataSha256 === EDO_SOURCE_SHA256, "search projection source SHA is stale");
+  assert(projection.sourceFeatureCount === sourceGeoJson.features.length, "search projection source count is stale");
+  assert(Array.isArray(projection.overrides), "search projection overrides must be an array");
+  let previousIndex = -1;
+  const targets = new Set();
+  for (const [index, item] of projection.overrides.entries()) {
+    const label = `search projection overrides[${index}]`;
+    exactKeys(item, SEARCH_OVERRIDE_KEYS, label);
+    assert(Number.isInteger(item.sourceIndex) && item.sourceIndex > previousIndex, `${label} must be deterministically ordered`);
+    assert(!targets.has(item.sourceIndex), `${label} target is duplicated`);
+    targets.add(item.sourceIndex);
+    previousIndex = item.sourceIndex;
+    const place = places[item.sourceIndex];
+    const reverse = place?.reverseMapping[0];
+    assert(reverse?.sourceRecordId === item.sourceRecordId, `${label} sourceIndex/sourceRecordId is invalid`);
+    assert(reverse?.sourceFeatureSha256 === item.featureSha256, `${label} feature SHA is invalid`);
+    assert(item.displayName === null || item.displayName === place.displayName.value, `${label} rename is not approved`);
+    assert(item.hidden === !place.applicability.search, `${label} hide state is not authorized`);
+    assert(!item.hidden || item.displayName === null, `${label} search-inapplicable place cannot have a rename`);
+  }
+  const expected = createEdoSearchProjection(places);
+  assert(JSON.stringify(projection) === JSON.stringify(expected), "search projection does not match Derived search applicability");
 }
 
 export function validateEdoDerivedPlaces(places, sourceGeoJson, identityCatalog, curationCatalog) {
@@ -279,6 +349,10 @@ export function summarizeEdoDerivedPlaces(places, identityCatalog, curationCatal
     hiddenDerivedPlaceCount: places.filter((place) => place.curation.hide.decision === "approved").length,
     renamedDerivedPlaceCount: places.filter((place) => place.curation.rename.decision === "approved").length,
     annotatedDerivedPlaceCount: places.filter((place) => place.curation.annotations.length > 0).length,
+    mapApplicableDerivedPlaceCount: places.filter((place) => place.applicability.map).length,
+    searchApplicableDerivedPlaceCount: places.filter((place) => place.applicability.search).length,
+    cardApplicableDerivedPlaceCount: places.filter((place) => place.applicability.card).length,
+    staticPageApplicableDerivedPlaceCount: places.filter((place) => place.applicability["static-page"]).length,
     runtimeApplicableDerivedPlaceCount: places.filter((place) => Object.values(place.applicability).some(Boolean)).length,
     canonicalOutputSha256: canonicalEdoDerivedPlacesSha256(places),
   };
@@ -333,10 +407,15 @@ export function auditEdoDerivedPlaceRepository(root = process.cwd()) {
     validateEdoDerivedPlaces(places, source, identity, curation);
     summary = summarizeEdoDerivedPlaces(places, identity, curation);
     validateEdoDerivedPlaceSnapshot(EDO_DERIVED_PLACE_SNAPSHOT, summary);
+    const projection = JSON.parse(readFileSync(resolve(root, EDO_SEARCH_PROJECTION_PATH), "utf8"));
+    validateEdoSearchProjection(projection, places, source);
     assert(summary.sourceIdentityGroupCount === EDO_SOURCE_IDENTITY_EXPECTED.groups, "source identity group count changed");
     assert(summary.sourceIdentityMemberCount === EDO_SOURCE_IDENTITY_EXPECTED.members, "source identity member count changed");
     assert(summary.multiMemberDerivedPlaceCount === 0, "identity groups must not automatically merge derived places");
-    assert(summary.runtimeApplicableDerivedPlaceCount === 0, "foundation must not be runtime-applicable");
+    assert(summary.mapApplicableDerivedPlaceCount === 0, "map applicability must remain disabled");
+    assert(summary.searchApplicableDerivedPlaceCount === summary.derivedPlaceCount, "every current source record must be search-applicable");
+    assert(summary.cardApplicableDerivedPlaceCount === 0, "card applicability must remain disabled");
+    assert(summary.staticPageApplicableDerivedPlaceCount === 0, "static-page applicability must remain disabled");
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));
   }
