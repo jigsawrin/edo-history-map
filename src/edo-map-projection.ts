@@ -36,7 +36,13 @@ export function validateEdoMapProjection(value: unknown, places?: readonly Place
   if (projection.schemaVersion !== 1 || projection.sourceDataSha256 !== SOURCE_SHA ||
       projection.sourceFeatureCount !== SOURCE_COUNT ||
       !Number.isInteger(projection.applicableSourceCount) ||
-      !Number.isInteger(projection.visibleMarkerCount) || !Array.isArray(projection.overrides) ||
+      projection.applicableSourceCount < 0 ||
+      projection.applicableSourceCount > projection.sourceFeatureCount ||
+      !Number.isInteger(projection.visibleMarkerCount) ||
+      projection.visibleMarkerCount < 0 ||
+      projection.visibleMarkerCount > projection.applicableSourceCount ||
+      !Array.isArray(projection.overrides) ||
+      projection.overrides.length > projection.applicableSourceCount ||
       projection.visibleMarkerCount !== projection.applicableSourceCount - projection.overrides.length) {
     throw new Error("Edo map projection is stale or invalid");
   }
@@ -54,12 +60,22 @@ export function validateEdoMapProjection(value: unknown, places?: readonly Place
   return projection;
 }
 
-const checkedProjection = validateEdoMapProjection(projectionJson);
-const hiddenByIndex = new Map(checkedProjection.overrides.map((item) => [item.sourceIndex, item.sourceRecordId]));
+export function createEdoMapSourceHiddenPredicate(
+  value: unknown,
+  places?: readonly PlaceFeature[],
+): (sourceIndex: number, place: PlaceFeature) => boolean {
+  const projection = validateEdoMapProjection(value, places);
+  const hiddenByIndex = new Map(projection.overrides.map((item) => [item.sourceIndex, item.sourceRecordId]));
+  return (sourceIndex, place) => {
+    const sourceRecordId = hiddenByIndex.get(sourceIndex);
+    if (sourceRecordId === undefined) return false;
+    if (sourceRecordId !== place.entryId) throw new Error("Edo map projection source binding is invalid");
+    return true;
+  };
+}
+
+const checkedIsHidden = createEdoMapSourceHiddenPredicate(projectionJson);
 
 export function isEdoMapSourceHidden(sourceIndex: number, place: PlaceFeature): boolean {
-  const sourceRecordId = hiddenByIndex.get(sourceIndex);
-  if (sourceRecordId === undefined) return false;
-  if (sourceRecordId !== place.entryId) throw new Error("Edo map projection source binding is invalid");
-  return true;
+  return checkedIsHidden(sourceIndex, place);
 }

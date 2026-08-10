@@ -221,6 +221,27 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(() => validateEdoDerivedMapProjection(privateProjection, places, source)).toThrow(/unknown or missing keys/);
   });
 
+  it("rejects stale source bindings and map-inapplicable approved overrides", () => {
+    const curated = deriveEdoPlaces(source, identity, activeCuration(approvedCandidate("hide", 2)));
+    const base = createEdoMapProjection(curated);
+    const cases: Array<(projection: typeof base, derived: typeof curated) => void> = [
+      (projection) => { projection.overrides[0]!.sourceRecordId = "wrong"; },
+      (projection) => { projection.overrides[0]!.sourceIndex = 3; },
+      (projection) => { projection.overrides[0]!.featureSha256 = "0".repeat(64); },
+      (projection, derived) => { derived[2]!.applicability.map = false; },
+      (projection) => { (projection.overrides[0] as typeof projection.overrides[0] & { evidence?: string }).evidence = "private"; },
+    ];
+    for (const mutate of cases) {
+      const projection = clone(base);
+      const derived = clone(curated);
+      mutate(projection, derived);
+      expect(() => validateEdoDerivedMapProjection(projection, derived, source)).toThrow();
+    }
+    const deterministicMismatch = clone(base);
+    deterministicMismatch.visibleMarkerCount = 8788;
+    expect(() => validateEdoDerivedMapProjection(deterministicMismatch, curated, source)).toThrow(/does not match/);
+  });
+
   it("projects only approved static rename and hide decisions", () => {
     const catalog = activeCuration(approvedCandidate("rename", 1), approvedCandidate("hide", 2));
     const curated = deriveEdoPlaces(source, identity, catalog);
