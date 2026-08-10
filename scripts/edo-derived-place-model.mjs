@@ -17,6 +17,14 @@ import {
   summarizeEdoPlaceSourceIdentityRelations,
   validateEdoPlaceSourceIdentityCatalog,
 } from "./edo-place-source-identity-relations.mjs";
+import {
+  parseStaticEdoPlaces,
+  STATIC_EDO_PER_PAGE,
+} from "./build-static-place-pages.mjs";
+import {
+  calculateEdoStaticLegacyLayoutSha256,
+  validateEdoStaticPlaceProjection,
+} from "./edo-static-place-projection.mjs";
 
 export const EDO_DERIVED_PLACE_SCHEMA_VERSION = 1;
 export const EDO_DERIVED_PLACE_SNAPSHOT = Object.freeze({
@@ -36,9 +44,9 @@ export const EDO_DERIVED_PLACE_SNAPSHOT = Object.freeze({
   mapApplicableDerivedPlaceCount: 0,
   searchApplicableDerivedPlaceCount: 8788,
   cardApplicableDerivedPlaceCount: 0,
-  staticPageApplicableDerivedPlaceCount: 0,
+  staticPageApplicableDerivedPlaceCount: 8788,
   runtimeApplicableDerivedPlaceCount: 8788,
-  canonicalOutputSha256: "703d2acf51fd4507b78d24a1b8d965c8dc70bf8285c9b3a17b4541ebea1339b2",
+  canonicalOutputSha256: "d217901e08e15714dc13097d66daa02650ed0ef85d4819223f4c2a1891ceb05d",
 });
 
 const PLACE_KEYS = [
@@ -68,6 +76,7 @@ const SNAPSHOT_KEYS = [
 const SEARCH_PROJECTION_KEYS = ["schemaVersion", "sourceDataSha256", "sourceFeatureCount", "eligibleSourceCount", "overrides"];
 const SEARCH_OVERRIDE_KEYS = ["sourceRecordId", "sourceIndex", "featureSha256", "displayName", "hidden"];
 const EDO_SEARCH_PROJECTION_PATH = "src/place-search/edo-search-projection.json";
+const EDO_STATIC_PROJECTION_PATH = "scripts/edo-static-place-projection.json";
 const PRIVATE_MARKERS = [
   "edo-derived-place-model",
   "deriveEdoPlaces",
@@ -146,6 +155,22 @@ export function isEdoDerivedPlaceSearchEligible(place) {
     ["source-record", "approved-rename"].includes(place.displayName.basis);
 }
 
+export function isEdoDerivedPlaceStaticEligible(place) {
+  const reverse = place.reverseMapping[0];
+  return place.memberSourceRecordIds.length === 1 &&
+    place.reverseMapping.length === 1 &&
+    reverse?.sourceRecordId === place.memberSourceRecordIds[0] &&
+    Number.isInteger(reverse?.sourceIndex) &&
+    SHA256.test(reverse?.sourceFeatureSha256 ?? "") &&
+    place.reviewState !== "needs-human-review" &&
+    ["source-record", "approved-rename"].includes(place.displayName.basis) &&
+    place.displayName.sourceRecordId === reverse.sourceRecordId &&
+    ["none", "approved"].includes(place.curation.rename.decision) &&
+    ["none", "approved"].includes(place.curation.hide.decision) &&
+    place.rights.license === "CC BY 4.0" &&
+    place.rights.sourceUrl === place.evidence[0]?.sourceUrl;
+}
+
 export function deriveEdoPlaces(sourceGeoJson, identityCatalog, curationCatalog) {
   validateEdoPlaceSourceIdentityCatalog(identityCatalog, sourceGeoJson);
   validateEdoPlaceCurationCatalog(curationCatalog, sourceGeoJson);
@@ -203,6 +228,7 @@ export function deriveEdoPlaces(sourceGeoJson, identityCatalog, curationCatalog)
       reverseMapping: [{ sourceRecordId: target.entryId, sourceIndex, sourceFeatureSha256: target.sourceFeatureSha256 }],
     };
     place.applicability.search = isEdoDerivedPlaceSearchEligible(place);
+    place.applicability["static-page"] = isEdoDerivedPlaceStaticEligible(place);
     return place;
   });
 }
@@ -256,6 +282,52 @@ export function validateEdoSearchProjection(projection, places, sourceGeoJson) {
   }
   const expected = createEdoSearchProjection(places);
   assert(JSON.stringify(projection) === JSON.stringify(expected), "search projection does not match Derived search applicability");
+}
+
+export function createEdoStaticPlaceProjection(places, legacyLayoutSha256) {
+  assert(SHA256.test(legacyLayoutSha256), "static projection legacy layout SHA is invalid");
+  const overrides = [];
+  for (const place of places) {
+    const reverse = place.reverseMapping[0];
+    const hidden = place.curation.hide.decision === "approved";
+    const displayName = !hidden && place.displayName.basis === "approved-rename" ? place.displayName.value : null;
+    if (!hidden && displayName === null) continue;
+    overrides.push({
+      sourceRecordId: reverse.sourceRecordId,
+      sourceIndex: reverse.sourceIndex,
+      featureSha256: reverse.sourceFeatureSha256,
+      displayName,
+      hidden,
+    });
+  }
+  return {
+    schemaVersion: 1,
+    sourceDataSha256: EDO_SOURCE_SHA256,
+    sourceFeatureCount: EDO_SOURCE_FEATURE_COUNT,
+    eligibleSourceCount: places.filter((place) => place.applicability["static-page"]).length,
+    legacyLayoutSha256,
+    overrides,
+  };
+}
+
+export function validateEdoDerivedStaticPlaceProjection(projection, places, sourceGeoJson, staticPlaces) {
+  const legacyLayoutSha256 = calculateEdoStaticLegacyLayoutSha256(staticPlaces, STATIC_EDO_PER_PAGE);
+  validateEdoStaticPlaceProjection(projection, staticPlaces, {
+    sourceDataSha256: EDO_SOURCE_SHA256,
+    perPage: STATIC_EDO_PER_PAGE,
+  });
+  for (const [index, item] of projection.overrides.entries()) {
+    const place = places[item.sourceIndex];
+    const label = `static projection overrides[${index}]`;
+    assert(place?.applicability["static-page"], `${label} targets a static-inapplicable place`);
+    assert(item.hidden === (place.curation.hide.decision === "approved"), `${label} hide state is not approved`);
+    const approvedName = place.displayName.basis === "approved-rename" ? place.displayName.value : null;
+    assert(item.displayName === (item.hidden ? null : approvedName), `${label} rename is not approved`);
+    const feature = sourceGeoJson.features[item.sourceIndex];
+    assert(feature?.properties?.id === item.sourceRecordId && calculateEdoSourceFeatureSha256(feature) === item.featureSha256, `${label} source binding is invalid`);
+  }
+  const expected = createEdoStaticPlaceProjection(places, legacyLayoutSha256);
+  assert(JSON.stringify(projection) === JSON.stringify(expected), "static projection does not match Derived static applicability");
 }
 
 export function validateEdoDerivedPlaces(places, sourceGeoJson, identityCatalog, curationCatalog) {
@@ -409,13 +481,16 @@ export function auditEdoDerivedPlaceRepository(root = process.cwd()) {
     validateEdoDerivedPlaceSnapshot(EDO_DERIVED_PLACE_SNAPSHOT, summary);
     const projection = JSON.parse(readFileSync(resolve(root, EDO_SEARCH_PROJECTION_PATH), "utf8"));
     validateEdoSearchProjection(projection, places, source);
+    const staticPlaces = parseStaticEdoPlaces(readFileSync(resolve(root, EDO_SOURCE_DATA_PATH), "utf8"));
+    const staticProjection = JSON.parse(readFileSync(resolve(root, EDO_STATIC_PROJECTION_PATH), "utf8"));
+    validateEdoDerivedStaticPlaceProjection(staticProjection, places, source, staticPlaces);
     assert(summary.sourceIdentityGroupCount === EDO_SOURCE_IDENTITY_EXPECTED.groups, "source identity group count changed");
     assert(summary.sourceIdentityMemberCount === EDO_SOURCE_IDENTITY_EXPECTED.members, "source identity member count changed");
     assert(summary.multiMemberDerivedPlaceCount === 0, "identity groups must not automatically merge derived places");
     assert(summary.mapApplicableDerivedPlaceCount === 0, "map applicability must remain disabled");
     assert(summary.searchApplicableDerivedPlaceCount === summary.derivedPlaceCount, "every current source record must be search-applicable");
     assert(summary.cardApplicableDerivedPlaceCount === 0, "card applicability must remain disabled");
-    assert(summary.staticPageApplicableDerivedPlaceCount === 0, "static-page applicability must remain disabled");
+    assert(summary.staticPageApplicableDerivedPlaceCount === summary.derivedPlaceCount, "every current source record must be static-page applicable");
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));
   }

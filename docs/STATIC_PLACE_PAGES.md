@@ -48,6 +48,14 @@ npm run audit:static-links
   同じJSON定義を共有する。
 - 新しい史実、読み、座標、要約、分類は生成処理で推測・追加しない。
 
+## EDO Derived Static pilot
+
+EDO地点はsource GeoJSONをparseした後、source由来legacy key・anchor・名称sort・page番号・page slotを先に確定し、その後で`scripts/edo-static-place-projection.json`の表示差分だけを適用する。projectionはbuild専用であり`public/`や`dist/`へ配信しない。現在は8,788件がstatic-page applicable、overridesは0件である。
+
+approved renameは記事見出しの表示名だけを変更し、legacy key、anchor、sort、page、slot、CODH URL、page範囲表示、canonical URLを変更しない。approved hideはrecordを配列から除外せず、同じanchor/page/slotへ「この地点は現在、表示対象外です。」というgeneric tombstoneを残す。tombstoneには元名称、分類、切絵図、個別CODH URL、hide理由、private curation情報を出力しない。ページ全体のCODH attributionとlicenseは維持する。
+
+`legacyLayoutSha256`は全EDO地点のsourceIndex、legacy key、anchor、page番号、page slotを固定する。source SHAまたはlayout SHAが変化した場合、projectionを自動更新せずbuild/auditを失敗させる。現baselineではprojection適用前後のStatic HTML、URL、anchor、manifestをbyte-for-byte同一に保つ。
+
 ## HTML・リンクの安全性
 
 データ由来の文字列は制御文字を除去し、`&`、`<`、`>`、`"`、`'`をHTMLエスケープする。

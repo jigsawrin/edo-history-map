@@ -6,13 +6,17 @@ import {
   auditEdoDerivedPlaceLeakage,
   auditEdoDerivedPlaceRepository,
   canonicalEdoDerivedPlacesSha256,
+  createEdoStaticPlaceProjection,
   createEdoSearchProjection,
   deriveEdoPlaces,
   EDO_DERIVED_PLACE_SNAPSHOT,
+  validateEdoDerivedStaticPlaceProjection,
   validateEdoDerivedPlaces,
   validateEdoDerivedPlaceSnapshot,
   validateEdoSearchProjection,
 } from "../scripts/edo-derived-place-model.mjs";
+import { parseStaticEdoPlaces, STATIC_EDO_PER_PAGE } from "../scripts/build-static-place-pages.mjs";
+import { calculateEdoStaticLegacyLayoutSha256 } from "../scripts/edo-static-place-projection.mjs";
 import {
   calculateEdoSourceFeatureSha256,
   EDO_SOURCE_DATASET_ID,
@@ -22,6 +26,8 @@ const ROOT = join(__dirname, "..");
 const source = JSON.parse(readFileSync(join(ROOT, "public/data/edo-places.geojson"), "utf8"));
 const identity = JSON.parse(readFileSync(join(ROOT, "data-curation/edo-place-source-identity-relations.json"), "utf8"));
 const curation = JSON.parse(readFileSync(join(ROOT, "data-curation/edo-place-curation-candidates.json"), "utf8"));
+const staticPlaces = parseStaticEdoPlaces(readFileSync(join(ROOT, "public/data/edo-places.geojson"), "utf8"));
+const legacyLayoutSha256 = calculateEdoStaticLegacyLayoutSha256(staticPlaces, STATIC_EDO_PER_PAGE);
 type IdentityMember = { target: { entryId: string } };
 type IdentityGroup = { groupId: string; members: IdentityMember[] };
 const identityGroups = identity.groups as IdentityGroup[];
@@ -100,15 +106,15 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(derived.every((place) => place?.sourceIdentityGroupId === firstGroup.groupId)).toBe(true);
   });
 
-  it("enables only the search surface for every current source record", () => {
+  it("enables only search and static-page for every current source record", () => {
     expect(places.every((place) => place.applicability.search)).toBe(true);
-    expect(places.every((place) => !place.applicability.map && !place.applicability.card && !place.applicability["static-page"])).toBe(true);
+    expect(places.every((place) => !place.applicability.map && !place.applicability.card && place.applicability["static-page"])).toBe(true);
   });
 
   it("is deterministic for an empty curation catalog", () => {
     const again = deriveEdoPlaces(source, identity, curation);
     expect(canonicalEdoDerivedPlacesSha256(again)).toBe(canonicalEdoDerivedPlacesSha256(places));
-    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("703d2acf51fd4507b78d24a1b8d965c8dc70bf8285c9b3a17b4541ebea1339b2");
+    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("d217901e08e15714dc13097d66daa02650ed0ef85d4819223f4c2a1891ceb05d");
   });
 
   it("rejects unknown keys", () => {
@@ -140,7 +146,7 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(audit.summary?.searchApplicableDerivedPlaceCount).toBe(8788);
     expect(audit.summary?.mapApplicableDerivedPlaceCount).toBe(0);
     expect(audit.summary?.cardApplicableDerivedPlaceCount).toBe(0);
-    expect(audit.summary?.staticPageApplicableDerivedPlaceCount).toBe(0);
+    expect(audit.summary?.staticPageApplicableDerivedPlaceCount).toBe(8788);
     expect(auditEdoDerivedPlaceLeakage(ROOT)).toEqual([]);
   });
 
@@ -157,6 +163,8 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(curated[2]?.curation.hide.decision).toBe("approved");
     expect(curated[1]?.applicability.search).toBe(true);
     expect(curated[2]?.applicability.search).toBe(false);
+    expect(curated[1]?.applicability["static-page"]).toBe(true);
+    expect(curated[2]?.applicability["static-page"]).toBe(true);
     expect(curated[3]?.curation.annotations).toEqual([
       { candidateId: "edo-derived-test-annotation-3", text: "根拠資料に基づく補足です。" },
     ]);
@@ -169,6 +177,48 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(projection.eligibleSourceCount).toBe(8788);
     expect(projection.overrides).toEqual([]);
     expect(() => validateEdoSearchProjection(projection, places, source)).not.toThrow();
+  });
+
+  it("creates the checked-in empty static projection deterministically", () => {
+    const projection = createEdoStaticPlaceProjection(places, legacyLayoutSha256);
+    expect(projection).toEqual(JSON.parse(readFileSync(join(ROOT, "scripts/edo-static-place-projection.json"), "utf8")));
+    expect(projection.eligibleSourceCount).toBe(8788);
+    expect(projection.overrides).toEqual([]);
+    expect(() => validateEdoDerivedStaticPlaceProjection(projection, places, source, staticPlaces)).not.toThrow();
+  });
+
+  it("projects only approved static rename and hide decisions", () => {
+    const catalog = activeCuration(approvedCandidate("rename", 1), approvedCandidate("hide", 2));
+    const curated = deriveEdoPlaces(source, identity, catalog);
+    const projection = createEdoStaticPlaceProjection(curated, legacyLayoutSha256);
+    expect(projection.overrides).toEqual([
+      expect.objectContaining({ sourceIndex: 1, displayName: curated[1]!.displayName.value, hidden: false }),
+      expect.objectContaining({ sourceIndex: 2, displayName: null, hidden: true }),
+    ]);
+    expect(() => validateEdoDerivedStaticPlaceProjection(projection, curated, source, staticPlaces)).not.toThrow();
+  });
+
+  it("rejects stale, private, unordered, unauthorized, and static-inapplicable projections", () => {
+    const curated = deriveEdoPlaces(source, identity, activeCuration(approvedCandidate("rename", 1)));
+    const base = createEdoStaticPlaceProjection(curated, legacyLayoutSha256);
+    const cases: Array<(projection: typeof base, derived: typeof curated) => void> = [
+      (projection) => { projection.sourceDataSha256 = "0".repeat(64); },
+      (projection) => { projection.legacyLayoutSha256 = "0".repeat(64); },
+      (projection) => { projection.overrides[0]!.sourceIndex = 2; },
+      (projection) => { projection.overrides[0]!.sourceRecordId = "wrong"; },
+      (projection) => { projection.overrides[0]!.featureSha256 = "0".repeat(64); },
+      (projection) => { (projection as typeof projection & { reviewer?: string }).reviewer = "private"; },
+      (projection) => { projection.overrides = [clone(projection.overrides[0]!), clone(projection.overrides[0]!)]; },
+      (projection) => { projection.overrides[0]!.displayName = "unapproved"; },
+      (projection) => { projection.overrides[0]!.hidden = true; projection.overrides[0]!.displayName = null; },
+      (projection, derived) => { derived[1]!.applicability["static-page"] = false; },
+    ];
+    for (const mutate of cases) {
+      const projection = clone(base);
+      const derived = clone(curated);
+      mutate(projection, derived);
+      expect(() => validateEdoDerivedStaticPlaceProjection(projection, derived, source, staticPlaces)).toThrow();
+    }
   });
 
   const invalidProjectionCases: Array<[string, (projection: ReturnType<typeof createEdoSearchProjection>) => void, RegExp]> = [

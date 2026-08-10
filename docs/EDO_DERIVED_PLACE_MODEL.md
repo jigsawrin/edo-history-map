@@ -6,7 +6,7 @@
 
 完全なDerived Place Model自体は引き続きnon-runtimeである。`scripts/edo-derived-place-model.mjs`のruntime import、full derived catalogの`public/`・`dist/`出力、private curation catalogやidentity・evidence・reviewer情報のruntime/public配信を禁止し、既存の漏洩監査が拒否する。
 
-Search/listだけは最初のpilot consumerとして導入済みである。runtimeは完全モデルを読み込まず、監査済みの最小projectionである`src/place-search/edo-search-projection.json`だけをstatic importしてsource-backed search read modelへ適用する。Map、info card、static place pagesは引き続きsource-backedであり、挙動・ID・URLを変更しない。
+Search/listとStatic builderを段階的なpilot consumerとして導入している。runtimeは完全モデルを読み込まず、監査済みの最小projectionである`src/place-search/edo-search-projection.json`だけをstatic importしてsource-backed search read modelへ適用する。Static builderはnon-runtime / non-deployedの`scripts/edo-static-place-projection.json`だけをbuild時に適用する。Mapとinfo cardは引き続きsource-backedであり、挙動・ID・URLを変更しない。
 
 ## 三層の分離
 
@@ -43,10 +43,10 @@ Search applicabilityは、source 1件からderived 1件を生成し、reverse ma
 | search applicable | 8,788 |
 | map applicable | 0 |
 | card applicable | 0 |
-| static-page applicable | 0 |
+| static-page applicable | 8,788 |
 | runtime applicable（いずれかのsurface） | 8,788 |
 
-Derived canonical SHA-256は`703d2acf51fd4507b78d24a1b8d965c8dc70bf8285c9b3a17b4541ebea1339b2`、source GeoJSON SHA-256は`7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4`である。
+Derived canonical SHA-256は`d217901e08e15714dc13097d66daa02650ed0ef85d4819223f4c2a1891ceb05d`、source GeoJSON SHA-256は`7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4`である。
 
 ## Search runtime projection
 
@@ -55,6 +55,14 @@ Derived canonical SHA-256は`703d2acf51fd4507b78d24a1b8d965c8dc70bf8285c9b3a17b4
 現在はcuration 0件のため`overrides`も0件である。将来、approved renameまたはapproved hideが発生した場合だけ、完全モデルから決定的に生成・検証されたoverrideを追加する。unknown field、重複target、順序違反、source SHA/count/index/ID/Feature SHA不一致、未承認rename/hide、search applicabilityとの不一致を監査で拒否する。
 
 projection適用後もraw source record、CODH source URL、source object identity、category、sheet、座標を保持し、source record自体を書き換えない。legacy search keyも維持するため、map→search同期と既存の検索順・query・paginationを変更しない。
+
+## Static builder projection
+
+`scripts/edo-static-place-projection.json`はStatic専用のnon-runtime / non-deployed projectionである。schemaは`schemaVersion`、`sourceDataSha256`、`sourceFeatureCount`、`eligibleSourceCount`、`legacyLayoutSha256`、`overrides`から成り、現在のoverridesは0件である。完全Derived catalog、identity group、evidence、reviewer、private curation情報は含めない。
+
+Static applicabilityは、1 sourceから1 derived、正しい1件のreverse mapping、source ID/index/Feature SHA一致、非multi-member、非`needs-human-review`、`source-record`または`approved-rename`の表示名、承認済みのrename/hide、source rightsとtraceabilityを満たす場合にtrueとなる。approved hideもStaticではrecord削除ではなくgeneric tombstoneを安全に適用するためtrueである。
+
+Static layoutはprojection適用前にsource由来legacy key、anchor、source name sort、page番号、page slotを確定する。`legacyLayoutSha256`は8,788件の`sourceIndex`、legacy key、anchor、page number、page slotをcanonical JSON化したSHA-256であり、現在値は`ba33be9595dfaa34a4494c45839c8ee1acbdaeac348645872bf58b6f013c6360`である。renameは記事の表示名だけへ適用し、範囲索引やSEO/layout metadataはsource baselineを維持する。hideは同じpage/slot/anchorに一般化したtombstoneを残し、元名称、分類、切絵図、個別CODH URL、hide理由、candidate/reviewer/evidenceを公開しない。
 
 ## deterministic auditとsnapshot
 
@@ -70,7 +78,7 @@ snapshot更新は入力SHA・既存catalog検証・差分理由・人間review�
 
 schemaは暗黙に拡張しない。変更時は旧validatorを残したうえで、新schemaVersion、純粋なv1→v2 migration、canonical snapshot、positive/negative/互換testを同一PRに追加する。
 
-Search/listは最初のpilot consumerとして導入済みである。今後の候補順は`Search/list → Static builder → Map → Card/selection`とする。ただし次consumerはそれぞれ別PR、別監査、明示承認を必要とし、applicabilityを一括で有効化しない。relation groupの自動merge、CODH `preferred`の表示代表化、manual curation candidateの自動承認は禁止を維持する。
+Search/listに続きStatic builderをpilot consumerとして導入した。今後の候補順は`Map → Card/selection`とする。ただし次consumerはそれぞれ別PR、別監査、明示承認を必要とし、applicabilityを一括で有効化しない。relation groupの自動merge、CODH `preferred`の表示代表化、manual curation candidateの自動承認は禁止を維持する。
 
 ## 法的境界と出典保持
 
