@@ -36,6 +36,17 @@ describe("categoryStyle", () => {
 });
 
 describe("createHistoricalLayer", () => {
+  it("skips an approved hidden source before marker creation and preserves raw identity", () => {
+    const first = place({ entryId: "first" });
+    const hidden = place({ entryId: "hidden" });
+    const onSelect = vi.fn();
+    const layer = createHistoricalLayer([first, hidden], onSelect, document.createElement("div"), (index) => index === 1);
+    expect(layer.layer.getLayers()).toHaveLength(1);
+    (layer.layer.getLayers()[0] as L.CircleMarker).fire("click");
+    expect(onSelect).toHaveBeenCalledWith(first);
+    expect(onSelect.mock.calls[0]![0]).toBe(first);
+    expect(onSelect).not.toHaveBeenCalledWith(hidden);
+  });
   it("地点からレイヤーグループを作成できる", () => {
     const pane = document.createElement("div");
     const layer = createHistoricalLayer(

@@ -6,7 +6,7 @@
 
 完全なDerived Place Model自体は引き続きnon-runtimeである。`scripts/edo-derived-place-model.mjs`のruntime import、full derived catalogの`public/`・`dist/`出力、private curation catalogやidentity・evidence・reviewer情報のruntime/public配信を禁止し、既存の漏洩監査が拒否する。
 
-Search/listとStatic builderを段階的なpilot consumerとして導入している。runtimeは完全モデルを読み込まず、監査済みの最小projectionである`src/place-search/edo-search-projection.json`だけをstatic importしてsource-backed search read modelへ適用する。Static builderはnon-runtime / non-deployedの`scripts/edo-static-place-projection.json`だけをbuild時に適用する。Mapとinfo cardは引き続きsource-backedであり、挙動・ID・URLを変更しない。
+Search/list、Static builder、Mapを段階的なpilot consumerとして導入している。runtimeは完全モデルを読み込まず、Searchは`src/place-search/edo-search-projection.json`、Mapは`src/edo-map-projection.json`という監査済み最小projectionだけをstatic importする。Static builderはnon-runtime / non-deployedの`scripts/edo-static-place-projection.json`だけをbuild時に適用する。Map markerはraw source objectを保持し、info cardは引き続きsource-backedである。
 
 ## 三層の分離
 
@@ -41,12 +41,12 @@ Search applicabilityは、source 1件からderived 1件を生成し、reverse ma
 | reverse mappings | 8,788 |
 | multi-member derived places | 0 |
 | search applicable | 8,788 |
-| map applicable | 0 |
+| map applicable | 8,788 |
 | card applicable | 0 |
 | static-page applicable | 8,788 |
 | runtime applicable（いずれかのsurface） | 8,788 |
 
-Derived canonical SHA-256は`d217901e08e15714dc13097d66daa02650ed0ef85d4819223f4c2a1891ceb05d`、source GeoJSON SHA-256は`7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4`である。
+Derived canonical SHA-256は`ae672724a298104240425390f23da71879da6ae5e4036c5d8452d318a9258684`、source GeoJSON SHA-256は`7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4`である。
 
 ## Search runtime projection
 
@@ -63,6 +63,12 @@ projection適用後もraw source record、CODH source URL、source object identi
 Static applicabilityは、1 sourceから1 derived、正しい1件のreverse mapping、source ID/index/Feature SHA一致、非multi-member、非`needs-human-review`、`source-record`または`approved-rename`の表示名、承認済みのrename/hide、source rightsとtraceabilityを満たす場合にtrueとなる。approved hideもStaticではrecord削除ではなくgeneric tombstoneを安全に適用するためtrueである。
 
 Static layoutはprojection適用前にsource由来legacy key、anchor、source name sort、page番号、page slotを確定する。`legacyLayoutSha256`は8,788件の`sourceIndex`、legacy key、anchor、page number、page slotをcanonical JSON化したSHA-256であり、現在値は`ba33be9595dfaa34a4494c45839c8ee1acbdaeac348645872bf58b6f013c6360`である。renameは記事の表示名だけへ適用し、範囲索引やSEO/layout metadataはsource baselineを維持する。hideは同じpage/slot/anchorに一般化したtombstoneを残し、元名称、分類、切絵図、個別CODH URL、hide理由、candidate/reviewer/evidenceを公開しない。
+
+## Map runtime projection
+
+`src/edo-map-projection.json`はMap専用のdelta-only projectionである。schema/source SHA/source count、map applicable count、visible marker countと、approved hideに必要なsource record ID/index/Feature SHAだけを保持する。現在は8,788件がmap applicable、visible markerも8,788件、overridesは0件である。approved renameはprojectionへ渡さず、tooltip/title等も追加しない。approved hideだけをmarker生成前に除外する。
+
+Mapは8,788件のview modelを生成せず、raw `PlaceFeature[]`をsourceIndex side lookupへ通す。marker callbackも同じraw object referenceを返すため、Search同期とsource-backed Cardのidentityを維持する。完全Derived catalog、identity group、evidence、reviewer、private curationはbundleへ含めない。
 
 ## deterministic auditとsnapshot
 
