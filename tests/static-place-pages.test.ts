@@ -22,6 +22,9 @@ import { generateStaticThemeFiles } from "../scripts/build-static-theme-pages.mj
 import { generateStaticTimelineFiles } from "../scripts/build-static-timeline-pages.mjs";
 
 const ROOT = join(__dirname, "..");
+const EDO_STATIC_PROJECTION = JSON.parse(
+  readFileSync(join(ROOT, "scripts/edo-static-place-projection.json"), "utf8"),
+);
 const HISTORICAL_REFERENCE_ASSETS = {
   schemaVersion: 1,
   assetCount: 2,
@@ -44,6 +47,7 @@ let temporaryDist = "";
 beforeAll(() => {
   generated = generateStaticPlaceFiles({
     edoRaw: readFileSync(join(ROOT, "public/data/edo-places.geojson"), "utf8"),
+    edoProjection: EDO_STATIC_PROJECTION,
     kyotoRaw: readFileSync(
       join(ROOT, "public/data/kyoto-bakumatsu-places.geojson"),
       "utf8",
@@ -218,6 +222,7 @@ describe("静的地点一覧生成", () => {
   it("同じ入力から同じHTMLとmanifestを再現する", () => {
     const second = generateStaticPlaceFiles({
       edoRaw: readFileSync(join(ROOT, "public/data/edo-places.geojson"), "utf8"),
+      edoProjection: EDO_STATIC_PROJECTION,
       kyotoRaw: readFileSync(join(ROOT, "public/data/kyoto-bakumatsu-places.geojson"), "utf8"),
       sourceData: JSON.parse(readFileSync(join(ROOT, "src/kyoto-source-registry.json"), "utf8")),
       presentation: JSON.parse(readFileSync(join(ROOT, "src/kyoto-place-presentation.json"), "utf8")) as Record<string, unknown>,

@@ -17,6 +17,7 @@ export function parseStaticEdoPlaces(raw: string): readonly Readonly<{
   sheet: string;
   sourceUrl: string;
   sourceIndex: number;
+  featureSha256: string;
 }>[];
 export function parseStaticKyotoPlaces(
   raw: string,
@@ -57,6 +58,7 @@ export interface StaticPlaceGeneration {
 
 export function generateStaticPlaceFiles(options: {
   edoRaw: string;
+  edoProjection: import("./edo-static-place-projection.mjs").EdoStaticPlaceProjection;
   kyotoRaw: string;
   sourceData: unknown;
   presentation: Record<string, unknown>;

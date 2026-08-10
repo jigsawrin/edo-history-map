@@ -10,7 +10,12 @@ import { fileURLToPath, URL } from "node:url";
 import { JSDOM } from "jsdom";
 import { validateSources } from "./build-kyoto-bakumatsu-places.mjs";
 import { validateSources as validateShigaSources } from "./build-shiga-sengoku-places.mjs";
-import { EXPECTED_DATA_SHA256 } from "./build-static-place-pages.mjs";
+import {
+  EXPECTED_DATA_SHA256,
+  parseStaticEdoPlaces,
+  STATIC_EDO_PER_PAGE,
+} from "./build-static-place-pages.mjs";
+import { validateEdoStaticPlaceProjection } from "./edo-static-place-projection.mjs";
 import {
   THEME_SCHEMA_VERSION,
   validateHistoricalThemeData,
@@ -182,6 +187,12 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
   const manifestPath = join(places, "manifest.json");
   if (!existsSync(manifestPath)) fail("静的一覧manifestがありません");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  const edoPlaces = parseStaticEdoPlaces(readFileSync(join(root, "public/data/edo-places.geojson"), "utf8"));
+  const staticProjection = JSON.parse(readFileSync(join(root, "scripts/edo-static-place-projection.json"), "utf8"));
+  validateEdoStaticPlaceProjection(staticProjection, edoPlaces, {
+    sourceDataSha256: EXPECTED_DATA_SHA256["public/data/edo-places.geojson"],
+    perPage: STATIC_EDO_PER_PAGE,
+  });
   if (
     manifest.schemaVersion !== 3 ||
     manifest.generatorVersion !== 1 ||
