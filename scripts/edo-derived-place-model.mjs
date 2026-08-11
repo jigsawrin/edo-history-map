@@ -39,14 +39,14 @@ export const EDO_DERIVED_PLACE_SNAPSHOT = Object.freeze({
   reverseMappedSourceRecordCount: 8788,
   multiMemberDerivedPlaceCount: 0,
   hiddenDerivedPlaceCount: 0,
-  renamedDerivedPlaceCount: 0,
+  renamedDerivedPlaceCount: 1,
   annotatedDerivedPlaceCount: 0,
   mapApplicableDerivedPlaceCount: 8788,
   searchApplicableDerivedPlaceCount: 8788,
   cardApplicableDerivedPlaceCount: 8788,
   staticPageApplicableDerivedPlaceCount: 8788,
   runtimeApplicableDerivedPlaceCount: 8788,
-  canonicalOutputSha256: "514085bdab22f2a09363f256de4626d7c1124a85d051df64575ef2857e69d160",
+  canonicalOutputSha256: "861f4291f0d1ab63258333d93e37be83e4fb4917c9d6a1cb3ee2b9c27e906472",
 });
 
 const PLACE_KEYS = [

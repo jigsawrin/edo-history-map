@@ -86,6 +86,26 @@ describe("EDO static place projection", () => {
     expect(generated.edoPlaces[0]).toMatchObject({ key: target.key, anchor: target.anchor, sourceIndex: target.sourceIndex, displayName: "承認済み表示名", hidden: false });
   });
 
+  it("applies the approved 20-246 display name without changing its legacy URL, anchor, page, or slot", () => {
+    const targetPosition = places.findIndex((place) => place.sourceIndex === 4207);
+    const target = places[targetPosition]!;
+    const beforeLayout = canonicalEdoStaticLegacyLayout(places, STATIC_EDO_PER_PAGE)[targetPosition]!;
+    const generated = generate(checkedIn);
+    const page = generated.files.get(pagePath(targetPosition))!;
+    const headingIndex = page.indexOf("<h3>太田摂津守</h3>");
+    const articleStart = page.lastIndexOf("<article ", headingIndex);
+    const articleEnd = page.indexOf("</article>", headingIndex);
+    const article = page.slice(articleStart, articleEnd + "</article>".length);
+    const after = generated.edoPlaces[targetPosition]!;
+    expect(headingIndex).toBeGreaterThan(-1);
+    expect(article).toContain(`id="${target.anchor}"`);
+    expect(article).toContain(`href="#${target.anchor}"`);
+    expect(article).toContain("<h3>太田摂津守</h3>");
+    expect(article).not.toContain("大田摂津守");
+    expect(after).toMatchObject({ key: target.key, anchor: target.anchor, sourceIndex: 4207, displayName: "太田摂津守", hidden: false });
+    expect(canonicalEdoStaticLegacyLayout(places, STATIC_EDO_PER_PAGE)[targetPosition]).toEqual(beforeLayout);
+  });
+
   it("keeps an approved hidden record in the same anchor/page/slot as a generic tombstone", () => {
     const target = places[0]!;
     const projection = projectionFor(target, { displayName: null, hidden: true });

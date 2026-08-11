@@ -3,5 +3,13 @@
   "sourceDataSha256": "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
   "sourceFeatureCount": 8788,
   "eligibleSourceCount": 8788,
-  "overrides": []
+  "overrides": [
+    {
+      "sourceRecordId": "20-246",
+      "sourceIndex": 4207,
+      "featureSha256": "1b1047dfd21bedab30cabdbbbd95dc95faf7636443215514bf15679d6756b232",
+      "displayName": "太田摂津守",
+      "hidden": false
+    }
+  ]
 }

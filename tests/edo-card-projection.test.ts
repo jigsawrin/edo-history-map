@@ -32,7 +32,7 @@ function value(overrides: EdoCardProjection["overrides"]): EdoCardProjection {
 }
 
 describe("Edo card projection", () => {
-  it("keeps the checked-in runtime projection minimal and empty", () => {
+  it("keeps the checked-in runtime projection minimal with one approved rename", () => {
     expect(validateEdoCardProjection(projection)).toEqual(projection);
     expect(projection).toEqual({
       schemaVersion: 1,
@@ -40,7 +40,22 @@ describe("Edo card projection", () => {
       sourceFeatureCount: 8788,
       applicableSourceCount: 8788,
       renderableCardCount: 8788,
-      overrides: [],
+      overrides: [{
+        sourceRecordId: "20-246",
+        sourceIndex: 4207,
+        featureSha256: "1b1047dfd21bedab30cabdbbbd95dc95faf7636443215514bf15679d6756b232",
+        displayName: "太田摂津守",
+        hidden: false,
+      }],
+    });
+  });
+
+  it("resolves the approved 20-246 heading and preserves its source name", () => {
+    const target = { ...place, entryId: "20-246", name: "大田摂津守" };
+    expect(createEdoCardResolver(projection)(target)).toEqual({
+      hidden: false,
+      displayName: "太田摂津守",
+      sourceName: "大田摂津守",
     });
   });
 
