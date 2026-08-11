@@ -1,9 +1,50 @@
 {
   "schemaVersion": 1,
-  "catalogStatus": "empty-foundation",
+  "catalogStatus": "active",
   "sourceDatasetId": "codh-edo-maps-places",
   "sourceDataPath": "public/data/edo-places.geojson",
   "sourceDataSha256": "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
   "sourceFeatureCount": 8788,
-  "candidates": []
+  "candidates": [
+    {
+      "candidateId": "edo-place-curation-rename-4207",
+      "sourceDatasetId": "codh-edo-maps-places",
+      "target": {
+        "sourceIndex": 4207,
+        "entryId": "20-246",
+        "sourceFeatureSha256": "1b1047dfd21bedab30cabdbbbd95dc95faf7636443215514bf15679d6756b232",
+        "name": "大田摂津守",
+        "category": "屋敷地",
+        "sheet": "江戸切絵図「尾張屋版」 本郷湯島絵図",
+        "sourceUrl": "https://codh.rois.ac.jp/edo-maps/owariya/20/1853/20-246.html.ja",
+        "longitude": 139.757949,
+        "latitude": 35.723369
+      },
+      "proposalType": "rename",
+      "proposal": {
+        "displayNameJa": "太田摂津守",
+        "preserveOriginalName": true
+      },
+      "reasonCode": "orthography-normalization",
+      "reasonJa": "原資料表記を保持したまま、外部公的史料と同じsource identity relation groupに属する複数図の表記を根拠として、プロジェクト表示名を「太田摂津守」に正規化する提案です。原資料の誤字を確定するものではありません。",
+      "evidence": {
+        "basis": "official-source",
+        "urls": [
+          "https://codh.rois.ac.jp/edo-maps/owariya/20/1853/20-246.html.ja",
+          "https://codh.rois.ac.jp/edo-maps/owariya/22/1854/22-070.html.ja",
+          "https://codh.rois.ac.jp/edo-maps/owariya/28/1854/28-189.html.ja",
+          "https://www.digital.archives.go.jp/file/1248125?page=1",
+          "https://www.digital.archives.go.jp/secondary-use",
+          "https://codh.rois.ac.jp/edo-maps/dataset/"
+        ],
+        "noteJa": "CODHの20-246は原資料表記、同relation groupの22-070と28-189は比較対象です。国立公文書館『嘉永雑記』は外部公的史料、同館の二次利用条件とCODH datasetページは各資料の利用条件確認先として記録します。relationのpreferred role自体は正解根拠にしていません。"
+      },
+      "review": {
+        "status": "proposed",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "reviewNoteJa": null
+      }
+    }
+  ]
 }

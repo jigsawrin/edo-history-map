@@ -12,7 +12,8 @@ import {
 
 const ROOT = process.cwd();
 const source = JSON.parse(readFileSync(join(ROOT, "public/data/edo-places.geojson"), "utf8"));
-const foundation = JSON.parse(readFileSync(join(ROOT, "data-curation/edo-place-curation-candidates.json"), "utf8"));
+const catalog = JSON.parse(readFileSync(join(ROOT, "data-curation/edo-place-curation-candidates.json"), "utf8"));
+const foundation = { ...catalog, catalogStatus: "empty-foundation", candidates: [] };
 const temporaryRoots: string[] = [];
 const clone = <T>(value: T): T => structuredClone(value);
 
@@ -65,6 +66,7 @@ afterEach(() => {
 describe("江戸地名キュレーション候補", () => {
   it("empty foundation・source SHA・8788件を受理する", () => {
     expect(validateEdoPlaceCurationCatalog(foundation, source).candidates).toHaveLength(0);
+    expect(validateEdoPlaceCurationCatalog(catalog, source).candidates).toHaveLength(1);
     expect(auditEdoPlaceCurationCandidateRepository(ROOT).errors).toEqual([]);
     expect(source.features).toHaveLength(8788);
   });
