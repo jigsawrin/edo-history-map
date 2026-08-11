@@ -7,10 +7,12 @@ import {
   auditEdoDerivedPlaceRepository,
   canonicalEdoDerivedPlacesSha256,
   createEdoStaticPlaceProjection,
+  createEdoMapProjection,
   createEdoSearchProjection,
   deriveEdoPlaces,
   EDO_DERIVED_PLACE_SNAPSHOT,
   validateEdoDerivedStaticPlaceProjection,
+  validateEdoDerivedMapProjection,
   validateEdoDerivedPlaces,
   validateEdoDerivedPlaceSnapshot,
   validateEdoSearchProjection,
@@ -106,15 +108,15 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(derived.every((place) => place?.sourceIdentityGroupId === firstGroup.groupId)).toBe(true);
   });
 
-  it("enables only search and static-page for every current source record", () => {
+  it("enables map, search and static-page for every current source record", () => {
     expect(places.every((place) => place.applicability.search)).toBe(true);
-    expect(places.every((place) => !place.applicability.map && !place.applicability.card && place.applicability["static-page"])).toBe(true);
+    expect(places.every((place) => place.applicability.map && !place.applicability.card && place.applicability["static-page"])).toBe(true);
   });
 
   it("is deterministic for an empty curation catalog", () => {
     const again = deriveEdoPlaces(source, identity, curation);
     expect(canonicalEdoDerivedPlacesSha256(again)).toBe(canonicalEdoDerivedPlacesSha256(places));
-    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("d217901e08e15714dc13097d66daa02650ed0ef85d4819223f4c2a1891ceb05d");
+    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("ae672724a298104240425390f23da71879da6ae5e4036c5d8452d318a9258684");
   });
 
   it("rejects unknown keys", () => {
@@ -144,7 +146,7 @@ describe("Edo derived place non-runtime foundation", () => {
     const audit = auditEdoDerivedPlaceRepository(ROOT);
     expect(audit.errors).toEqual([]);
     expect(audit.summary?.searchApplicableDerivedPlaceCount).toBe(8788);
-    expect(audit.summary?.mapApplicableDerivedPlaceCount).toBe(0);
+    expect(audit.summary?.mapApplicableDerivedPlaceCount).toBe(8788);
     expect(audit.summary?.cardApplicableDerivedPlaceCount).toBe(0);
     expect(audit.summary?.staticPageApplicableDerivedPlaceCount).toBe(8788);
     expect(auditEdoDerivedPlaceLeakage(ROOT)).toEqual([]);
@@ -165,6 +167,8 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(curated[2]?.applicability.search).toBe(false);
     expect(curated[1]?.applicability["static-page"]).toBe(true);
     expect(curated[2]?.applicability["static-page"]).toBe(true);
+    expect(curated[1]?.applicability.map).toBe(true);
+    expect(curated[2]?.applicability.map).toBe(true);
     expect(curated[3]?.curation.annotations).toEqual([
       { candidateId: "edo-derived-test-annotation-3", text: "根拠資料に基づく補足です。" },
     ]);
@@ -185,6 +189,57 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(projection.eligibleSourceCount).toBe(8788);
     expect(projection.overrides).toEqual([]);
     expect(() => validateEdoDerivedStaticPlaceProjection(projection, places, source, staticPlaces)).not.toThrow();
+  });
+
+  it("creates the checked-in empty map projection deterministically", () => {
+    const projection = createEdoMapProjection(places);
+    expect(projection).toEqual(JSON.parse(readFileSync(join(ROOT, "src/edo-map-projection.json"), "utf8")));
+    expect(projection.applicableSourceCount).toBe(8788);
+    expect(projection.visibleMarkerCount).toBe(8788);
+    expect(projection.overrides).toEqual([]);
+    expect(() => validateEdoDerivedMapProjection(projection, places, source)).not.toThrow();
+  });
+
+  it("projects only approved map hide decisions and never projects rename", () => {
+    const curated = deriveEdoPlaces(source, identity, activeCuration(approvedCandidate("rename", 1), approvedCandidate("hide", 2)));
+    const projection = createEdoMapProjection(curated);
+    expect(projection.applicableSourceCount).toBe(8788);
+    expect(projection.visibleMarkerCount).toBe(8787);
+    expect(projection.overrides).toEqual([expect.objectContaining({ sourceIndex: 2, hidden: true })]);
+    expect(Object.hasOwn(projection.overrides[0]!, "displayName")).toBe(false);
+    expect(() => validateEdoDerivedMapProjection(projection, curated, source)).not.toThrow();
+  });
+
+  it("rejects unauthorized or private map projection decisions", () => {
+    const projection = createEdoMapProjection(places);
+    const reverse = places[0]!.reverseMapping[0]!;
+    projection.overrides = [{ sourceRecordId: reverse.sourceRecordId, sourceIndex: 0, featureSha256: reverse.sourceFeatureSha256, hidden: true }];
+    projection.visibleMarkerCount = 8787;
+    expect(() => validateEdoDerivedMapProjection(projection, places, source)).toThrow(/not approved|does not match/);
+    const privateProjection = clone(createEdoMapProjection(places)) as typeof projection & { reviewer?: string };
+    privateProjection.reviewer = "private";
+    expect(() => validateEdoDerivedMapProjection(privateProjection, places, source)).toThrow(/unknown or missing keys/);
+  });
+
+  it("rejects stale source bindings and map-inapplicable approved overrides", () => {
+    const curated = deriveEdoPlaces(source, identity, activeCuration(approvedCandidate("hide", 2)));
+    const base = createEdoMapProjection(curated);
+    const cases: Array<(projection: typeof base, derived: typeof curated) => void> = [
+      (projection) => { projection.overrides[0]!.sourceRecordId = "wrong"; },
+      (projection) => { projection.overrides[0]!.sourceIndex = 3; },
+      (projection) => { projection.overrides[0]!.featureSha256 = "0".repeat(64); },
+      (projection, derived) => { derived[2]!.applicability.map = false; },
+      (projection) => { (projection.overrides[0] as typeof projection.overrides[0] & { evidence?: string }).evidence = "private"; },
+    ];
+    for (const mutate of cases) {
+      const projection = clone(base);
+      const derived = clone(curated);
+      mutate(projection, derived);
+      expect(() => validateEdoDerivedMapProjection(projection, derived, source)).toThrow();
+    }
+    const deterministicMismatch = clone(base);
+    deterministicMismatch.visibleMarkerCount = 8788;
+    expect(() => validateEdoDerivedMapProjection(deterministicMismatch, curated, source)).toThrow(/does not match/);
   });
 
   it("projects only approved static rename and hide decisions", () => {
@@ -271,7 +326,7 @@ describe("Edo derived place non-runtime foundation", () => {
     ["fake displayName", (items) => { items[0]!.displayName.value = "偽表示名"; }],
     ["shifted coordinate", (items) => { items[0]!.location.longitude += 0.001; }],
     ["wrong existing group ID", (items) => { items[0]!.sourceIdentityGroupId = identityGroups[1]!.groupId; }],
-    ["applicability true", (items) => { items[0]!.applicability.map = true; }],
+    ["applicability false", (items) => { items[0]!.applicability.map = false; }],
     ["inconsistent evidence", (items) => { items[0]!.evidence[0]!.sourceUrl = "https://example.com/"; }],
     ["inconsistent rights", (items) => { items[0]!.rights.attribution = "Other"; }],
     ["inconsistent reviewState", (items) => { items[0]!.reviewState = "needs-human-review"; }],

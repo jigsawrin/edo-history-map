@@ -1,6 +1,7 @@
 import L from "leaflet";
 import type { PlaceFeature } from "./validate";
 import { MAP_PANES } from "./leaflet-layers";
+import { isEdoMapSourceHidden } from "./edo-map-projection";
 
 /**
  * 歴史レイヤー(江戸後期の地名ポイント)。
@@ -41,9 +42,11 @@ export function createHistoricalLayer(
   places: PlaceFeature[],
   onSelect: (place: PlaceFeature) => void,
   pane: HTMLElement,
+  isHidden: (sourceIndex: number, place: PlaceFeature) => boolean = isEdoMapSourceHidden,
 ): HistoricalLayer {
   const group = L.layerGroup();
-  for (const place of places) {
+  for (const [sourceIndex, place] of places.entries()) {
+    if (isHidden(sourceIndex, place)) continue;
     const style = categoryStyle(place.category);
     const marker = L.circleMarker([place.lat, place.lon], {
       radius: 6,

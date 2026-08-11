@@ -69,7 +69,7 @@ export interface EdoDerivedPlaceAuditSnapshot {
   hiddenDerivedPlaceCount: 0;
   renamedDerivedPlaceCount: 0;
   annotatedDerivedPlaceCount: 0;
-  mapApplicableDerivedPlaceCount: 0;
+  mapApplicableDerivedPlaceCount: 8788;
   searchApplicableDerivedPlaceCount: 8788;
   cardApplicableDerivedPlaceCount: 0;
   staticPageApplicableDerivedPlaceCount: 8788;
@@ -82,6 +82,11 @@ export const EDO_DERIVED_PLACE_SNAPSHOT: Readonly<EdoDerivedPlaceAuditSnapshot>;
 export function deriveEdoPlaces(sourceGeoJson: unknown, identityCatalog: unknown, curationCatalog: unknown): EdoDerivedPlace[];
 export function isEdoDerivedPlaceSearchEligible(place: EdoDerivedPlace): boolean;
 export function isEdoDerivedPlaceStaticEligible(place: EdoDerivedPlace): boolean;
+export function isEdoDerivedPlaceMapEligible(place: EdoDerivedPlace): boolean;
+export interface EdoMapProjectionOverride { sourceRecordId: string; sourceIndex: number; featureSha256: string; hidden: true; }
+export interface EdoMapProjection { schemaVersion: 1; sourceDataSha256: string; sourceFeatureCount: number; applicableSourceCount: number; visibleMarkerCount: number; overrides: EdoMapProjectionOverride[]; }
+export function createEdoMapProjection(places: EdoDerivedPlace[]): EdoMapProjection;
+export function validateEdoDerivedMapProjection(projection: EdoMapProjection, places: EdoDerivedPlace[], sourceGeoJson: unknown): void;
 export interface EdoSearchProjectionOverride {
   sourceRecordId: string;
   sourceIndex: number;
