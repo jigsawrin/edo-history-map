@@ -16,6 +16,21 @@ describe("地点検索と地図の統合", () => {
     expect(main).toContain("renderKyotoPlaceCard(");
   });
 
+  it("hidden EDO Cardは後続のMap→Search同期前にfail closedで停止する", () => {
+    const render = main.indexOf("const rendered = renderPlaceCard(");
+    const guard = main.indexOf("if (!rendered) return;", render);
+    const sync = main.indexOf("placeSearchController.selectFromMap(searchable)", render);
+    expect(render).toBeGreaterThan(-1);
+    expect(guard).toBeGreaterThan(render);
+    expect(sync).toBeGreaterThan(guard);
+  });
+
+  it("prepublish publication gate propagates Derived/Card authorization failures", () => {
+    expect(audit).toContain("auditEdoDerivedPlaceRepository(ROOT)");
+    expect(audit).toContain("for (const message of edoDerivedPlaceAudit.errors)");
+    expect(audit).toContain('addFinding(\n    "error"');
+  });
+
   it("検索選択はpanToを使い、現在ズームを強制変更しない", () => {
     const selection = main.slice(
       main.indexOf("async function selectHistoricalPlace"),

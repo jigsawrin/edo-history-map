@@ -6,7 +6,7 @@
 
 完全なDerived Place Model自体は引き続きnon-runtimeである。`scripts/edo-derived-place-model.mjs`のruntime import、full derived catalogの`public/`・`dist/`出力、private curation catalogやidentity・evidence・reviewer情報のruntime/public配信を禁止し、既存の漏洩監査が拒否する。
 
-Search/list、Static builder、Mapを段階的なpilot consumerとして導入している。runtimeは完全モデルを読み込まず、Searchは`src/place-search/edo-search-projection.json`、Mapは`src/edo-map-projection.json`という監査済み最小projectionだけをstatic importする。Static builderはnon-runtime / non-deployedの`scripts/edo-static-place-projection.json`だけをbuild時に適用する。Map markerはraw source objectを保持し、info cardは引き続きsource-backedである。
+Search/list、Static builder、Map、Cardを段階的なpilot consumerとして導入している。runtimeは完全モデルを読み込まず、Searchは`src/place-search/edo-search-projection.json`、Mapは`src/edo-map-projection.json`、Cardは`src/edo-card-projection.json`という監査済み最小projectionだけをstatic importする。Static builderはnon-runtime / non-deployedの`scripts/edo-static-place-projection.json`だけをbuild時に適用する。Map markerとCard入力はraw source objectを保持する。
 
 ## 三層の分離
 
@@ -42,11 +42,11 @@ Search applicabilityは、source 1件からderived 1件を生成し、reverse ma
 | multi-member derived places | 0 |
 | search applicable | 8,788 |
 | map applicable | 8,788 |
-| card applicable | 0 |
+| card applicable | 8,788 |
 | static-page applicable | 8,788 |
 | runtime applicable（いずれかのsurface） | 8,788 |
 
-Derived canonical SHA-256は`ae672724a298104240425390f23da71879da6ae5e4036c5d8452d318a9258684`、source GeoJSON SHA-256は`7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4`である。
+Derived canonical SHA-256は`514085bdab22f2a09363f256de4626d7c1124a85d051df64575ef2857e69d160`、source GeoJSON SHA-256は`7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4`である。
 
 ## Search runtime projection
 
@@ -70,6 +70,14 @@ Static layoutはprojection適用前にsource由来legacy key、anchor、source n
 
 Mapは8,788件のview modelを生成せず、raw `PlaceFeature[]`をsourceIndex side lookupへ通す。marker callbackも同じraw object referenceを返すため、Search同期とsource-backed Cardのidentityを維持する。完全Derived catalog、identity group、evidence、reviewer、private curationはbundleへ含めない。
 
+## Card runtime projection
+
+`src/edo-card-projection.json`はCard専用のdelta-only projectionである。schema/source SHA/source count、Card applicable count、renderable countと、approved rename/hideに必要なsource record ID/index/Feature SHA、display name、hide stateだけを保持する。現在は8,788件がCard applicableかつrenderableで、overridesは0件である。
+
+Card applicabilityはStatic/Mapと同じく、1 sourceから1 derived、正しいreverse mappingとsource binding、非multi-member、非`needs-human-review`、承認済みrename/hide、source rightsとtraceabilityを満たす場合にtrueとなる。approved hideも、Card consumerがfail-closedで安全に適用できるためtrueである。
+
+runtimeはoverridesだけから`sourceRecordId` keyed lookupを1回作り、raw `PlaceFeature.entryId`でO(1)解決する。全8,788件のview model化、source clone、browser SHA計算、追加fetchは行わない。rename時はDerived display nameを見出しに使い、raw source nameを「原資料表記」と明示する。category、sheet、CODH URL、attribution、CC BY 4.0はsource-backedのまま維持する。hide時はCard内容やfocusable elementを描画せず、後続のMap→Search同期も行わない。
+
 ## deterministic auditとsnapshot
 
 `npm run audit:edo-derived-place-model`は3入力をread-onlyで検証し、full outputをmemory内だけで構築する。型付きの`EDO_DERIVED_PLACE_SNAPSHOT`定数は件数、reverse mapping coverage、surface別applicability、runtime適用8,788件、canonical JSON SHA-256を固定し、full derived catalogをcommitまたは公開しない。定数は既存の追跡禁止`audit/*`へ出力せずvalidatorと同じnon-runtime moduleに置く。
@@ -84,7 +92,7 @@ snapshot更新は入力SHA・既存catalog検証・差分理由・人間review�
 
 schemaは暗黙に拡張しない。変更時は旧validatorを残したうえで、新schemaVersion、純粋なv1→v2 migration、canonical snapshot、positive/negative/互換testを同一PRに追加する。
 
-Search/listに続きStatic builderをpilot consumerとして導入した。今後の候補順は`Map → Card/selection`とする。ただし次consumerはそれぞれ別PR、別監査、明示承認を必要とし、applicabilityを一括で有効化しない。relation groupの自動merge、CODH `preferred`の表示代表化、manual curation candidateの自動承認は禁止を維持する。
+Search/list、Static builder、Map、Cardを個別のpilot consumerとして導入した。selection identityはraw source object参照のまま維持し、stable-ID方式への置換は行っていない。今後のconsumerやselection方式の変更はそれぞれ別PR、別監査、明示承認を必要とする。relation groupの自動merge、CODH `preferred`の表示代表化、manual curation candidateの自動承認は禁止を維持する。
 
 ## 法的境界と出典保持
 

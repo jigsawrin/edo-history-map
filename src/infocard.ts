@@ -1,4 +1,5 @@
 import type { PlaceFeature } from "./validate";
+import { resolveEdoCard, type EdoCardResolver } from "./edo-card-projection";
 
 /**
  * 歴史情報カードの描画。
@@ -17,15 +18,22 @@ export function renderPlaceCard(
   container: HTMLElement,
   place: PlaceFeature,
   returnFocus?: HTMLElement,
-): void {
+  resolve: EdoCardResolver = resolveEdoCard,
+): boolean {
+  const resolution = resolve(place);
   container.replaceChildren();
+  if (resolution.hidden) {
+    container.hidden = true;
+    return false;
+  }
   container.hidden = false;
 
   const heading = document.createElement("h2");
-  heading.textContent = place.name;
+  heading.textContent = resolution.displayName;
   container.append(heading);
 
   const dl = document.createElement("dl");
+  if (resolution.sourceName !== null) addRow(dl, "原資料表記", resolution.sourceName);
   if (place.category) addRow(dl, "分類", place.category);
   if (place.sheet) addRow(dl, "収載切絵図", place.sheet);
   addRow(dl, "対象年代", "江戸後期(嘉永〜文久、1849–1862年頃)");
@@ -64,6 +72,7 @@ export function renderPlaceCard(
     returnFocus?.focus();
   });
   container.append(close);
+  return true;
 }
 
 /** データがない地点向けの表示。 */

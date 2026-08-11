@@ -972,11 +972,12 @@ function main(): void {
     if (selection.curatedGeneration !== undefined && selection.curatedGeneration !== curatedSelectionGeneration) return;
 
     if (selection.record.datasetId === "codh-edo-maps-places") {
-      renderPlaceCard(
+      const rendered = renderPlaceCard(
         infoCard,
         selection.record.record,
         selection.returnFocus,
       );
+      if (!rendered) return;
     } else if (selection.record.datasetId === "project-kyoto-bakumatsu-places") {
       renderKyotoPlaceCard(
         infoCard,

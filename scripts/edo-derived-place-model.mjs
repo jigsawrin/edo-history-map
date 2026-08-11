@@ -43,10 +43,10 @@ export const EDO_DERIVED_PLACE_SNAPSHOT = Object.freeze({
   annotatedDerivedPlaceCount: 0,
   mapApplicableDerivedPlaceCount: 8788,
   searchApplicableDerivedPlaceCount: 8788,
-  cardApplicableDerivedPlaceCount: 0,
+  cardApplicableDerivedPlaceCount: 8788,
   staticPageApplicableDerivedPlaceCount: 8788,
   runtimeApplicableDerivedPlaceCount: 8788,
-  canonicalOutputSha256: "ae672724a298104240425390f23da71879da6ae5e4036c5d8452d318a9258684",
+  canonicalOutputSha256: "514085bdab22f2a09363f256de4626d7c1124a85d051df64575ef2857e69d160",
 });
 
 const PLACE_KEYS = [
@@ -79,6 +79,9 @@ const EDO_SEARCH_PROJECTION_PATH = "src/place-search/edo-search-projection.json"
 const MAP_PROJECTION_KEYS = ["schemaVersion", "sourceDataSha256", "sourceFeatureCount", "applicableSourceCount", "visibleMarkerCount", "overrides"];
 const MAP_OVERRIDE_KEYS = ["sourceRecordId", "sourceIndex", "featureSha256", "hidden"];
 const EDO_MAP_PROJECTION_PATH = "src/edo-map-projection.json";
+const CARD_PROJECTION_KEYS = ["schemaVersion", "sourceDataSha256", "sourceFeatureCount", "applicableSourceCount", "renderableCardCount", "overrides"];
+const CARD_OVERRIDE_KEYS = ["sourceRecordId", "sourceIndex", "featureSha256", "displayName", "hidden"];
+const EDO_CARD_PROJECTION_PATH = "src/edo-card-projection.json";
 const EDO_STATIC_PROJECTION_PATH = "scripts/edo-static-place-projection.json";
 const PRIVATE_MARKERS = [
   "edo-derived-place-model",
@@ -186,6 +189,18 @@ export function isEdoDerivedPlaceMapEligible(place) {
     place.rights.license === "CC BY 4.0" && place.rights.sourceUrl === place.evidence[0]?.sourceUrl;
 }
 
+export function isEdoDerivedPlaceCardEligible(place) {
+  const reverse = place.reverseMapping[0];
+  return place.memberSourceRecordIds.length === 1 && place.reverseMapping.length === 1 &&
+    reverse?.sourceRecordId === place.memberSourceRecordIds[0] && Number.isInteger(reverse?.sourceIndex) &&
+    SHA256.test(reverse?.sourceFeatureSha256 ?? "") && place.reviewState !== "needs-human-review" &&
+    ["source-record", "approved-rename"].includes(place.displayName.basis) &&
+    place.displayName.sourceRecordId === reverse.sourceRecordId &&
+    ["none", "approved"].includes(place.curation.rename.decision) &&
+    ["none", "approved"].includes(place.curation.hide.decision) &&
+    place.rights.license === "CC BY 4.0" && place.rights.sourceUrl === place.evidence[0]?.sourceUrl;
+}
+
 export function deriveEdoPlaces(sourceGeoJson, identityCatalog, curationCatalog) {
   validateEdoPlaceSourceIdentityCatalog(identityCatalog, sourceGeoJson);
   validateEdoPlaceCurationCatalog(curationCatalog, sourceGeoJson);
@@ -245,8 +260,71 @@ export function deriveEdoPlaces(sourceGeoJson, identityCatalog, curationCatalog)
     place.applicability.search = isEdoDerivedPlaceSearchEligible(place);
     place.applicability["static-page"] = isEdoDerivedPlaceStaticEligible(place);
     place.applicability.map = isEdoDerivedPlaceMapEligible(place);
+    place.applicability.card = isEdoDerivedPlaceCardEligible(place);
     return place;
   });
+}
+
+export function createEdoCardProjection(places) {
+  const overrides = places.filter((place) =>
+    place.applicability.card &&
+    (place.curation.rename.decision === "approved" || place.curation.hide.decision === "approved")
+  ).map((place) => {
+    const hidden = place.curation.hide.decision === "approved";
+    return {
+      sourceRecordId: place.reverseMapping[0].sourceRecordId,
+      sourceIndex: place.reverseMapping[0].sourceIndex,
+      featureSha256: place.reverseMapping[0].sourceFeatureSha256,
+      displayName: hidden ? null : place.displayName.value,
+      hidden,
+    };
+  });
+  const applicableSourceCount = places.filter((place) => place.applicability.card).length;
+  const hiddenCount = overrides.filter((item) => item.hidden).length;
+  return {
+    schemaVersion: 1,
+    sourceDataSha256: EDO_SOURCE_SHA256,
+    sourceFeatureCount: EDO_SOURCE_FEATURE_COUNT,
+    applicableSourceCount,
+    renderableCardCount: applicableSourceCount - hiddenCount,
+    overrides,
+  };
+}
+
+export function validateEdoDerivedCardProjection(projection, places, sourceGeoJson) {
+  exactKeys(projection, CARD_PROJECTION_KEYS, "card projection");
+  assert(projection.schemaVersion === 1 && projection.sourceDataSha256 === EDO_SOURCE_SHA256 &&
+    projection.sourceFeatureCount === sourceGeoJson.features.length &&
+    Number.isInteger(projection.applicableSourceCount) && Number.isInteger(projection.renderableCardCount) &&
+    Array.isArray(projection.overrides), "card projection is stale or invalid");
+  let previousIndex = -1;
+  const ids = new Set();
+  for (const [index, item] of projection.overrides.entries()) {
+    const label = `card projection overrides[${index}]`;
+    exactKeys(item, CARD_OVERRIDE_KEYS, label);
+    assert(Number.isInteger(item.sourceIndex) && item.sourceIndex > previousIndex, `${label} must be ordered and unique`);
+    const place = places[item.sourceIndex];
+    const feature = sourceGeoJson.features[item.sourceIndex];
+    assert(place?.applicability.card, `${label} targets a card-inapplicable place`);
+    assert(typeof item.sourceRecordId === "string" && !ids.has(item.sourceRecordId) &&
+      item.sourceRecordId === place.reverseMapping[0]?.sourceRecordId, `${label} source ID is invalid or duplicated`);
+    assert(feature?.properties?.id === item.sourceRecordId &&
+      calculateEdoSourceFeatureSha256(feature) === item.featureSha256 &&
+      item.featureSha256 === place.reverseMapping[0]?.sourceFeatureSha256, `${label} source binding is invalid`);
+    const hidden = place.curation.hide.decision === "approved";
+    const renamed = place.curation.rename.decision === "approved";
+    assert(item.hidden === hidden, `${label} hide is not approved`);
+    if (hidden) assert(item.displayName === null, `${label} hidden place must not expose a display name`);
+    else {
+      assert(renamed, `${label} rename is not approved`);
+      safeText(item.displayName, `${label}.displayName`);
+      assert(item.displayName === place.displayName.value, `${label} displayName is not authorized`);
+    }
+    ids.add(item.sourceRecordId);
+    previousIndex = item.sourceIndex;
+  }
+  assert(JSON.stringify(projection) === JSON.stringify(createEdoCardProjection(places)),
+    "card projection does not match Derived card applicability");
 }
 
 export function createEdoMapProjection(places) {
@@ -530,6 +608,8 @@ export function auditEdoDerivedPlaceRepository(root = process.cwd()) {
     validateEdoSearchProjection(projection, places, source);
     const mapProjection = JSON.parse(readFileSync(resolve(root, EDO_MAP_PROJECTION_PATH), "utf8"));
     validateEdoDerivedMapProjection(mapProjection, places, source);
+    const cardProjection = JSON.parse(readFileSync(resolve(root, EDO_CARD_PROJECTION_PATH), "utf8"));
+    validateEdoDerivedCardProjection(cardProjection, places, source);
     const staticPlaces = parseStaticEdoPlaces(readFileSync(resolve(root, EDO_SOURCE_DATA_PATH), "utf8"));
     const staticProjection = JSON.parse(readFileSync(resolve(root, EDO_STATIC_PROJECTION_PATH), "utf8"));
     validateEdoDerivedStaticPlaceProjection(staticProjection, places, source, staticPlaces);
@@ -538,7 +618,7 @@ export function auditEdoDerivedPlaceRepository(root = process.cwd()) {
     assert(summary.multiMemberDerivedPlaceCount === 0, "identity groups must not automatically merge derived places");
     assert(summary.mapApplicableDerivedPlaceCount === summary.derivedPlaceCount, "every current source record must be map-applicable");
     assert(summary.searchApplicableDerivedPlaceCount === summary.derivedPlaceCount, "every current source record must be search-applicable");
-    assert(summary.cardApplicableDerivedPlaceCount === 0, "card applicability must remain disabled");
+    assert(summary.cardApplicableDerivedPlaceCount === summary.derivedPlaceCount, "every current source record must be card-applicable");
     assert(summary.staticPageApplicableDerivedPlaceCount === summary.derivedPlaceCount, "every current source record must be static-page applicable");
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));
