@@ -1,17 +1,19 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import {
   auditEdoDerivedPlaceLeakage,
   auditEdoDerivedPlaceRepository,
   canonicalEdoDerivedPlacesSha256,
   createEdoStaticPlaceProjection,
+  createEdoCardProjection,
   createEdoMapProjection,
   createEdoSearchProjection,
   deriveEdoPlaces,
   EDO_DERIVED_PLACE_SNAPSHOT,
   validateEdoDerivedStaticPlaceProjection,
+  validateEdoDerivedCardProjection,
   validateEdoDerivedMapProjection,
   validateEdoDerivedPlaces,
   validateEdoDerivedPlaceSnapshot,
@@ -108,15 +110,15 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(derived.every((place) => place?.sourceIdentityGroupId === firstGroup.groupId)).toBe(true);
   });
 
-  it("enables map, search and static-page for every current source record", () => {
+  it("enables map, search, card and static-page for every current source record", () => {
     expect(places.every((place) => place.applicability.search)).toBe(true);
-    expect(places.every((place) => place.applicability.map && !place.applicability.card && place.applicability["static-page"])).toBe(true);
+    expect(places.every((place) => place.applicability.map && place.applicability.card && place.applicability["static-page"])).toBe(true);
   });
 
   it("is deterministic for an empty curation catalog", () => {
     const again = deriveEdoPlaces(source, identity, curation);
     expect(canonicalEdoDerivedPlacesSha256(again)).toBe(canonicalEdoDerivedPlacesSha256(places));
-    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("ae672724a298104240425390f23da71879da6ae5e4036c5d8452d318a9258684");
+    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("514085bdab22f2a09363f256de4626d7c1124a85d051df64575ef2857e69d160");
   });
 
   it("rejects unknown keys", () => {
@@ -147,9 +149,39 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(audit.errors).toEqual([]);
     expect(audit.summary?.searchApplicableDerivedPlaceCount).toBe(8788);
     expect(audit.summary?.mapApplicableDerivedPlaceCount).toBe(8788);
-    expect(audit.summary?.cardApplicableDerivedPlaceCount).toBe(0);
+    expect(audit.summary?.cardApplicableDerivedPlaceCount).toBe(8788);
     expect(audit.summary?.staticPageApplicableDerivedPlaceCount).toBe(8788);
     expect(auditEdoDerivedPlaceLeakage(ROOT)).toEqual([]);
+  });
+
+  it("makes the repository publication gate reject a correctly-bound but unapproved Card rename", () => {
+    const root = mkdtempSync(join(tmpdir(), "edo-card-gate-"));
+    temporaryRoots.push(root);
+    const required = [
+      "public/data/edo-places.geojson",
+      "data-curation/edo-place-source-identity-relations.json",
+      "data-curation/edo-place-curation-candidates.json",
+      "src/place-search/edo-search-projection.json",
+      "src/edo-map-projection.json",
+      "src/edo-card-projection.json",
+      "scripts/edo-static-place-projection.json",
+    ];
+    for (const relative of required) {
+      const target = join(root, relative);
+      mkdirSync(dirname(target), { recursive: true });
+      copyFileSync(join(ROOT, relative), target);
+    }
+    const projection = JSON.parse(readFileSync(join(root, "src/edo-card-projection.json"), "utf8"));
+    const reverse = places[0]!.reverseMapping[0]!;
+    projection.overrides = [{
+      sourceRecordId: reverse.sourceRecordId,
+      sourceIndex: reverse.sourceIndex,
+      featureSha256: reverse.sourceFeatureSha256,
+      displayName: "未承認表示名",
+      hidden: false,
+    }];
+    writeFileSync(join(root, "src/edo-card-projection.json"), JSON.stringify(projection));
+    expect(auditEdoDerivedPlaceRepository(root).errors.join("\n")).toMatch(/rename is not approved|does not match/);
   });
 
   it("derives and validates approved rename, hide, and annotation independently", () => {
@@ -169,6 +201,8 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(curated[2]?.applicability["static-page"]).toBe(true);
     expect(curated[1]?.applicability.map).toBe(true);
     expect(curated[2]?.applicability.map).toBe(true);
+    expect(curated[1]?.applicability.card).toBe(true);
+    expect(curated[2]?.applicability.card).toBe(true);
     expect(curated[3]?.curation.annotations).toEqual([
       { candidateId: "edo-derived-test-annotation-3", text: "根拠資料に基づく補足です。" },
     ]);
@@ -198,6 +232,65 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(projection.visibleMarkerCount).toBe(8788);
     expect(projection.overrides).toEqual([]);
     expect(() => validateEdoDerivedMapProjection(projection, places, source)).not.toThrow();
+  });
+
+  it("creates the checked-in empty card projection deterministically", () => {
+    const projection = createEdoCardProjection(places);
+    expect(projection).toEqual(JSON.parse(readFileSync(join(ROOT, "src/edo-card-projection.json"), "utf8")));
+    expect(projection.applicableSourceCount).toBe(8788);
+    expect(projection.renderableCardCount).toBe(8788);
+    expect(projection.overrides).toEqual([]);
+    expect(() => validateEdoDerivedCardProjection(projection, places, source)).not.toThrow();
+  });
+
+  it("authorizes approved Card rename/hide and keeps hidden places card-applicable", () => {
+    const catalog = activeCuration(approvedCandidate("rename", 1), approvedCandidate("hide", 2));
+    const curated = deriveEdoPlaces(source, identity, catalog);
+    const projection = createEdoCardProjection(curated);
+    expect(projection.applicableSourceCount).toBe(8788);
+    expect(projection.renderableCardCount).toBe(8787);
+    expect(projection.overrides).toEqual([
+      expect.objectContaining({ sourceIndex: 1, displayName: curated[1]!.displayName.value, hidden: false }),
+      expect.objectContaining({ sourceIndex: 2, displayName: null, hidden: true }),
+    ]);
+    expect(() => validateEdoDerivedCardProjection(projection, curated, source)).not.toThrow();
+  });
+
+  it("rejects unauthorized, stale, private, unordered, and card-inapplicable projections", () => {
+    const catalog = activeCuration(approvedCandidate("rename", 1), approvedCandidate("hide", 2));
+    const curated = deriveEdoPlaces(source, identity, catalog);
+    const base = createEdoCardProjection(curated);
+    const cases: Array<(projection: typeof base, derived: typeof curated) => void> = [
+      (projection) => { projection.sourceDataSha256 = "0".repeat(64); },
+      (projection) => { projection.overrides[0]!.sourceRecordId = "wrong"; },
+      (projection) => { projection.overrides[0]!.sourceIndex = 2; },
+      (projection) => { projection.overrides[0]!.featureSha256 = "0".repeat(64); },
+      (projection) => { projection.overrides[0]!.displayName = "unapproved"; },
+      (projection) => { projection.overrides[1]!.hidden = false; projection.overrides[1]!.displayName = "unapproved"; },
+      (projection) => { (projection as typeof projection & { reviewer?: string }).reviewer = "private"; },
+      (projection) => { (projection.overrides[0] as typeof projection.overrides[0] & { evidence?: string }).evidence = "private"; },
+      (projection) => { projection.overrides = [clone(projection.overrides[0]!), clone(projection.overrides[0]!)]; },
+      (projection) => { projection.overrides.reverse(); },
+      (projection) => { projection.renderableCardCount = 8788; },
+      (_projection, derived) => { derived[1]!.applicability.card = false; },
+    ];
+    for (const mutate of cases) {
+      const projection = clone(base);
+      const derived = clone(curated);
+      mutate(projection, derived);
+      expect(() => validateEdoDerivedCardProjection(projection, derived, source)).toThrow();
+    }
+
+    const unauthorized = createEdoCardProjection(places);
+    const reverse = places[0]!.reverseMapping[0]!;
+    unauthorized.overrides = [{
+      sourceRecordId: reverse.sourceRecordId,
+      sourceIndex: reverse.sourceIndex,
+      featureSha256: reverse.sourceFeatureSha256,
+      displayName: "unapproved",
+      hidden: false,
+    }];
+    expect(() => validateEdoDerivedCardProjection(unauthorized, places, source)).toThrow();
   });
 
   it("projects only approved map hide decisions and never projects rename", () => {

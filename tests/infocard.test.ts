@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderPlaceCard, renderNoData } from "../src/infocard";
 import type { PlaceFeature } from "../src/validate";
+import { createEdoCardResolver } from "../src/edo-card-projection";
 
 function place(overrides: Partial<PlaceFeature> = {}): PlaceFeature {
   return {
@@ -99,6 +100,56 @@ describe("renderPlaceCard", () => {
     button?.focus();
     button?.click();
     expect(document.activeElement).toBe(map);
+  });
+
+  it("approved renameだけを見出しへ適用し、原資料表記とsource-backed fieldsを維持する", () => {
+    const raw = place();
+    const original = structuredClone(raw);
+    const resolver = createEdoCardResolver({
+      schemaVersion: 1,
+      sourceDataSha256: "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
+      sourceFeatureCount: 8788,
+      applicableSourceCount: 8788,
+      renderableCardCount: 8788,
+      overrides: [{
+        sourceRecordId: raw.entryId,
+        sourceIndex: 0,
+        featureSha256: "a".repeat(64),
+        displayName: "承認済み表示名",
+        hidden: false,
+      }],
+    });
+    expect(renderPlaceCard(container, raw, undefined, resolver)).toBe(true);
+    expect(container.querySelector("h2")?.textContent).toBe("承認済み表示名");
+    expect(container.textContent).toContain("原資料表記");
+    expect(container.textContent).toContain(raw.name);
+    expect(container.textContent).toContain(raw.category);
+    expect(container.textContent).toContain(raw.sheet);
+    expect(container.querySelector("a")?.href).toBe(raw.sourceUrl);
+    expect(raw).toEqual(original);
+  });
+
+  it("approved hideは内容もfocusable elementも描画せずfail closedにする", () => {
+    const raw = place();
+    const resolver = createEdoCardResolver({
+      schemaVersion: 1,
+      sourceDataSha256: "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
+      sourceFeatureCount: 8788,
+      applicableSourceCount: 8788,
+      renderableCardCount: 8787,
+      overrides: [{
+        sourceRecordId: raw.entryId,
+        sourceIndex: 0,
+        featureSha256: "a".repeat(64),
+        displayName: null,
+        hidden: true,
+      }],
+    });
+    expect(renderPlaceCard(container, raw, undefined, resolver)).toBe(false);
+    expect(container.hidden).toBe(true);
+    expect(container.childElementCount).toBe(0);
+    expect(container.textContent).toBe("");
+    expect(container.querySelectorAll("a,button,[tabindex]")).toHaveLength(0);
   });
 });
 

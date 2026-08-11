@@ -221,7 +221,7 @@ URL、Cookie、ブラウザストレージへ保存しません。
 - [docs/REGION_PACKS.md](docs/REGION_PACKS.md) — 地域パックの構造と安全な追加手順
 - [docs/BROWSER_QA.md](docs/BROWSER_QA.md) — Canvas操作とPagesキャッシュの実ブラウザ確認手順
 - [docs/EDO_PLACE_CURATION.md](docs/EDO_PLACE_CURATION.md) — 江戸地名の非表示・表記修正・補足追記候補の非公開管理
-- [docs/EDO_DERIVED_PLACE_MODEL.md](docs/EDO_DERIVED_PLACE_MODEL.md) — 江戸地名の共通派生地点モデルとSearch consumer pilot
+- [docs/EDO_DERIVED_PLACE_MODEL.md](docs/EDO_DERIVED_PLACE_MODEL.md) — 江戸地名の共通派生地点モデルと段階的なSearch/Static/Map/Card consumer pilots
 
 江戸地名キュレーションcatalogは現在0件の空基盤で、公開表示・検索・静的地点ページ・元GeoJSONへの効果はありません。
 
