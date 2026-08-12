@@ -118,7 +118,7 @@ describe("Edo derived place non-runtime foundation", () => {
   it("is deterministic for an empty curation catalog", () => {
     const again = deriveEdoPlaces(source, identity, curation);
     expect(canonicalEdoDerivedPlacesSha256(again)).toBe(canonicalEdoDerivedPlacesSha256(places));
-    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("861f4291f0d1ab63258333d93e37be83e4fb4917c9d6a1cb3ee2b9c27e906472");
+    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("970aa6a5b3d9335cdb78b3293892663e2503ac38a1687293b375f4277371b2e0");
   });
 
   it("rejects unknown keys", () => {
@@ -215,6 +215,7 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(projection.eligibleSourceCount).toBe(8788);
     expect(projection.overrides).toEqual([
       expect.objectContaining({ sourceRecordId: "20-246", sourceIndex: 4207, displayName: "太田摂津守", hidden: false }),
+      expect.objectContaining({ sourceRecordId: "21-034", sourceIndex: 4385, displayName: "永昌寺", hidden: false }),
     ]);
     expect(() => validateEdoSearchProjection(projection, places, source)).not.toThrow();
   });
@@ -225,6 +226,7 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(projection.eligibleSourceCount).toBe(8788);
     expect(projection.overrides).toEqual([
       expect.objectContaining({ sourceRecordId: "20-246", sourceIndex: 4207, displayName: "太田摂津守", hidden: false }),
+      expect.objectContaining({ sourceRecordId: "21-034", sourceIndex: 4385, displayName: "永昌寺", hidden: false }),
     ]);
     expect(() => validateEdoDerivedStaticPlaceProjection(projection, places, source, staticPlaces)).not.toThrow();
   });
@@ -245,6 +247,7 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(projection.renderableCardCount).toBe(8788);
     expect(projection.overrides).toEqual([
       expect.objectContaining({ sourceRecordId: "20-246", sourceIndex: 4207, displayName: "太田摂津守", hidden: false }),
+      expect.objectContaining({ sourceRecordId: "21-034", sourceIndex: 4385, displayName: "永昌寺", hidden: false }),
     ]);
     expect(() => validateEdoDerivedCardProjection(projection, places, source)).not.toThrow();
   });

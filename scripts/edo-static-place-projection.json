@@ -11,6 +11,13 @@
       "featureSha256": "1b1047dfd21bedab30cabdbbbd95dc95faf7636443215514bf15679d6756b232",
       "displayName": "太田摂津守",
       "hidden": false
+    },
+    {
+      "sourceRecordId": "21-034",
+      "sourceIndex": 4385,
+      "featureSha256": "68b99472ecbe226e0ce63a0fb697c521865f4d0da75dfbc94bdbdf0ab0f85009",
+      "displayName": "永昌寺",
+      "hidden": false
     }
   ]
 }

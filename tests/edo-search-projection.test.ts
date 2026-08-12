@@ -30,7 +30,11 @@ describe("Edo search runtime-safe projection", () => {
     records.forEach((record, sourceIndex) => {
       const source = places[sourceIndex]!;
       expect(record.key).toBe(`edo:${source.entryId}`);
-      const expectedName = sourceIndex === 4207 ? "太田摂津守" : source.name;
+      const expectedName = sourceIndex === 4207
+        ? "太田摂津守"
+        : sourceIndex === 4385
+          ? "永昌寺"
+          : source.name;
       expect(record.name).toBe(expectedName);
       expect(record.secondaryText).toBe([source.category, source.sheet].filter(Boolean).join("／"));
       expect(record.categoryId).toBe(source.category);
@@ -51,6 +55,15 @@ describe("Edo search runtime-safe projection", () => {
     expect(records[4207]?.sourceRecord.record).toBe(places[4207]);
     expect(places[4207]?.name).toBe("大田摂津守");
     expect(searchHistoricalPlaces(records, "太田摂津守").map((item) => item.key)).toContain("edo:20-246");
+  });
+
+  it("applies the approved 21-034 display name while retaining the raw source identity", () => {
+    const records = createEdoSearchRecords(places);
+    expect(records[4385]?.name).toBe("永昌寺");
+    expect(records[4385]?.sourceRecord.record).toBe(places[4385]);
+    expect(places[4385]?.entryId).toBe("21-034");
+    expect(places[4385]?.name).toBe("永照寺");
+    expect(searchHistoricalPlaces(records, "永昌寺").map((item) => item.key)).toContain("edo:21-034");
   });
 
   it("preserves ordering, query results, category filtering, and pagination", () => {

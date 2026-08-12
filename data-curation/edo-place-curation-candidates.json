@@ -80,10 +80,10 @@
         "noteJa": "CODHの21-034は原資料表記、同relation groupの17-076と13-313は比較対象です。CODHの現代語訳と台東区役所観光課の公式観光情報ページで寺号「永昌寺」を確認しました。台東区ページはURLと資料名のみを出典として記録し、本文・画像を転載しません。同サイト利用規約とCODH datasetページを利用条件の確認先として記録し、CODHのCC BY 4.0 attributionを維持します。relationのpreferred role自体は正解根拠にしていません。"
       },
       "review": {
-        "status": "proposed",
-        "reviewedBy": null,
-        "reviewedAt": null,
-        "reviewNoteJa": null
+        "status": "approved",
+        "reviewedBy": "jigsawrin",
+        "reviewedAt": "2026-08-12",
+        "reviewNoteJa": "プロジェクト所有者が、原資料表記を保持したうえで表示名を「永昌寺」に変更することを承認しました。"
       }
     }
   ]
