@@ -12,7 +12,7 @@ import {
   type BaseLayerKey,
 } from "./config";
 import { createHistoricalLayer, type EdoHistoricalLayer, type HistoricalLayer } from "./historical";
-import { renderPlaceCard, renderNoData } from "./infocard";
+import { renderAggregatePlaceCard, renderPlaceCard, renderNoData } from "./infocard";
 import { renderKyotoNoData, renderKyotoPlaceCard } from "./kyoto-infocard";
 import { createKyotoBakumatsuLayer } from "./kyoto-layer";
 import { renderShigaNoData, renderShigaPlaceCard } from "./shiga-infocard";
@@ -866,6 +866,11 @@ function main(): void {
           });
         },
         panes.get(MAP_PANES.historicalPoints) as HTMLElement,
+        undefined,
+        (group) => {
+          edoHistoricalLayer?.clearTemporarySupplemental();
+          renderAggregatePlaceCard(infoCard, group, map.getContainer());
+        },
       );
       historical.syncZoom(map.getZoom());
       edoHistoricalLayer = historical;

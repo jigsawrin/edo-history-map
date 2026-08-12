@@ -603,6 +603,37 @@ a:focus-visible,
   margin: 0;
 }
 
+.edo-aggregate-marker-shell {
+  background: transparent;
+  border: 0;
+}
+
+.edo-aggregate-marker {
+  align-items: center;
+  background: color-mix(in srgb, var(--edo-marker-color) 82%, white);
+  border: 2px solid var(--edo-marker-color);
+  border-radius: 50%;
+  box-sizing: border-box;
+  color: white;
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  height: 100%;
+  justify-content: center;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 70%);
+  width: 100%;
+}
+
+.aggregate-source-list {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.aggregate-source-list li + li {
+  margin-top: 0.45rem;
+}
+
 .card-note {
   font-size: 0.75rem;
   color: #555;

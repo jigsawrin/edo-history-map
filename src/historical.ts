@@ -2,6 +2,11 @@ import L from "leaflet";
 import type { PlaceFeature } from "./validate";
 import { MAP_PANES } from "./leaflet-layers";
 import { isEdoMapSourceHidden } from "./edo-map-projection";
+import {
+  createEdoMapPresentationResolver,
+  resolveEdoMapPresentation,
+  type EdoMapAggregateGroup,
+} from "./edo-map-presentation-projection";
 
 /**
  * 歴史レイヤー(江戸後期の地名ポイント)。
@@ -44,6 +49,8 @@ export interface EdoHistoricalLayer extends HistoricalLayer {
   temporaryLayer: L.LayerGroup;
   normalMarkerCount: number;
   supplementalMarkerCount: number;
+  aggregateMarkerCount: number;
+  presentationMarkerCount: number;
   syncZoom(zoom: number): void;
   showTemporarySupplemental(place: PlaceFeature, zoom: number): boolean;
   clearTemporarySupplemental(): void;
@@ -66,16 +73,61 @@ export function createHistoricalLayer(
   onSelect: (place: PlaceFeature) => void,
   pane: HTMLElement,
   isHidden: (sourceIndex: number, place: PlaceFeature) => boolean = isEdoMapSourceHidden,
+  onSelectAggregate: (group: EdoMapAggregateGroup) => void = () => {},
+  presentationValue?: unknown,
 ): EdoHistoricalLayer {
   const normalLayer = L.layerGroup();
   const supplementalLayer = L.layerGroup();
   const temporaryLayer = L.layerGroup();
   const group = L.layerGroup([normalLayer]);
   const supplementalMarkers = new Map<PlaceFeature, L.CircleMarker>();
+  const presentation = presentationValue === undefined
+    ? (places.length === 8788
+        ? resolveEdoMapPresentation(places)
+        : { projection: { groups: [] as readonly EdoMapAggregateGroup[] }, groupForSourceIndex: () => null })
+    : createEdoMapPresentationResolver(presentationValue, places);
+  const hiddenIndexes = new Set(
+    places.flatMap((place, sourceIndex) => isHidden(sourceIndex, place) ? [sourceIndex] : []),
+  );
+  const aggregatableGroupIds = new Set(
+    presentation.projection.groups
+      .filter((aggregate) => aggregate.members.every((member) => !hiddenIndexes.has(member.sourceIndex)))
+      .map((aggregate) => aggregate.groupId),
+  );
   let supplementalVisible = false;
   let temporaryMarker: L.CircleMarker | null = null;
+  let aggregateMarkerCount = 0;
   for (const [sourceIndex, place] of places.entries()) {
-    if (isHidden(sourceIndex, place)) continue;
+    if (hiddenIndexes.has(sourceIndex)) continue;
+    const aggregate = presentation.groupForSourceIndex(sourceIndex);
+    if (aggregate && aggregatableGroupIds.has(aggregate.groupId)) {
+      if (sourceIndex !== aggregate.members[0]?.sourceIndex) continue;
+      const style = categoryStyle(aggregate.category);
+      const size = aggregate.memberCount === 2 ? 28 : aggregate.memberCount === 3 ? 32 : 36;
+      const accessibleName = `${aggregate.name}、原資料${aggregate.memberCount}件`;
+      const marker = L.marker([aggregate.latitude, aggregate.longitude], {
+        pane: HISTORICAL_PANE,
+        interactive: true,
+        bubblingMouseEvents: false,
+        title: accessibleName,
+        alt: accessibleName,
+        icon: L.divIcon({
+          className: "edo-aggregate-marker-shell",
+          html: `<span class="edo-aggregate-marker" style="--edo-marker-color:${style.color}" aria-hidden="true">${aggregate.memberCount}</span>`,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        }),
+      });
+      marker.on("click", () => onSelectAggregate(aggregate));
+      marker.on("add", () => marker.getElement()?.setAttribute("aria-label", accessibleName));
+      marker.on("keypress", (event) => {
+        const key = (event as unknown as { originalEvent?: KeyboardEvent }).originalEvent?.key;
+        if (key === "Enter" || key === " ") onSelectAggregate(aggregate);
+      });
+      normalLayer.addLayer(marker);
+      aggregateMarkerCount += 1;
+      continue;
+    }
     const style = categoryStyle(place.category);
     const marker = L.circleMarker([place.lat, place.lon], {
       radius: 6,
@@ -132,6 +184,8 @@ export function createHistoricalLayer(
     temporaryLayer,
     normalMarkerCount: normalLayer.getLayers().length,
     supplementalMarkerCount: supplementalLayer.getLayers().length,
+    aggregateMarkerCount,
+    presentationMarkerCount: normalLayer.getLayers().length + supplementalLayer.getLayers().length,
     syncZoom,
     showTemporarySupplemental(place, zoom) {
       clearTemporarySupplemental();
