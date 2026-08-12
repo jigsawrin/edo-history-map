@@ -32,7 +32,7 @@ describe("Canvas地点と地図背景のクリック振り分け", () => {
       (place) => renderPlaceCard(card, place),
       document.createElement("div"),
     );
-    const marker = historical.layer.getLayers()[0] as L.CircleMarker;
+    const marker = historical.normalLayer.getLayers()[0] as L.CircleMarker;
 
     marker.fire("click");
     const handledAsBackground = handleHistoricalBackgroundClick(
@@ -74,7 +74,7 @@ describe("Canvas地点と地図背景のクリック振り分け", () => {
       onSelect,
       document.createElement("div"),
     );
-    const marker = historical.layer.getLayers()[0] as L.CircleMarker;
+    const marker = historical.normalLayer.getLayers()[0] as L.CircleMarker;
     for (const mode of ["reconstructed", "historical-map", "compare", "points"] as const) {
       expect(mode).toBeTruthy();
       marker.fire("click");

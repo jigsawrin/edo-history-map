@@ -11,7 +11,7 @@ import {
   GSI_TILE_URLS,
   type BaseLayerKey,
 } from "./config";
-import { createHistoricalLayer, type HistoricalLayer } from "./historical";
+import { createHistoricalLayer, type EdoHistoricalLayer, type HistoricalLayer } from "./historical";
 import { renderPlaceCard, renderNoData } from "./infocard";
 import { renderKyotoNoData, renderKyotoPlaceCard } from "./kyoto-infocard";
 import { createKyotoBakumatsuLayer } from "./kyoto-layer";
@@ -843,14 +843,15 @@ function main(): void {
     Promise<TransitionLayer>
   >();
   let activeHistoricalPointsDatasetId: PointDatasetId | null = null;
+  let edoHistoricalLayer: EdoHistoricalLayer | null = null;
   let machiyaLayerPromise: Promise<MachiyaAreaTransitionLayer> | null = null;
   let coastlineLayerPromise: Promise<CoastlineTransitionLayer> | null = null;
 
   const LAYER_FACTORIES: Readonly<
     Record<PointDatasetId, () => Promise<HistoricalLayer>>
   > = Object.freeze({
-    "codh-edo-maps-places": async () =>
-      createHistoricalLayer(
+    "codh-edo-maps-places": async () => {
+      const historical = createHistoricalLayer(
         await datasetRegistry.load("codh-edo-maps-places"),
         (place) => {
           void selectHistoricalPlace({
@@ -865,7 +866,11 @@ function main(): void {
           });
         },
         panes.get(MAP_PANES.historicalPoints) as HTMLElement,
-      ),
+      );
+      historical.syncZoom(map.getZoom());
+      edoHistoricalLayer = historical;
+      return historical;
+    },
     "project-kyoto-bakumatsu-places": async () =>
       createKyotoBakumatsuLayer(
         await datasetRegistry.load("project-kyoto-bakumatsu-places"),
@@ -916,6 +921,8 @@ function main(): void {
     pointLayerPromises.set(id, promise);
     return promise;
   }
+
+  map.on("zoomend", () => edoHistoricalLayer?.syncZoom(map.getZoom()));
 
   interface HistoricalPlaceSelection {
     readonly datasetId: PointDatasetId;
@@ -970,6 +977,12 @@ function main(): void {
     }
 
     if (selection.curatedGeneration !== undefined && selection.curatedGeneration !== curatedSelectionGeneration) return;
+
+    if (selection.record.datasetId === "codh-edo-maps-places" && selection.source === "search") {
+      edoHistoricalLayer?.showTemporarySupplemental(selection.record.record, map.getZoom());
+    } else {
+      edoHistoricalLayer?.clearTemporarySupplemental();
+    }
 
     if (selection.record.datasetId === "codh-edo-maps-places") {
       const rendered = renderPlaceCard(
@@ -1172,6 +1185,7 @@ function main(): void {
   }
 
   function activateRegion(pack: Readonly<RegionPack>, moveMap: boolean): void {
+    edoHistoricalLayer?.clearTemporarySupplemental();
     transitions.switchTo([], 0);
     activeHistoricalRaster?.historical.dispose();
     activeHistoricalRaster = null;
@@ -1214,6 +1228,7 @@ function main(): void {
 
   eraSelect.addEventListener("change", () => {
     curatedSelectionGeneration += 1;
+    edoHistoricalLayer?.clearTemporarySupplemental();
     applyEra(true);
     requestHistoricalRaster();
     updateReferencePrompt();
