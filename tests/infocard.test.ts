@@ -129,6 +129,19 @@ describe("renderPlaceCard", () => {
     expect(raw).toEqual(original);
   });
 
+  it("renders the approved 20-246 heading with its preserved source name", () => {
+    const raw = {
+      ...place(),
+      entryId: "20-246",
+      name: "大田摂津守",
+      sourceUrl: "https://codh.rois.ac.jp/edo-maps/owariya/20/1853/20-246.html.ja",
+    };
+    expect(renderPlaceCard(container, raw)).toBe(true);
+    expect(container.querySelector("h2")?.textContent).toBe("太田摂津守");
+    expect(container.textContent).toContain("原資料表記");
+    expect(container.textContent).toContain("大田摂津守");
+  });
+
   it("approved hideは内容もfocusable elementも描画せずfail closedにする", () => {
     const raw = place();
     const resolver = createEdoCardResolver({

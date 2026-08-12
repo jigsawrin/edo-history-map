@@ -4,5 +4,13 @@
   "sourceFeatureCount": 8788,
   "applicableSourceCount": 8788,
   "renderableCardCount": 8788,
-  "overrides": []
+  "overrides": [
+    {
+      "sourceRecordId": "20-246",
+      "sourceIndex": 4207,
+      "featureSha256": "1b1047dfd21bedab30cabdbbbd95dc95faf7636443215514bf15679d6756b232",
+      "displayName": "太田摂津守",
+      "hidden": false
+    }
+  ]
 }

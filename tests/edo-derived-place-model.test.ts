@@ -118,7 +118,7 @@ describe("Edo derived place non-runtime foundation", () => {
   it("is deterministic for an empty curation catalog", () => {
     const again = deriveEdoPlaces(source, identity, curation);
     expect(canonicalEdoDerivedPlacesSha256(again)).toBe(canonicalEdoDerivedPlacesSha256(places));
-    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("514085bdab22f2a09363f256de4626d7c1124a85d051df64575ef2857e69d160");
+    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("861f4291f0d1ab63258333d93e37be83e4fb4917c9d6a1cb3ee2b9c27e906472");
   });
 
   it("rejects unknown keys", () => {
@@ -209,19 +209,23 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(curated.slice(1, 4).every((place) => place.reviewState === "curation-approved")).toBe(true);
   });
 
-  it("creates the checked-in empty search projection deterministically", () => {
+  it("creates the checked-in approved search projection deterministically", () => {
     const projection = createEdoSearchProjection(places);
     expect(projection).toEqual(JSON.parse(readFileSync(join(ROOT, "src/place-search/edo-search-projection.json"), "utf8")));
     expect(projection.eligibleSourceCount).toBe(8788);
-    expect(projection.overrides).toEqual([]);
+    expect(projection.overrides).toEqual([
+      expect.objectContaining({ sourceRecordId: "20-246", sourceIndex: 4207, displayName: "太田摂津守", hidden: false }),
+    ]);
     expect(() => validateEdoSearchProjection(projection, places, source)).not.toThrow();
   });
 
-  it("creates the checked-in empty static projection deterministically", () => {
+  it("creates the checked-in approved static projection deterministically", () => {
     const projection = createEdoStaticPlaceProjection(places, legacyLayoutSha256);
     expect(projection).toEqual(JSON.parse(readFileSync(join(ROOT, "scripts/edo-static-place-projection.json"), "utf8")));
     expect(projection.eligibleSourceCount).toBe(8788);
-    expect(projection.overrides).toEqual([]);
+    expect(projection.overrides).toEqual([
+      expect.objectContaining({ sourceRecordId: "20-246", sourceIndex: 4207, displayName: "太田摂津守", hidden: false }),
+    ]);
     expect(() => validateEdoDerivedStaticPlaceProjection(projection, places, source, staticPlaces)).not.toThrow();
   });
 
@@ -234,12 +238,14 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(() => validateEdoDerivedMapProjection(projection, places, source)).not.toThrow();
   });
 
-  it("creates the checked-in empty card projection deterministically", () => {
+  it("creates the checked-in approved card projection deterministically", () => {
     const projection = createEdoCardProjection(places);
     expect(projection).toEqual(JSON.parse(readFileSync(join(ROOT, "src/edo-card-projection.json"), "utf8")));
     expect(projection.applicableSourceCount).toBe(8788);
     expect(projection.renderableCardCount).toBe(8788);
-    expect(projection.overrides).toEqual([]);
+    expect(projection.overrides).toEqual([
+      expect.objectContaining({ sourceRecordId: "20-246", sourceIndex: 4207, displayName: "太田摂津守", hidden: false }),
+    ]);
     expect(() => validateEdoDerivedCardProjection(projection, places, source)).not.toThrow();
   });
 

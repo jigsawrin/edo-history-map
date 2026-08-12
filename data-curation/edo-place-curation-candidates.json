@@ -40,10 +40,10 @@
         "noteJa": "CODHの20-246は原資料表記、同relation groupの22-070と28-189は比較対象です。国立公文書館『嘉永雑記』は外部公的史料、同館の二次利用条件とCODH datasetページは各資料の利用条件確認先として記録します。relationのpreferred role自体は正解根拠にしていません。"
       },
       "review": {
-        "status": "proposed",
-        "reviewedBy": null,
-        "reviewedAt": null,
-        "reviewNoteJa": null
+        "status": "approved",
+        "reviewedBy": "jigsawrin",
+        "reviewedAt": "2026-08-11",
+        "reviewNoteJa": "プロジェクト所有者が、原資料表記を保持したうえで表示名を「太田摂津守」に変更することを承認しました。"
       }
     }
   ]

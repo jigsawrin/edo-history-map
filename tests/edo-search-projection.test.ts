@@ -30,19 +30,28 @@ describe("Edo search runtime-safe projection", () => {
     records.forEach((record, sourceIndex) => {
       const source = places[sourceIndex]!;
       expect(record.key).toBe(`edo:${source.entryId}`);
-      expect(record.name).toBe(source.name);
+      const expectedName = sourceIndex === 4207 ? "太田摂津守" : source.name;
+      expect(record.name).toBe(expectedName);
       expect(record.secondaryText).toBe([source.category, source.sheet].filter(Boolean).join("／"));
       expect(record.categoryId).toBe(source.category);
       expect(record.categoryLabel).toBe(source.category);
       expect(record.latitude).toBe(source.lat);
       expect(record.longitude).toBe(source.lon);
-      expect(record.normalizedName).toBe(normalizeSearchText(source.name));
+      expect(record.normalizedName).toBe(normalizeSearchText(expectedName));
       expect(record.normalizedCategory).toBe(normalizeSearchText(source.category));
       expect(record.normalizedSecondary).toBe(normalizeSearchText(source.sheet));
       expect(record.sourceRecord.record).toBe(source);
       expect(record.sourceRecord.sourceIndex).toBe(sourceIndex);
     });
   }, 60_000);
+
+  it("applies the approved 20-246 display name while retaining the source record", () => {
+    const records = createEdoSearchRecords(places);
+    expect(records[4207]?.name).toBe("太田摂津守");
+    expect(records[4207]?.sourceRecord.record).toBe(places[4207]);
+    expect(places[4207]?.name).toBe("大田摂津守");
+    expect(searchHistoricalPlaces(records, "太田摂津守").map((item) => item.key)).toContain("edo:20-246");
+  });
 
   it("preserves ordering, query results, category filtering, and pagination", () => {
     const records = createEdoSearchRecords(places);
