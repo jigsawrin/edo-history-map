@@ -34,7 +34,7 @@ export const EDO_DERIVED_PLACE_SNAPSHOT = Object.freeze({
   sourceFeatureCount: 8788,
   sourceIdentityGroupCount: 825,
   sourceIdentityMemberCount: 1693,
-  curationCandidateCount: 1,
+  curationCandidateCount: 2,
   derivedPlaceCount: 8788,
   reverseMappedSourceRecordCount: 8788,
   multiMemberDerivedPlaceCount: 0,
