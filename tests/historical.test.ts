@@ -5,6 +5,8 @@ import L from "leaflet";
 import {
   categoryStyle,
   createHistoricalLayer,
+  isSupplementalMarkerPlace,
+  SUPPLEMENTAL_MARKER_MIN_ZOOM,
   addHistoricalImageLayer,
   HISTORICAL_PANE,
 } from "../src/historical";
@@ -44,8 +46,8 @@ describe("createHistoricalLayer", () => {
     const hidden = place({ entryId: "hidden" });
     const onSelect = vi.fn();
     const layer = createHistoricalLayer([first, hidden], onSelect, document.createElement("div"), (index) => index === 1);
-    expect(layer.layer.getLayers()).toHaveLength(1);
-    (layer.layer.getLayers()[0] as L.CircleMarker).fire("click");
+    expect(layer.normalLayer.getLayers()).toHaveLength(1);
+    (layer.normalLayer.getLayers()[0] as L.CircleMarker).fire("click");
     expect(onSelect).toHaveBeenCalledWith(first);
     expect(onSelect.mock.calls[0]![0]).toBe(first);
     expect(onSelect).not.toHaveBeenCalledWith(hidden);
@@ -65,8 +67,8 @@ describe("createHistoricalLayer", () => {
     const isHidden = createEdoMapSourceHiddenPredicate(projection);
     const onSelect = vi.fn();
     const layer = createHistoricalLayer([first, hidden], onSelect, document.createElement("div"), isHidden);
-    expect(layer.layer.getLayers()).toHaveLength(1);
-    (layer.layer.getLayers()[0] as L.CircleMarker).fire("click");
+    expect(layer.normalLayer.getLayers()).toHaveLength(1);
+    (layer.normalLayer.getLayers()[0] as L.CircleMarker).fire("click");
     expect(onSelect.mock.calls[0]![0]).toBe(first);
     expect(onSelect).not.toHaveBeenCalledWith(hidden);
   });
@@ -85,11 +87,20 @@ describe("createHistoricalLayer", () => {
     const onSelect = vi.fn();
     const layer = createHistoricalLayer(sources, onSelect, document.createElement("div"), createEdoMapSourceHiddenPredicate(projection, sources));
     expect(sources).toHaveLength(8788);
-    expect(layer.layer.getLayers()).toHaveLength(8787);
+    expect(layer.normalMarkerCount + layer.supplementalMarkerCount).toBe(8787);
     const firstVisible = sources[1]!;
-    (layer.layer.getLayers()[0] as L.CircleMarker).fire("click");
+    (layer.normalLayer.getLayers()[0] as L.CircleMarker).fire("click");
     expect(onSelect.mock.calls[0]![0]).toBe(firstVisible);
     expect(sources[0]).toBe(hiddenSource);
+  }, 30_000);
+
+  it("partitions all 8,788 production markers into 7,731 normal and 1,057 supplemental markers", () => {
+    const sources = parsePlacesGeoJson(readFileSync(join(__dirname, "../public/data/edo-places.geojson"), "utf8"));
+    const layer = createHistoricalLayer(sources, () => {}, document.createElement("div"));
+    expect(sources).toHaveLength(8788);
+    expect(layer.normalMarkerCount).toBe(7731);
+    expect(layer.supplementalMarkerCount).toBe(1057);
+    expect(layer.normalMarkerCount + layer.supplementalMarkerCount).toBe(8788);
   }, 30_000);
   it("地点からレイヤーグループを作成できる", () => {
     const pane = document.createElement("div");
@@ -98,7 +109,7 @@ describe("createHistoricalLayer", () => {
       () => {},
       pane,
     );
-    expect(layer.layer.getLayers()).toHaveLength(2);
+    expect(layer.normalLayer.getLayers()).toHaveLength(2);
   });
 
   it("Canvas用paneへ配置してもクリック選択と分類スタイルを維持する", () => {
@@ -108,7 +119,7 @@ describe("createHistoricalLayer", () => {
       onSelect,
       document.createElement("div"),
     );
-    const marker = layer.layer.getLayers()[0] as L.CircleMarker;
+    const marker = layer.normalLayer.getLayers()[0] as L.CircleMarker;
     expect(marker.options.pane).toBe(HISTORICAL_PANE);
     expect(marker.options.interactive).toBe(true);
     expect(marker.options.bubblingMouseEvents).toBe(false);
@@ -121,7 +132,7 @@ describe("createHistoricalLayer", () => {
   it("透明度は全markerのsetStyleを呼ばずpaneへ1回で適用する", () => {
     const pane = document.createElement("div");
     const layer = createHistoricalLayer([place()], () => {}, pane);
-    const marker = layer.layer.getLayers()[0] as L.CircleMarker;
+    const marker = layer.normalLayer.getLayers()[0] as L.CircleMarker;
     const setStyle = vi.spyOn(marker, "setStyle");
 
     layer.setOpacity(0.5);
@@ -131,6 +142,61 @@ describe("createHistoricalLayer", () => {
     expect(pane.style.opacity).toBe("0");
     layer.setOpacity(2);
     expect(pane.style.opacity).toBe("1");
+  });
+
+  it("classifies only the three exact supplemental names", () => {
+    expect(isSupplementalMarkerPlace(place({ name: "（辻番）" }))).toBe(true);
+    expect(isSupplementalMarkerPlace(place({ name: "（木戸）" }))).toBe(true);
+    expect(isSupplementalMarkerPlace(place({ name: "（坂道）" }))).toBe(true);
+    expect(isSupplementalMarkerPlace(place({ name: "辻番屋敷" }))).toBe(false);
+    expect(isSupplementalMarkerPlace(place({ name: "大木戸" }))).toBe(false);
+    expect(isSupplementalMarkerPlace(place({ name: "榎坂" }))).toBe(false);
+  });
+
+  it("reuses supplemental markers and changes nested groups only when crossing z16", () => {
+    const supplemental = place({ name: "（辻番）", entryId: "supplemental" });
+    const layer = createHistoricalLayer([place(), supplemental], () => {}, document.createElement("div"));
+    const marker = layer.supplementalLayer.getLayers()[0];
+    const addLayer = vi.spyOn(layer.layer, "addLayer");
+    const removeLayer = vi.spyOn(layer.layer, "removeLayer");
+
+    layer.syncZoom(15);
+    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
+    expect(addLayer).not.toHaveBeenCalled();
+    layer.syncZoom(SUPPLEMENTAL_MARKER_MIN_ZOOM);
+    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(true);
+    expect(layer.supplementalLayer.getLayers()[0]).toBe(marker);
+    expect(addLayer).toHaveBeenCalledTimes(1);
+    layer.syncZoom(17);
+    expect(addLayer).toHaveBeenCalledTimes(1);
+    layer.syncZoom(15);
+    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
+    expect(removeLayer).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows only the selected supplemental marker below z16 without stale or duplicate layers", () => {
+    const first = place({ name: "（辻番）", entryId: "first-supplemental" });
+    const second = place({ name: "（木戸）", entryId: "second-supplemental" });
+    const layer = createHistoricalLayer([place(), first, second], () => {}, document.createElement("div"));
+    const firstMarker = layer.supplementalLayer.getLayers()[0];
+    const secondMarker = layer.supplementalLayer.getLayers()[1];
+
+    expect(layer.showTemporarySupplemental(first, 15)).toBe(true);
+    expect(layer.temporaryLayer.getLayers()).toEqual([firstMarker]);
+    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(true);
+    expect(layer.showTemporarySupplemental(second, 15)).toBe(true);
+    expect(layer.temporaryLayer.getLayers()).toEqual([secondMarker]);
+    layer.syncZoom(16);
+    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(false);
+    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(true);
+    expect(layer.supplementalLayer.getLayers()).toEqual([firstMarker, secondMarker]);
+    layer.syncZoom(15);
+    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
+    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(true);
+    expect(layer.temporaryLayer.getLayers()).toEqual([secondMarker]);
+    layer.clearTemporarySupplemental();
+    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(false);
+    expect(layer.temporaryLayer.getLayers()).toHaveLength(0);
   });
 });
 

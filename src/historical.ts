@@ -38,13 +38,42 @@ export interface HistoricalLayer {
   setOpacity(opacity: number): void;
 }
 
+export interface EdoHistoricalLayer extends HistoricalLayer {
+  normalLayer: L.LayerGroup;
+  supplementalLayer: L.LayerGroup;
+  temporaryLayer: L.LayerGroup;
+  normalMarkerCount: number;
+  supplementalMarkerCount: number;
+  syncZoom(zoom: number): void;
+  showTemporarySupplemental(place: PlaceFeature, zoom: number): boolean;
+  clearTemporarySupplemental(): void;
+}
+
+export const SUPPLEMENTAL_MARKER_MIN_ZOOM = 16;
+
+const SUPPLEMENTAL_EXACT_NAMES = new Set([
+  "（辻番）",
+  "（木戸）",
+  "（坂道）",
+]);
+
+export function isSupplementalMarkerPlace(place: Pick<PlaceFeature, "name">): boolean {
+  return SUPPLEMENTAL_EXACT_NAMES.has(place.name);
+}
+
 export function createHistoricalLayer(
   places: PlaceFeature[],
   onSelect: (place: PlaceFeature) => void,
   pane: HTMLElement,
   isHidden: (sourceIndex: number, place: PlaceFeature) => boolean = isEdoMapSourceHidden,
-): HistoricalLayer {
-  const group = L.layerGroup();
+): EdoHistoricalLayer {
+  const normalLayer = L.layerGroup();
+  const supplementalLayer = L.layerGroup();
+  const temporaryLayer = L.layerGroup();
+  const group = L.layerGroup([normalLayer]);
+  const supplementalMarkers = new Map<PlaceFeature, L.CircleMarker>();
+  let supplementalVisible = false;
+  let temporaryMarker: L.CircleMarker | null = null;
   for (const [sourceIndex, place] of places.entries()) {
     if (isHidden(sourceIndex, place)) continue;
     const style = categoryStyle(place.category);
@@ -69,10 +98,53 @@ export function createHistoricalLayer(
         .originalEvent?.key;
       if (key === "Enter" || key === " ") onSelect(place);
     });
-    group.addLayer(marker);
+    if (isSupplementalMarkerPlace(place)) {
+      supplementalLayer.addLayer(marker);
+      supplementalMarkers.set(place, marker);
+    } else {
+      normalLayer.addLayer(marker);
+    }
   }
+
+  const clearTemporarySupplemental = (): void => {
+    if (group.hasLayer(temporaryLayer)) group.removeLayer(temporaryLayer);
+    if (temporaryMarker) temporaryLayer.removeLayer(temporaryMarker);
+    temporaryMarker = null;
+  };
+
+  const syncZoom = (zoom: number): void => {
+    const shouldShowSupplemental = zoom >= SUPPLEMENTAL_MARKER_MIN_ZOOM;
+    if (shouldShowSupplemental === supplementalVisible) return;
+    supplementalVisible = shouldShowSupplemental;
+    if (shouldShowSupplemental) {
+      if (group.hasLayer(temporaryLayer)) group.removeLayer(temporaryLayer);
+      if (!group.hasLayer(supplementalLayer)) group.addLayer(supplementalLayer);
+      return;
+    }
+    if (group.hasLayer(supplementalLayer)) group.removeLayer(supplementalLayer);
+    if (temporaryMarker && !group.hasLayer(temporaryLayer)) group.addLayer(temporaryLayer);
+  };
+
   return {
     layer: group,
+    normalLayer,
+    supplementalLayer,
+    temporaryLayer,
+    normalMarkerCount: normalLayer.getLayers().length,
+    supplementalMarkerCount: supplementalLayer.getLayers().length,
+    syncZoom,
+    showTemporarySupplemental(place, zoom) {
+      clearTemporarySupplemental();
+      const marker = supplementalMarkers.get(place);
+      if (!marker) return false;
+      temporaryMarker = marker;
+      temporaryLayer.addLayer(marker);
+      if (zoom < SUPPLEMENTAL_MARKER_MIN_ZOOM && !group.hasLayer(temporaryLayer)) {
+        group.addLayer(temporaryLayer);
+      }
+      return true;
+    },
+    clearTemporarySupplemental,
     setOpacity(opacity: number) {
       const clamped = Math.min(1, Math.max(0, opacity));
       pane.style.opacity = String(clamped);
