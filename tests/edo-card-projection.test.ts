@@ -32,7 +32,7 @@ function value(overrides: EdoCardProjection["overrides"]): EdoCardProjection {
 }
 
 describe("Edo card projection", () => {
-  it("keeps the checked-in runtime projection minimal with one approved rename", () => {
+  it("keeps the checked-in runtime projection minimal with two approved renames", () => {
     expect(validateEdoCardProjection(projection)).toEqual(projection);
     expect(projection).toEqual({
       schemaVersion: 1,
@@ -40,13 +40,22 @@ describe("Edo card projection", () => {
       sourceFeatureCount: 8788,
       applicableSourceCount: 8788,
       renderableCardCount: 8788,
-      overrides: [{
-        sourceRecordId: "20-246",
-        sourceIndex: 4207,
-        featureSha256: "1b1047dfd21bedab30cabdbbbd95dc95faf7636443215514bf15679d6756b232",
-        displayName: "太田摂津守",
-        hidden: false,
-      }],
+      overrides: [
+        {
+          sourceRecordId: "20-246",
+          sourceIndex: 4207,
+          featureSha256: "1b1047dfd21bedab30cabdbbbd95dc95faf7636443215514bf15679d6756b232",
+          displayName: "太田摂津守",
+          hidden: false,
+        },
+        {
+          sourceRecordId: "21-034",
+          sourceIndex: 4385,
+          featureSha256: "68b99472ecbe226e0ce63a0fb697c521865f4d0da75dfbc94bdbdf0ab0f85009",
+          displayName: "永昌寺",
+          hidden: false,
+        },
+      ],
     });
   });
 
@@ -56,6 +65,15 @@ describe("Edo card projection", () => {
       hidden: false,
       displayName: "太田摂津守",
       sourceName: "大田摂津守",
+    });
+  });
+
+  it("resolves the approved 21-034 heading and preserves its source name", () => {
+    const target = { ...place, entryId: "21-034", name: "永照寺" };
+    expect(createEdoCardResolver(projection)(target)).toEqual({
+      hidden: false,
+      displayName: "永昌寺",
+      sourceName: "永照寺",
     });
   });
 

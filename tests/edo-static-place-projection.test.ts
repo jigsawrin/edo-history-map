@@ -106,6 +106,22 @@ describe("EDO static place projection", () => {
     expect(canonicalEdoStaticLegacyLayout(places, STATIC_EDO_PER_PAGE)[targetPosition]).toEqual(beforeLayout);
   });
 
+  it("applies the approved 21-034 display name without changing its legacy URL, anchor, page, or slot", () => {
+    const targetPosition = places.findIndex((place) => place.sourceIndex === 4385);
+    const target = places[targetPosition]!;
+    const beforeLayout = canonicalEdoStaticLegacyLayout(places, STATIC_EDO_PER_PAGE)[targetPosition]!;
+    const generated = generate(checkedIn);
+    const page = generated.files.get(pagePath(targetPosition))!;
+    const article = articleHtml(page, target.anchor);
+    const after = generated.edoPlaces[targetPosition]!;
+    expect(article).toContain(`id="${target.anchor}"`);
+    expect(article).toContain(`href="#${target.anchor}"`);
+    expect(article).toContain("<h3>永昌寺</h3>");
+    expect(article).not.toContain("永照寺");
+    expect(after).toMatchObject({ key: target.key, anchor: target.anchor, sourceIndex: 4385, displayName: "永昌寺", hidden: false });
+    expect(canonicalEdoStaticLegacyLayout(places, STATIC_EDO_PER_PAGE)[targetPosition]).toEqual(beforeLayout);
+  });
+
   it("keeps an approved hidden record in the same anchor/page/slot as a generic tombstone", () => {
     const target = places[0]!;
     const projection = projectionFor(target, { displayName: null, hidden: true });
