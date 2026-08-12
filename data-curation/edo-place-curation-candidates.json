@@ -45,6 +45,46 @@
         "reviewedAt": "2026-08-11",
         "reviewNoteJa": "プロジェクト所有者が、原資料表記を保持したうえで表示名を「太田摂津守」に変更することを承認しました。"
       }
+    },
+    {
+      "candidateId": "edo-place-curation-rename-4385",
+      "sourceDatasetId": "codh-edo-maps-places",
+      "target": {
+        "sourceIndex": 4385,
+        "entryId": "21-034",
+        "sourceFeatureSha256": "68b99472ecbe226e0ce63a0fb697c521865f4d0da75dfbc94bdbdf0ab0f85009",
+        "name": "永照寺",
+        "category": "寺社",
+        "sheet": "江戸切絵図「尾張屋版」 今戸箕輪浅草絵図",
+        "sourceUrl": "https://codh.rois.ac.jp/edo-maps/owariya/21/1853/21-034.html.ja",
+        "longitude": 139.782677,
+        "latitude": 35.711701
+      },
+      "proposalType": "rename",
+      "proposal": {
+        "displayNameJa": "永昌寺",
+        "preserveOriginalName": true
+      },
+      "reasonCode": "orthography-normalization",
+      "reasonJa": "原資料表記を保持したまま、同じsource identity relation groupに属する複数図、CODHの現代語訳、および台東区公式資料で確認できる寺号に基づき、プロジェクト表示名を「永昌寺」に正規化する提案です。原資料の誤字を確定するものではありません。",
+      "evidence": {
+        "basis": "official-source",
+        "urls": [
+          "https://codh.rois.ac.jp/edo-maps/owariya/21/1853/21-034.html.ja",
+          "https://codh.rois.ac.jp/edo-maps/owariya/17/1853/17-076.html.ja",
+          "https://codh.rois.ac.jp/edo-maps/owariya/13/1851/13-313.html.ja",
+          "https://codh.rois.ac.jp/edo-maps/dataset/",
+          "https://t-navi.city.taito.lg.jp/spot/1136",
+          "https://t-navi.city.taito.lg.jp/about/aboutus"
+        ],
+        "noteJa": "CODHの21-034は原資料表記、同relation groupの17-076と13-313は比較対象です。CODHの現代語訳と台東区役所観光課の公式観光情報ページで寺号「永昌寺」を確認しました。台東区ページはURLと資料名のみを出典として記録し、本文・画像を転載しません。同サイト利用規約とCODH datasetページを利用条件の確認先として記録し、CODHのCC BY 4.0 attributionを維持します。relationのpreferred role自体は正解根拠にしていません。"
+      },
+      "review": {
+        "status": "proposed",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "reviewNoteJa": null
+      }
     }
   ]
 }
