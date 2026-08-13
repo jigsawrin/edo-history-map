@@ -45,7 +45,7 @@
     "@eslint/js": "^10.0.1",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^26.1.2",
-    "eslint": "^10.8.0",
+    "eslint": "^10.8.1",
     "jsdom": "^26.0.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.66.0",
