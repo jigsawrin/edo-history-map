@@ -871,6 +871,8 @@ function main(): void {
           edoHistoricalLayer?.clearTemporarySupplemental();
           renderAggregatePlaceCard(infoCard, group, map.getContainer());
         },
+        undefined,
+        map,
       );
       historical.syncZoom(map.getZoom());
       edoHistoricalLayer = historical;
@@ -927,7 +929,7 @@ function main(): void {
     return promise;
   }
 
-  map.on("zoomend", () => edoHistoricalLayer?.syncZoom(map.getZoom()));
+  map.on("moveend zoomend", () => edoHistoricalLayer?.syncView(map.getZoom(), map.getPixelBounds()));
 
   interface HistoricalPlaceSelection {
     readonly datasetId: PointDatasetId;
@@ -984,7 +986,7 @@ function main(): void {
     if (selection.curatedGeneration !== undefined && selection.curatedGeneration !== curatedSelectionGeneration) return;
 
     if (selection.record.datasetId === "codh-edo-maps-places" && selection.source === "search") {
-      edoHistoricalLayer?.showTemporarySupplemental(selection.record.record, map.getZoom());
+      edoHistoricalLayer?.showTemporaryPlace(selection.record.record, map.getZoom());
     } else {
       edoHistoricalLayer?.clearTemporarySupplemental();
     }

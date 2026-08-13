@@ -625,6 +625,33 @@ a:focus-visible,
   width: 100%;
 }
 
+.edo-navigation-marker-shell {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.edo-navigation-marker {
+  align-items: center;
+  background: #fffdf7;
+  border: 2px solid #40352d;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 35%);
+  box-sizing: border-box;
+  color: #211b17;
+  display: flex;
+  font-size: 0.82rem;
+  font-weight: 800;
+  height: 38px;
+  justify-content: center;
+  line-height: 1;
+  min-width: 38px;
+  padding: 0.15rem;
+  width: 38px;
+}
+
 .aggregate-source-list {
   margin: 0.5rem 0;
   padding-left: 1.5rem;

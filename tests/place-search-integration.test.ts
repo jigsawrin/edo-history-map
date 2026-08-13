@@ -56,10 +56,11 @@ describe("地点検索と地図の統合", () => {
   });
 
   it("EDO補足markerのzoom同期と検索temporary表示を既存選択経路へ接続する", () => {
-    expect(main).toContain('map.on("zoomend", () => edoHistoricalLayer?.syncZoom(map.getZoom()))');
-    expect(main).toContain("showTemporarySupplemental(selection.record.record, map.getZoom())");
+    expect(main).toContain('map.on("moveend zoomend", () => edoHistoricalLayer?.syncView(map.getZoom(), map.getPixelBounds()))');
+    expect(main).toContain("showTemporaryPlace(selection.record.record, map.getZoom())");
     expect(main).toContain("edoHistoricalLayer?.clearTemporarySupplemental()");
     expect(main).toContain('selection.source === "search"');
+    expect(main.match(/map\.on\("moveend zoomend", \(\) => edoHistoricalLayer\?\.syncView/g)).toHaveLength(1);
   });
 });
 
