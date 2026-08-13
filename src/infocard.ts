@@ -118,7 +118,7 @@ export function renderAggregatePlaceCard(
 
   const note = document.createElement("p");
   note.className = "card-note";
-  note.textContent = "同じ名称・分類・座標を持つrelation groupの表示を集約しています。各原資料recordは保持されています。";
+  note.textContent = "複数の原資料で同じ名称・分類・座標として登録されているため、地図上ではまとめて表示しています。各原資料の情報は個別に保持されています。";
   container.append(note);
 
   const close = document.createElement("button");

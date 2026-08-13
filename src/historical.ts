@@ -105,6 +105,11 @@ export function createHistoricalLayer(
       const style = categoryStyle(aggregate.category);
       const size = aggregate.memberCount === 2 ? 28 : aggregate.memberCount === 3 ? 32 : 36;
       const accessibleName = `${aggregate.name}、原資料${aggregate.memberCount}件`;
+      const markerContent = document.createElement("span");
+      markerContent.className = "edo-aggregate-marker";
+      markerContent.textContent = String(aggregate.memberCount);
+      markerContent.setAttribute("aria-hidden", "true");
+      markerContent.style.setProperty("--edo-marker-color", style.color);
       const marker = L.marker([aggregate.latitude, aggregate.longitude], {
         pane: HISTORICAL_PANE,
         interactive: true,
@@ -113,7 +118,7 @@ export function createHistoricalLayer(
         alt: accessibleName,
         icon: L.divIcon({
           className: "edo-aggregate-marker-shell",
-          html: `<span class="edo-aggregate-marker" style="--edo-marker-color:${style.color}" aria-hidden="true">${aggregate.memberCount}</span>`,
+          html: markerContent,
           iconSize: [size, size],
           iconAnchor: [size / 2, size / 2],
         }),

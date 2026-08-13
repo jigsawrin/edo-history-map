@@ -107,7 +107,12 @@ describe("createHistoricalLayer", () => {
     const firstAggregate = layer.normalLayer.getLayers()[0] as L.Marker;
     expect(firstAggregate.options.title).toBe("桜田御門、原資料2件");
     expect(firstAggregate.options.alt).toBe("桜田御門、原資料2件");
-    expect((firstAggregate.options.icon as L.DivIcon).options.html).toContain(">2</span>");
+    const markerContent = (firstAggregate.options.icon as L.DivIcon).options.html;
+    expect(markerContent).toBeInstanceOf(HTMLElement);
+    expect((markerContent as HTMLElement).className).toBe("edo-aggregate-marker");
+    expect((markerContent as HTMLElement).textContent).toBe("2");
+    expect((markerContent as HTMLElement).getAttribute("aria-hidden")).toBe("true");
+    expect((markerContent as HTMLElement).style.getPropertyValue("--edo-marker-color")).toBe("#7b1fa2");
     firstAggregate.fire("click");
     expect(onAggregate).toHaveBeenCalledOnce();
     expect(onAggregate.mock.calls[0]![0].members.map((member: { sourceIndex: number }) => member.sourceIndex)).toEqual([0, 8105]);

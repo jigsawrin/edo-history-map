@@ -212,6 +212,9 @@ describe("renderAggregatePlaceCard", () => {
     renderAggregatePlaceCard(container, group);
     expect(container.querySelector("h2")?.textContent).toBe("牛込御門");
     expect(container.textContent).toContain("同一座標の原資料4件");
+    expect(container.textContent).toContain("複数の原資料で同じ名称・分類・座標として登録されているため、地図上ではまとめて表示しています。各原資料の情報は個別に保持されています。");
+    expect(container.textContent).not.toContain("relation group");
+    expect(container.textContent).not.toContain("record");
     expect([...container.querySelectorAll("li strong")].map((item) => item.textContent)).toEqual(["1-002", "2-004", "3-009", "4-011"]);
     expect(container.querySelectorAll("a")).toHaveLength(4);
     expect([...container.querySelectorAll("a")].every((link) => link.rel.includes("noopener") && link.href.startsWith("https://codh.rois.ac.jp/"))).toBe(true);
