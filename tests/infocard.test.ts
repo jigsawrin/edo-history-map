@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { renderPlaceCard, renderNoData } from "../src/infocard";
+import { renderAggregatePlaceCard, renderPlaceCard, renderNoData } from "../src/infocard";
 import type { PlaceFeature } from "../src/validate";
 import { createEdoCardResolver } from "../src/edo-card-projection";
 
@@ -190,5 +190,34 @@ describe("renderNoData", () => {
     renderNoData(container);
     container.querySelector("button")?.click();
     expect(container.hidden).toBe(true);
+  });
+});
+
+describe("renderAggregatePlaceCard", () => {
+  it("renders the shared identity and every source in sourceIndex order", () => {
+    const group = {
+      groupId: `edo-map-aggregate-${"a".repeat(64)}`,
+      name: "牛込御門",
+      category: "施設",
+      longitude: 139.7,
+      latitude: 35.7,
+      memberCount: 4,
+      members: [
+        { sourceIndex: 1, entryId: "1-002", sheet: "図1", sourceUrl: "https://codh.rois.ac.jp/edo-maps/owariya/01/1849/1-002.html.ja" },
+        { sourceIndex: 3, entryId: "2-004", sheet: "図2", sourceUrl: "https://codh.rois.ac.jp/edo-maps/owariya/02/1849/2-004.html.ja" },
+        { sourceIndex: 8, entryId: "3-009", sheet: "図3", sourceUrl: "https://codh.rois.ac.jp/edo-maps/owariya/03/1849/3-009.html.ja" },
+        { sourceIndex: 10, entryId: "4-011", sheet: "図4", sourceUrl: "https://codh.rois.ac.jp/edo-maps/owariya/04/1849/4-011.html.ja" },
+      ],
+    } as const;
+    renderAggregatePlaceCard(container, group);
+    expect(container.querySelector("h2")?.textContent).toBe("牛込御門");
+    expect(container.textContent).toContain("同一座標の原資料4件");
+    expect(container.textContent).toContain("複数の原資料で同じ名称・分類・座標として登録されているため、地図上ではまとめて表示しています。各原資料の情報は個別に保持されています。");
+    expect(container.textContent).not.toContain("relation group");
+    expect(container.textContent).not.toContain("record");
+    expect([...container.querySelectorAll("li strong")].map((item) => item.textContent)).toEqual(["1-002", "2-004", "3-009", "4-011"]);
+    expect(container.querySelectorAll("a")).toHaveLength(4);
+    expect([...container.querySelectorAll("a")].every((link) => link.rel.includes("noopener") && link.href.startsWith("https://codh.rois.ac.jp/"))).toBe(true);
+    expect(container.textContent).not.toContain("preferred");
   });
 });

@@ -73,7 +73,7 @@ describe("createHistoricalLayer", () => {
     expect(onSelect).not.toHaveBeenCalledWith(hidden);
   });
 
-  it("keeps 8,788 raw sources while an approved hide yields 8,787 markers", () => {
+  it("keeps 8,788 raw sources while applying an approved hide before presentation grouping", () => {
     const sources = parsePlacesGeoJson(readFileSync(join(__dirname, "../public/data/edo-places.geojson"), "utf8"));
     const hiddenSource = sources[0]!;
     const projection = {
@@ -87,20 +87,35 @@ describe("createHistoricalLayer", () => {
     const onSelect = vi.fn();
     const layer = createHistoricalLayer(sources, onSelect, document.createElement("div"), createEdoMapSourceHiddenPredicate(projection, sources));
     expect(sources).toHaveLength(8788);
-    expect(layer.normalMarkerCount + layer.supplementalMarkerCount).toBe(8787);
-    const firstVisible = sources[1]!;
-    (layer.normalLayer.getLayers()[0] as L.CircleMarker).fire("click");
-    expect(onSelect.mock.calls[0]![0]).toBe(firstVisible);
+    expect(layer.presentationMarkerCount).toBe(8234);
+    const firstIndividualMarker = layer.normalLayer.getLayers().find((item) => item instanceof L.CircleMarker) as L.CircleMarker;
+    firstIndividualMarker.fire("click");
+    expect(sources).toContain(onSelect.mock.calls[0]![0]);
+    expect(onSelect).not.toHaveBeenCalledWith(hiddenSource);
     expect(sources[0]).toBe(hiddenSource);
   }, 30_000);
 
-  it("partitions all 8,788 production markers into 7,731 normal and 1,057 supplemental markers", () => {
+  it("presents 528 aggregate markers while leaving all 1,057 supplemental markers unchanged", () => {
     const sources = parsePlacesGeoJson(readFileSync(join(__dirname, "../public/data/edo-places.geojson"), "utf8"));
-    const layer = createHistoricalLayer(sources, () => {}, document.createElement("div"));
+    const onAggregate = vi.fn();
+    const layer = createHistoricalLayer(sources, () => {}, document.createElement("div"), undefined, onAggregate);
     expect(sources).toHaveLength(8788);
-    expect(layer.normalMarkerCount).toBe(7731);
+    expect(layer.normalMarkerCount).toBe(7177);
     expect(layer.supplementalMarkerCount).toBe(1057);
-    expect(layer.normalMarkerCount + layer.supplementalMarkerCount).toBe(8788);
+    expect(layer.aggregateMarkerCount).toBe(528);
+    expect(layer.presentationMarkerCount).toBe(8234);
+    const firstAggregate = layer.normalLayer.getLayers()[0] as L.Marker;
+    expect(firstAggregate.options.title).toBe("桜田御門、原資料2件");
+    expect(firstAggregate.options.alt).toBe("桜田御門、原資料2件");
+    const markerContent = (firstAggregate.options.icon as L.DivIcon).options.html;
+    expect(markerContent).toBeInstanceOf(HTMLElement);
+    expect((markerContent as HTMLElement).className).toBe("edo-aggregate-marker");
+    expect((markerContent as HTMLElement).textContent).toBe("2");
+    expect((markerContent as HTMLElement).getAttribute("aria-hidden")).toBe("true");
+    expect((markerContent as HTMLElement).style.getPropertyValue("--edo-marker-color")).toBe("#7b1fa2");
+    firstAggregate.fire("click");
+    expect(onAggregate).toHaveBeenCalledOnce();
+    expect(onAggregate.mock.calls[0]![0].members.map((member: { sourceIndex: number }) => member.sourceIndex)).toEqual([0, 8105]);
   }, 30_000);
   it("地点からレイヤーグループを作成できる", () => {
     const pane = document.createElement("div");

@@ -1,5 +1,6 @@
 import type { PlaceFeature } from "./validate";
 import { resolveEdoCard, type EdoCardResolver } from "./edo-card-projection";
+import type { EdoMapAggregateGroup } from "./edo-map-presentation-projection";
 
 /**
  * 歴史情報カードの描画。
@@ -73,6 +74,63 @@ export function renderPlaceCard(
   });
   container.append(close);
   return true;
+}
+
+export function renderAggregatePlaceCard(
+  container: HTMLElement,
+  group: EdoMapAggregateGroup,
+  returnFocus?: HTMLElement,
+): void {
+  container.replaceChildren();
+  container.hidden = false;
+
+  const heading = document.createElement("h2");
+  heading.textContent = group.name;
+  container.append(heading);
+
+  const summary = document.createElement("dl");
+  addRow(summary, "分類", group.category);
+  addRow(summary, "資料構成", `同一座標の原資料${group.memberCount}件`);
+  container.append(summary);
+
+  const memberHeading = document.createElement("h3");
+  memberHeading.textContent = "原資料";
+  container.append(memberHeading);
+  const list = document.createElement("ol");
+  list.className = "aggregate-source-list";
+  for (const member of group.members) {
+    const item = document.createElement("li");
+    const id = document.createElement("strong");
+    id.textContent = member.entryId;
+    item.append(id, document.createTextNode(` — ${member.sheet}`));
+    if (member.sourceUrl) {
+      item.append(document.createTextNode(" "));
+      const link = document.createElement("a");
+      link.href = member.sourceUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "CODHで確認";
+      item.append(link);
+    }
+    list.append(item);
+  }
+  container.append(list);
+
+  const note = document.createElement("p");
+  note.className = "card-note";
+  note.textContent = "複数の原資料で同じ名称・分類・座標として登録されているため、地図上ではまとめて表示しています。各原資料の情報は個別に保持されています。";
+  container.append(note);
+
+  const close = document.createElement("button");
+  close.type = "button";
+  close.textContent = "閉じる";
+  close.setAttribute("aria-label", "地点情報を閉じる");
+  close.addEventListener("click", () => {
+    container.hidden = true;
+    container.replaceChildren();
+    returnFocus?.focus();
+  });
+  container.append(close);
 }
 
 /** データがない地点向けの表示。 */
