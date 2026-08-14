@@ -122,6 +122,22 @@ describe("EDO static place projection", () => {
     expect(canonicalEdoStaticLegacyLayout(places, STATIC_EDO_PER_PAGE)[targetPosition]).toEqual(beforeLayout);
   });
 
+  it("applies the approved 8-231 display name without changing its legacy URL, anchor, page, or slot", () => {
+    const targetPosition = places.findIndex((place) => place.sourceIndex === 8436);
+    const target = places[targetPosition]!;
+    const beforeLayout = canonicalEdoStaticLegacyLayout(places, STATIC_EDO_PER_PAGE)[targetPosition]!;
+    const generated = generate(checkedIn);
+    const page = generated.files.get(pagePath(targetPosition))!;
+    const article = articleHtml(page, target.anchor);
+    const after = generated.edoPlaces[targetPosition]!;
+    expect(article).toContain(`id="${target.anchor}"`);
+    expect(article).toContain(`href="#${target.anchor}"`);
+    expect(article).toContain("<h3>仙寿院</h3>");
+    expect(article).not.toContain("千寿院");
+    expect(after).toMatchObject({ key: target.key, anchor: target.anchor, sourceIndex: 8436, displayName: "仙寿院", hidden: false });
+    expect(canonicalEdoStaticLegacyLayout(places, STATIC_EDO_PER_PAGE)[targetPosition]).toEqual(beforeLayout);
+  });
+
   it("keeps an approved hidden record in the same anchor/page/slot as a generic tombstone", () => {
     const target = places[0]!;
     const projection = projectionFor(target, { displayName: null, hidden: true });

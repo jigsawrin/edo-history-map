@@ -32,7 +32,7 @@ function value(overrides: EdoCardProjection["overrides"]): EdoCardProjection {
 }
 
 describe("Edo card projection", () => {
-  it("keeps the checked-in runtime projection minimal with two approved renames", () => {
+  it("keeps the checked-in runtime projection minimal with three approved renames", () => {
     expect(validateEdoCardProjection(projection)).toEqual(projection);
     expect(projection).toEqual({
       schemaVersion: 1,
@@ -55,6 +55,13 @@ describe("Edo card projection", () => {
           displayName: "永昌寺",
           hidden: false,
         },
+        {
+          sourceRecordId: "8-231",
+          sourceIndex: 8436,
+          featureSha256: "12b766555f068948d5902d38ad361e925386f4c64cf59a3112d9c76c55724f15",
+          displayName: "仙寿院",
+          hidden: false,
+        },
       ],
     });
   });
@@ -74,6 +81,15 @@ describe("Edo card projection", () => {
       hidden: false,
       displayName: "永昌寺",
       sourceName: "永照寺",
+    });
+  });
+
+  it("resolves the approved 8-231 heading and preserves its source name", () => {
+    const target = { ...place, entryId: "8-231", name: "千寿院" };
+    expect(createEdoCardResolver(projection)(target)).toEqual({
+      hidden: false,
+      displayName: "仙寿院",
+      sourceName: "千寿院",
     });
   });
 
