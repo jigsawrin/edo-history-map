@@ -21,7 +21,10 @@ const temporaryRoots: string[] = [];
 
 interface MutableRightsRegistry {
   sources: Array<{
+    sourceId?: string;
+    accessible?: string;
     commercialUse: string;
+    reproduction?: string;
     modification: string;
     summarization: string;
     thirdPartyRights: { status: string };
@@ -45,6 +48,34 @@ function approvedCatalog() {
     segment.humanVerified = true;
   }
   return value;
+}
+
+function addRestrictedFactVerificationSource(value: ReturnType<typeof approvedCatalog>, rightsValue: typeof rights) {
+  rightsValue.sources.push({
+    sourceId: "restricted-fact-fixture",
+    title: "Restricted fact fixture",
+    provider: "Fixture provider",
+    sourceUrl: "https://example.com/facts",
+    termsUrl: "https://example.com/terms",
+    rightsBasisUrls: ["https://example.com/terms"],
+    rightsCheckedAt: "2026-08-15",
+    rightsBasisNote: "Fact verification only fixture.",
+    accessible: "confirmed",
+    commercialUse: "unknown",
+    reproduction: "prohibited",
+    modification: "unknown",
+    summarization: "unknown",
+    attribution: { required: false, requiredText: null, licenseNotice: null, modificationNotice: null },
+    thirdPartyRights: { status: "restricted", note: "No text is reused from this fixture." },
+    scopeNote: "Only a short fact is checked; wording is not reused.",
+  });
+  value.descriptions[0].evidence.push({
+    evidenceId: "restricted-fact-check",
+    sourceId: "restricted-fact-fixture",
+    role: "fact-verification",
+    verifiedFacts: ["Fixture fact was checked."],
+  });
+  value.descriptions[0].content.ja.segments[0].evidenceIds.push("restricted-fact-check");
 }
 
 describe("historical place description foundation", () => {
@@ -106,6 +137,35 @@ describe("historical place description foundation", () => {
     expect(() => createHistoricalPlaceDescriptionPublicProjection(value, rights, source)).toThrow(/text-reuse/);
   });
 
+  it("restricted reuse rightsのsourceをfact-verificationだけに使う場合は公開gateを通す", () => {
+    const value = approvedCatalog();
+    const changedRights = clone(rights);
+    addRestrictedFactVerificationSource(value, changedRights);
+    expect(() => createHistoricalPlaceDescriptionPublicProjection(value, changedRights, source)).not.toThrow();
+  });
+
+  it("restricted fact fixtureをtext-reuseに変更すると公開gateが拒否する", () => {
+    const value = approvedCatalog();
+    const changedRights = clone(rights);
+    addRestrictedFactVerificationSource(value, changedRights);
+    value.descriptions[0].evidence.at(-1)!.role = "text-reuse";
+    expect(() => createHistoricalPlaceDescriptionPublicProjection(value, changedRights, source)).toThrow(/unknown|reproduction permission/);
+  });
+
+  it("fact-verification sourceにも共通gateのaccessibilityを要求する", () => {
+    const value = approvedCatalog();
+    const changedRights = clone(rights);
+    addRestrictedFactVerificationSource(value, changedRights);
+    changedRights.sources.at(-1)!.accessible = "unknown";
+    expect(() => createHistoricalPlaceDescriptionPublicProjection(value, changedRights, source)).toThrow(/not confirmed accessible/);
+  });
+
+  it("direct-quoteはschema v1のpublic projectionで拒否する", () => {
+    const value = approvedCatalog();
+    value.descriptions[0].compositionMode = "direct-quote";
+    expect(() => createHistoricalPlaceDescriptionPublicProjection(value, rights, source)).toThrow(/direct-quote is not publishable/);
+  });
+
   it("claim evidence欠落とAI未確認を拒否する", () => {
     const noEvidence = approvedCatalog();
     noEvidence.descriptions[0].content.ja.segments[0].evidenceIds = [];
@@ -151,6 +211,17 @@ describe("historical place description foundation", () => {
     expect(auditHistoricalPlaceDescriptionPrivateLeakage(root)).toEqual([
       "private description catalog leaked to public/historical-place-descriptions.json",
     ]);
+  });
+
+  it("別名JS bundle内のprivate markerを検出しpublic projection fieldは誤検出しない", () => {
+    const root = mkdtempSync(join(tmpdir(), "historical-description-bundle-")); temporaryRoots.push(root);
+    mkdirSync(join(root, "dist", "assets"), { recursive: true });
+    writeFileSync(join(root, "dist", "assets", "app-a1b2c3.js"), 'const publicProjection={descriptionId:"ok",sourceIdentity:{},epistemicSegments:[]};const leaked={verifiedFacts:["private"]};');
+    expect(auditHistoricalPlaceDescriptionPrivateLeakage(root)).toEqual([
+      "private description marker verifiedFacts leaked to dist/assets/app-a1b2c3.js",
+    ]);
+    writeFileSync(join(root, "dist", "assets", "app-a1b2c3.js"), 'const publicProjection={descriptionId:"ok",sourceIdentity:{},epistemicSegments:[],canonicalContentSha256:"abc"};');
+    expect(auditHistoricalPlaceDescriptionPrivateLeakage(root)).toEqual([]);
   });
 
   it("public projectionのprivate field混入を拒否する", () => {

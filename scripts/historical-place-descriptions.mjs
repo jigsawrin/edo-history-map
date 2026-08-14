@@ -50,6 +50,7 @@ const PUBLIC_SOURCE_KEYS = ["sourceId", "title", "provider", "sourceUrl", "attri
 const PUBLIC_ATTRIBUTION_KEYS = ["requiredText", "licenseNotice", "modificationNotice"];
 const PUBLIC_TRANSLATION_KEYS = ["locale", "text", "translationOfContentSha256"];
 const PRIVATE_MARKERS = ["verifiedFacts", "reviewNote", "rightsBasisNote", "scopeNote", "thirdPartyRights", "humanVerified", "aiUse"];
+const TEXT_ASSET_EXTENSIONS = new Set([".css", ".html", ".js", ".json", ".map", ".mjs", ".svg", ".txt", ".xml"]);
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -224,11 +225,19 @@ export function validateHistoricalPlaceDescriptionCatalog(value, sourceGeoJson, 
   return Object.freeze({ ...deepClone(value), descriptions: Object.freeze(descriptions) });
 }
 
-function assertNoUnknownRights(source, label) {
+function assertCommonSourceGate(source, label) {
   assert(source.termsUrl && source.rightsCheckedAt, `${label} lacks terms URL or rights checked date`);
-  assert(source.accessible !== "unknown" && source.accessible === "confirmed", `${label} is not confirmed accessible`);
+  assert(source.accessible === "confirmed", `${label} is not confirmed accessible`);
+  assert(source.scopeNote, `${label} lacks a checked scope`);
+}
+
+function assertTextReuseGate(source, compositionMode, label) {
   for (const field of ["commercialUse", "reproduction", "modification", "summarization"]) assert(source[field] !== "unknown", `${label}.${field} is unknown`);
   assert(source.commercialUse === "allowed", `${label} does not allow commercial use`);
+  assert(source.reproduction === "allowed", `${label} lacks reproduction permission`);
+  if (compositionMode === "editorial-summary") {
+    assert(source.modification === "allowed" && source.summarization === "allowed", `${label} lacks modification/summarization permission`);
+  }
   assert(source.thirdPartyRights.status === "cleared-for-scope", `${label} has unresolved third-party rights`);
   if (source.attribution.required) assert(source.attribution.requiredText && source.attribution.licenseNotice, `${label} cannot generate attribution`);
 }
@@ -252,23 +261,22 @@ export function createHistoricalPlaceDescriptionPublicProjection(catalogValue, r
   const catalog = validateHistoricalPlaceDescriptionCatalog(catalogValue, sourceGeoJson, rightsRegistryValue);
   const sourceById = new Map(rights.sources.map((source) => [source.sourceId, source]));
   const descriptions = catalog.descriptions.filter((description) => description.status === "approved").map((description) => {
+    assert(description.compositionMode === "editorial-summary", `${description.descriptionId} direct-quote is not publishable in schema v1`);
     assert(description.review.reviewedBy && description.review.reviewedAt, `${description.descriptionId} lacks reviewer/date`);
     const evidenceById = new Map(description.evidence.map((evidence) => [evidence.evidenceId, evidence]));
     for (const segment of description.content.ja.segments) {
       assert(segment.humanVerified, `${description.descriptionId}/${segment.segmentId} is AI-only or not human verified`);
       assert(segment.evidenceIds.length > 0 && segment.evidenceIds.every((id) => evidenceById.has(id)), `${description.descriptionId}/${segment.segmentId} lacks evidence`);
     }
+    const allEvidenceSources = [...new Set(description.evidence.map((evidence) => evidence.sourceId))].map((id) => sourceById.get(id));
+    allEvidenceSources.forEach((source) => assertCommonSourceGate(source, `${description.descriptionId}/${source.sourceId}`));
     const usedEvidence = [...new Set(description.content.ja.segments.flatMap((segment) => segment.evidenceIds))].map((id) => evidenceById.get(id));
     const usedSources = [...new Set(usedEvidence.map((evidence) => evidence.sourceId))].map((id) => sourceById.get(id));
-    usedSources.forEach((source) => assertNoUnknownRights(source, `${description.descriptionId}/${source.sourceId}`));
     const reuseEvidence = usedEvidence.filter((evidence) => evidence.role === "text-reuse");
     assert(reuseEvidence.length > 0, `${description.descriptionId} lacks text-reuse evidence`);
     for (const evidence of reuseEvidence) {
       const source = sourceById.get(evidence.sourceId);
-      assert(source.reproduction === "allowed", `${description.descriptionId}/${source.sourceId} lacks reproduction permission`);
-      if (description.compositionMode === "editorial-summary") {
-        assert(source.modification === "allowed" && source.summarization === "allowed", `${description.descriptionId}/${source.sourceId} lacks modification/summarization permission`);
-      }
+      assertTextReuseGate(source, description.compositionMode, `${description.descriptionId}/${source.sourceId}`);
     }
     const canonicalContentSha256 = canonicalDescriptionContentSha256(description.content.ja.text);
     const translations = description.translations.filter((translation) => translation.status === "approved" && translation.translationOfContentSha256 === canonicalContentSha256).map((translation) => Object.freeze({ locale: translation.locale, text: translation.text, translationOfContentSha256: translation.translationOfContentSha256 }));
@@ -329,6 +337,13 @@ export function auditHistoricalPlaceDescriptionPrivateLeakage(root) {
       const rel = relative(root, path).replaceAll("\\", "/");
       const name = rel.split("/").at(-1);
       if (name === DESCRIPTION_RIGHTS_PATH.split("/").at(-1) || name === DESCRIPTION_CATALOG_PATH.split("/").at(-1)) errors.push(`private description catalog leaked to ${rel}`);
+      const extension = name?.includes(".") ? `.${name.split(".").at(-1)?.toLowerCase()}` : "";
+      if (TEXT_ASSET_EXTENSIONS.has(extension)) {
+        const contents = readFileSync(path, "utf8");
+        for (const marker of PRIVATE_MARKERS) {
+          if (contents.includes(marker)) errors.push(`private description marker ${marker} leaked to ${rel}`);
+        }
+      }
     }
   }
   return errors;
