@@ -272,11 +272,14 @@ export function createHistoricalPlaceDescriptionPublicProjection(catalogValue, r
     allEvidenceSources.forEach((source) => assertCommonSourceGate(source, `${description.descriptionId}/${source.sourceId}`));
     const usedEvidence = [...new Set(description.content.ja.segments.flatMap((segment) => segment.evidenceIds))].map((id) => evidenceById.get(id));
     const usedSources = [...new Set(usedEvidence.map((evidence) => evidence.sourceId))].map((id) => sourceById.get(id));
-    const reuseEvidence = usedEvidence.filter((evidence) => evidence.role === "text-reuse");
-    assert(reuseEvidence.length > 0, `${description.descriptionId} lacks text-reuse evidence`);
-    for (const evidence of reuseEvidence) {
-      const source = sourceById.get(evidence.sourceId);
-      assertTextReuseGate(source, description.compositionMode, `${description.descriptionId}/${source.sourceId}`);
+    for (const segment of description.content.ja.segments) {
+      const segmentEvidence = segment.evidenceIds.map((id) => evidenceById.get(id));
+      const publicationBasis = segmentEvidence.filter((evidence) => evidence.role === "text-reuse");
+      assert(publicationBasis.length > 0, `${description.descriptionId}/${segment.segmentId} lacks text-reuse publication basis`);
+      for (const evidence of publicationBasis) {
+        const source = sourceById.get(evidence.sourceId);
+        assertTextReuseGate(source, description.compositionMode, `${description.descriptionId}/${segment.segmentId}/${source.sourceId}`);
+      }
     }
     const canonicalContentSha256 = canonicalDescriptionContentSha256(description.content.ja.text);
     const translations = description.translations.filter((translation) => translation.status === "approved" && translation.translationOfContentSha256 === canonicalContentSha256).map((translation) => Object.freeze({ locale: translation.locale, text: translation.text, translationOfContentSha256: translation.translationOfContentSha256 }));

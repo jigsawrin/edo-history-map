@@ -109,7 +109,7 @@ describe("historical place description foundation", () => {
     expect(() => validateDescriptionRightsRegistry(incompleteAttribution)).toThrow(/attribution/);
   });
 
-  it("approved editorial-summaryのpositive rights gate", () => {
+  it("各segmentにNDL text-reuseがあるapproved editorial-summaryは通す", () => {
     const projection = createHistoricalPlaceDescriptionPublicProjection(approvedCatalog(), rights, source);
     expect(projection.approvedDescriptionCount).toBe(1);
     expect(projection.descriptions[0]).toMatchObject({
@@ -134,17 +134,30 @@ describe("historical place description foundation", () => {
   it("fact-verificationだけではtext reuseにならない", () => {
     const value = approvedCatalog();
     value.descriptions[0].evidence[1].role = "fact-verification";
-    expect(() => createHistoricalPlaceDescriptionPublicProjection(value, rights, source)).toThrow(/text-reuse/);
+    expect(() => createHistoricalPlaceDescriptionPublicProjection(value, rights, source)).toThrow(/text-reuse publication basis/);
   });
 
-  it("restricted reuse rightsのsourceをfact-verificationだけに使う場合は公開gateを通す", () => {
+  it("segment Aがfact-verification onlyならsegment Bにtext-reuseがあっても拒否する", () => {
+    const value = approvedCatalog();
+    value.descriptions[0].evidence.push({
+      evidenceId: "codh-fact-only",
+      sourceId: "codh-edo-map-place-dataset",
+      role: "fact-verification",
+      verifiedFacts: ["Fixture fact was checked."],
+    });
+    value.descriptions[0].content.ja.segments[0].evidenceIds = ["codh-fact-only"];
+    expect(value.descriptions[0].content.ja.segments[1].evidenceIds).toContain("ndl-zojoji-facts");
+    expect(() => createHistoricalPlaceDescriptionPublicProjection(value, rights, source)).toThrow(/zojoji-role lacks text-reuse publication basis/);
+  });
+
+  it("restricted fact-verificationとallowed text-reuseを同一segmentで併用できる", () => {
     const value = approvedCatalog();
     const changedRights = clone(rights);
     addRestrictedFactVerificationSource(value, changedRights);
     expect(() => createHistoricalPlaceDescriptionPublicProjection(value, changedRights, source)).not.toThrow();
   });
 
-  it("restricted fact fixtureをtext-reuseに変更すると公開gateが拒否する", () => {
+  it("fact-only evidenceをtext-reuseへ偽装すると既存reuse rights gateが拒否する", () => {
     const value = approvedCatalog();
     const changedRights = clone(rights);
     addRestrictedFactVerificationSource(value, changedRights);
