@@ -155,6 +155,19 @@ describe("renderPlaceCard", () => {
     expect(container.textContent).toContain("永照寺");
   });
 
+  it("renders the approved 8-231 heading with its preserved source name", () => {
+    const raw = {
+      ...place(),
+      entryId: "8-231",
+      name: "千寿院",
+      sourceUrl: "https://codh.rois.ac.jp/edo-maps/owariya/08/1850/8-231.html.ja",
+    };
+    expect(renderPlaceCard(container, raw)).toBe(true);
+    expect(container.querySelector("h2")?.textContent).toBe("仙寿院");
+    expect(container.textContent).toContain("原資料表記");
+    expect(container.textContent).toContain("千寿院");
+  });
+
   it("approved hideは内容もfocusable elementも描画せずfail closedにする", () => {
     const raw = place();
     const resolver = createEdoCardResolver({

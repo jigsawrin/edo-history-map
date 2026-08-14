@@ -115,10 +115,25 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(places.every((place) => place.applicability.map && place.applicability.card && place.applicability["static-page"])).toBe(true);
   });
 
+  it("derives the approved 8-231 rename without changing its source identity", () => {
+    const target = places[8436]!;
+    expect(target.displayName).toEqual({
+      value: "仙寿院",
+      basis: "approved-rename",
+      sourceRecordId: "8-231",
+      curationCandidateId: "edo-place-curation-rename-8436",
+    });
+    expect(target.curation.rename).toEqual({ decision: "approved", candidateId: "edo-place-curation-rename-8436" });
+    expect(target.reviewState).toBe("curation-approved");
+    expect(target.applicability).toEqual({ map: true, search: true, card: true, "static-page": true });
+    expect(target.reverseMapping).toEqual([expect.objectContaining({ sourceRecordId: "8-231", sourceIndex: 8436 })]);
+    expect(source.features[8436]?.properties).toMatchObject({ id: "8-231", name: "千寿院" });
+  });
+
   it("is deterministic for an empty curation catalog", () => {
     const again = deriveEdoPlaces(source, identity, curation);
     expect(canonicalEdoDerivedPlacesSha256(again)).toBe(canonicalEdoDerivedPlacesSha256(places));
-    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("970aa6a5b3d9335cdb78b3293892663e2503ac38a1687293b375f4277371b2e0");
+    expect(canonicalEdoDerivedPlacesSha256(places)).toBe("bdf8a37402934d45eb7617b1b1d5e13e0d08bbc21be8e95ff69009f3f022f015");
   });
 
   it("rejects unknown keys", () => {
@@ -216,6 +231,7 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(projection.overrides).toEqual([
       expect.objectContaining({ sourceRecordId: "20-246", sourceIndex: 4207, displayName: "太田摂津守", hidden: false }),
       expect.objectContaining({ sourceRecordId: "21-034", sourceIndex: 4385, displayName: "永昌寺", hidden: false }),
+      expect.objectContaining({ sourceRecordId: "8-231", sourceIndex: 8436, displayName: "仙寿院", hidden: false }),
     ]);
     expect(() => validateEdoSearchProjection(projection, places, source)).not.toThrow();
   });
@@ -227,6 +243,7 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(projection.overrides).toEqual([
       expect.objectContaining({ sourceRecordId: "20-246", sourceIndex: 4207, displayName: "太田摂津守", hidden: false }),
       expect.objectContaining({ sourceRecordId: "21-034", sourceIndex: 4385, displayName: "永昌寺", hidden: false }),
+      expect.objectContaining({ sourceRecordId: "8-231", sourceIndex: 8436, displayName: "仙寿院", hidden: false }),
     ]);
     expect(() => validateEdoDerivedStaticPlaceProjection(projection, places, source, staticPlaces)).not.toThrow();
   });
@@ -248,6 +265,7 @@ describe("Edo derived place non-runtime foundation", () => {
     expect(projection.overrides).toEqual([
       expect.objectContaining({ sourceRecordId: "20-246", sourceIndex: 4207, displayName: "太田摂津守", hidden: false }),
       expect.objectContaining({ sourceRecordId: "21-034", sourceIndex: 4385, displayName: "永昌寺", hidden: false }),
+      expect.objectContaining({ sourceRecordId: "8-231", sourceIndex: 8436, displayName: "仙寿院", hidden: false }),
     ]);
     expect(() => validateEdoDerivedCardProjection(projection, places, source)).not.toThrow();
   });
