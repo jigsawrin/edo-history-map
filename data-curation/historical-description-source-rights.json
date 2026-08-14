@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "catalogStatus": "active",
+  "sources": [
+    {
+      "sourceId": "codh-edo-map-place-dataset",
+      "title": "江戸マップ地名データセット",
+      "provider": "ROIS-DS人文学オープンデータ共同利用センター",
+      "sourceUrl": "https://codh.rois.ac.jp/edo-maps/dataset/",
+      "termsUrl": "https://creativecommons.org/licenses/by/4.0/deed.ja",
+      "rightsBasisUrls": [
+        "https://codh.rois.ac.jp/edo-maps/dataset/"
+      ],
+      "rightsCheckedAt": "2026-08-14",
+      "rightsBasisNote": "公式dataset pageがCC BY 4.0と出典表示例を明示していることを確認しました。datasetのidentity、原資料表記、位置情報だけを対象とし、リンク先画像や第三者資料は対象外です。",
+      "accessible": "confirmed",
+      "commercialUse": "allowed",
+      "reproduction": "allowed",
+      "modification": "allowed",
+      "summarization": "allowed",
+      "attribution": {
+        "required": true,
+        "requiredText": "『江戸マップ地名データセット』（ROIS-DS人文学オープンデータ共同利用センター作成）doi:10.20676/00000445",
+        "licenseNotice": "CC BY 4.0",
+        "modificationNotice": "編集・加工した場合は変更内容を表示する。"
+      },
+      "thirdPartyRights": {
+        "status": "cleared-for-scope",
+        "note": "dataset fieldsだけを利用対象とし、原図画像、外部リンク先、第三者コンテンツは再利用対象に含めません。"
+      },
+      "scopeNote": "東京・江戸地点のsource identity、原資料表記、分類、収載図、推定位置の確認に限定します。"
+    },
+    {
+      "sourceId": "ndl-landmarks-zojoji",
+      "title": "錦絵と写真でめぐる日本の名所 / 増上寺・芝公園",
+      "provider": "国立国会図書館",
+      "sourceUrl": "https://www.ndl.go.jp/landmarks/sights/zojoji",
+      "termsUrl": "https://www.ndl.go.jp/landmarks/about",
+      "rightsBasisUrls": [
+        "https://www.ndl.go.jp/sitepolicy/terms",
+        "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
+      ],
+      "rightsCheckedAt": "2026-08-14",
+      "rightsBasisNote": "電子展示会の「ご利用について」が掲載解説の申込不要・商用利用可・出典表示必要を明示し、NDL利用規約がPDL1.0準拠で複製、翻訳、変形等を許可していることを確認しました。",
+      "accessible": "confirmed",
+      "commercialUse": "allowed",
+      "reproduction": "allowed",
+      "modification": "allowed",
+      "summarization": "allowed",
+      "attribution": {
+        "required": true,
+        "requiredText": "出典：国立国会図書館「錦絵と写真でめぐる日本の名所」",
+        "licenseNotice": "公共データ利用規約（第1.0版）準拠",
+        "modificationNotice": "国立国会図書館の掲載解説をもとに本プロジェクトが独自に編集・要約した旨を表示する。"
+      },
+      "thirdPartyRights": {
+        "status": "cleared-for-scope",
+        "note": "国立国会図書館作成の掲載解説だけを対象とします。掲載画像、採録元資料、第三者名義コンテンツは再利用しません。"
+      },
+      "scopeNote": "増上寺・芝公園pageのNDL作成解説を史実確認とeditorial summary作成に利用します。画像や採録元資料は対象外です。"
+    }
+  ]
+}

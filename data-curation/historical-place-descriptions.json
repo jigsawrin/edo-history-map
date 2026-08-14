@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "catalogStatus": "active",
+  "sourceDatasetId": "codh-edo-maps-places",
+  "sourceDataPath": "public/data/edo-places.geojson",
+  "sourceDataSha256": "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
+  "sourceFeatureCount": 8788,
+  "descriptions": [
+    {
+      "descriptionId": "historical-place-description-edo-7346",
+      "target": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 7346,
+        "entryId": "4-349",
+        "sourceFeatureSha256": "e4158b329af9e3b357e89c66896ddaa03c2b1ada2a9961d6b0c266ed9f3118b1"
+      },
+      "compositionMode": "editorial-summary",
+      "status": "proposed",
+      "canonicalLocale": "ja",
+      "content": {
+        "ja": {
+          "text": "増上寺は徳川将軍家の菩提寺として知られる寺院です。江戸城の拡張に伴って1598年に芝へ移り、広い寺域に伽藍や徳川家の霊廟が置かれました。",
+          "segments": [
+            {
+              "segmentId": "zojoji-role",
+              "epistemicStatus": "historical-fact",
+              "text": "増上寺は徳川将軍家の菩提寺として知られる寺院です。",
+              "evidenceIds": ["ndl-zojoji-facts"],
+              "aiUse": "draft-assistance",
+              "humanVerified": false
+            },
+            {
+              "segmentId": "zojoji-relocation",
+              "epistemicStatus": "historical-fact",
+              "text": "江戸城の拡張に伴って1598年に芝へ移り、広い寺域に伽藍や徳川家の霊廟が置かれました。",
+              "evidenceIds": ["ndl-zojoji-facts"],
+              "aiUse": "draft-assistance",
+              "humanVerified": false
+            }
+          ]
+        }
+      },
+      "evidence": [
+        {
+          "evidenceId": "codh-zojoji-identity",
+          "sourceId": "codh-edo-map-place-dataset",
+          "role": "fact-verification",
+          "verifiedFacts": [
+            "sourceIndex 7346のentryIdは4-349です。",
+            "原資料表記は三縁山　増上寺です。"
+          ]
+        },
+        {
+          "evidenceId": "ndl-zojoji-facts",
+          "sourceId": "ndl-landmarks-zojoji",
+          "role": "text-reuse",
+          "verifiedFacts": [
+            "増上寺は徳川将軍家の菩提寺です。",
+            "1598年に現在の芝へ移転しました。",
+            "寺域には伽藍と徳川家の霊廟がありました。"
+          ]
+        }
+      ],
+      "review": {
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "reviewNote": "AI支援で作成した独自要約案です。史実、表現、rightsの人手確認前であり、approved化・公開は禁止です。"
+      },
+      "translations": []
+    }
+  ]
+}
