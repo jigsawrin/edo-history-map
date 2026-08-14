@@ -66,7 +66,13 @@ afterEach(() => {
 describe("江戸地名キュレーション候補", () => {
   it("empty foundation・source SHA・8788件を受理する", () => {
     expect(validateEdoPlaceCurationCatalog(foundation, source).candidates).toHaveLength(0);
-    expect(validateEdoPlaceCurationCatalog(catalog, source).candidates).toHaveLength(2);
+    expect(validateEdoPlaceCurationCatalog(catalog, source).candidates).toHaveLength(3);
+    expect(catalog.candidates).toContainEqual(expect.objectContaining({
+      candidateId: "edo-place-curation-rename-8436",
+      target: expect.objectContaining({ sourceIndex: 8436, entryId: "8-231", name: "千寿院" }),
+      proposal: { displayNameJa: "仙寿院", preserveOriginalName: true },
+      review: { status: "proposed", reviewedBy: null, reviewedAt: null, reviewNoteJa: null },
+    }));
     expect(auditEdoPlaceCurationCandidateRepository(ROOT).errors).toEqual([]);
     expect(source.features).toHaveLength(8788);
   });

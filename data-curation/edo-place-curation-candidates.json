@@ -85,6 +85,46 @@
         "reviewedAt": "2026-08-12",
         "reviewNoteJa": "プロジェクト所有者が、原資料表記を保持したうえで表示名を「永昌寺」に変更することを承認しました。"
       }
+    },
+    {
+      "candidateId": "edo-place-curation-rename-8436",
+      "sourceDatasetId": "codh-edo-maps-places",
+      "target": {
+        "sourceIndex": 8436,
+        "entryId": "8-231",
+        "sourceFeatureSha256": "12b766555f068948d5902d38ad361e925386f4c64cf59a3112d9c76c55724f15",
+        "name": "千寿院",
+        "category": "寺社",
+        "sheet": "江戸切絵図「尾張屋版」 四ツ谷絵図",
+        "sourceUrl": "https://codh.rois.ac.jp/edo-maps/owariya/08/1850/8-231.html.ja",
+        "longitude": 139.711584,
+        "latitude": 35.675726
+      },
+      "proposalType": "rename",
+      "proposal": {
+        "displayNameJa": "仙寿院",
+        "preserveOriginalName": true
+      },
+      "reasonCode": "orthography-normalization",
+      "reasonJa": "原資料表記「千寿院」を保持したまま、同じsource identity relation groupに属する別図2件の表記、渋谷区公式の寺号・沿革、および『新修渋谷区史』索引の表記確認に基づき、プロジェクト表示名を「仙寿院」に正規化する提案です。原資料の誤字を確定するものではありません。",
+      "evidence": {
+        "basis": "official-source",
+        "urls": [
+          "https://codh.rois.ac.jp/edo-maps/owariya/08/1850/8-231.html.ja",
+          "https://codh.rois.ac.jp/edo-maps/owariya/18/1853/18-010.html.ja",
+          "https://codh.rois.ac.jp/edo-maps/owariya/30/1862/30-115.html.ja",
+          "https://www.city.shibuya.tokyo.jp/bunka/bunkazai/bunkazai/kubunka.html",
+          "https://www.lib.city.shibuya.tokyo.jp/shibuya/shibuya-history/new-repair/sa-line/",
+          "https://www.lib.city.shibuya.tokyo.jp/shibuya/shibuya-history/contents/second-volume/"
+        ],
+        "noteJa": "CODHの8-231は原資料表記「千寿院」を保持する対象です。同relation groupの別図18-010は「仙寿院」、30-115は「仙寿院　心日暮シト云」と記録されています。渋谷区公式「区指定文化財」は千駄ヶ谷の寺号を「仙寿院」とし、法雲山東漸寺仙寿院の沿革を確認できる資料です。渋谷区立図書館の『新修渋谷区史』索引では「仙寿院（千寿院）」「千寿院の転住と紀州徳川家」等が中巻1216ページ、目次では「仙寿院の転住と紀州徳川家」が同ページと確認できます。外部資料の本文・画像は転載せず、URL・資料名・確認事実のみを記録します。relationのpreferred role自体はrenameの正解根拠にしていません。"
+      },
+      "review": {
+        "status": "proposed",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "reviewNoteJa": null
+      }
     }
   ]
 }
