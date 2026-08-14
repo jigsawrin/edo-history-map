@@ -113,11 +113,15 @@
           "https://codh.rois.ac.jp/edo-maps/owariya/08/1850/8-231.html.ja",
           "https://codh.rois.ac.jp/edo-maps/owariya/18/1853/18-010.html.ja",
           "https://codh.rois.ac.jp/edo-maps/owariya/30/1862/30-115.html.ja",
+          "https://codh.rois.ac.jp/edo-maps/dataset/",
+          "https://creativecommons.org/licenses/by/4.0/deed.ja",
           "https://www.city.shibuya.tokyo.jp/bunka/bunkazai/bunkazai/kubunka.html",
+          "https://www.city.shibuya.tokyo.jp/guide/website/list/site_policy.html",
           "https://www.lib.city.shibuya.tokyo.jp/shibuya/shibuya-history/new-repair/sa-line/",
-          "https://www.lib.city.shibuya.tokyo.jp/shibuya/shibuya-history/contents/second-volume/"
+          "https://www.lib.city.shibuya.tokyo.jp/shibuya/shibuya-history/contents/second-volume/",
+          "https://www.lib.city.shibuya.tokyo.jp/about-thissite/"
         ],
-        "noteJa": "CODHの8-231は原資料表記「千寿院」を保持する対象です。同relation groupの別図18-010は「仙寿院」、30-115は「仙寿院　心日暮シト云」と記録されています。渋谷区公式「区指定文化財」は千駄ヶ谷の寺号を「仙寿院」とし、法雲山東漸寺仙寿院の沿革を確認できる資料です。渋谷区立図書館の『新修渋谷区史』索引では「仙寿院（千寿院）」「千寿院の転住と紀州徳川家」等が中巻1216ページ、目次では「仙寿院の転住と紀州徳川家」が同ページと確認できます。外部資料の本文・画像は転載せず、URL・資料名・確認事実のみを記録します。relationのpreferred role自体はrenameの正解根拠にしていません。"
+        "noteJa": "CODHの8-231は原資料表記「千寿院」を保持する対象です。同relation groupの別図18-010は「仙寿院」、30-115は「仙寿院　心日暮シト云」と記録されています。渋谷区公式「区指定文化財」で寺号・沿革、渋谷区立図書館の『新修渋谷区史』索引・中巻目次で「仙寿院（千寿院）」「千寿院の転住と紀州徳川家」等を確認しました。利用条件確認（2026-08-14）：CODH（提供主体ROIS-DS人文学オープンデータ共同利用センター）の地名データセットはCC BY 4.0で商用利用・複製・改変が可能ですが、適切なクレジット、ライセンスへのリンク、変更表示が必要で、第三者の権利等は別途制限となり得ます。渋谷区公式と渋谷区立図書館は、特記がない情報・画像・図表等の著作権者を渋谷区とし、転載・複製を禁じ、希望時の連絡を求めています。両サイトとも商用利用、改変・要約、出典表示による一般的な再利用許諾は確認できず、第三者権利・個別表示の例外もあり得るため利用可とは扱いません。今回は各資料をrename判断の史実確認にのみ使い、本文・画像を転載せずURL・資料名・独自に要約した確認事実だけを記録します。relationのpreferred role自体はrename根拠にしていません。"
       },
       "review": {
         "status": "proposed",
