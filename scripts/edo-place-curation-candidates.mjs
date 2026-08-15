@@ -19,7 +19,7 @@ const REASON_CODES = ["duplicate", "non-place-label", "low-information", "transc
 const BASIS = ["source-record-comparison", "official-source", "scholarly-source", "project-review"];
 const REVIEW_STATUSES = ["proposed", "in-review", "approved", "rejected", "withdrawn"];
 const NOTE_TYPES = ["clarification", "reading", "modern-equivalent", "duplicate-context", "other"];
-const PRIVATE_MARKERS = ["sourceFeatureSha256", "reviewedBy", "reviewNoteJa"];
+const PRIVATE_MARKERS = ["reviewedBy", "reviewNoteJa"];
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);

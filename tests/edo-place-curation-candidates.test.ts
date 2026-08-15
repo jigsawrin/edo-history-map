@@ -261,12 +261,28 @@ describe("江戸地名キュレーション候補", () => {
       expect(auditEdoPlaceCurationCandidateRepository(root).errors.some((message) => message.includes("private catalog"))).toBe(true);
     });
   }
-  it("bundleへprivate fieldが入ると失敗する", () => {
+  function auditPublishedAsset(content: string, fileName = "index.js") {
     const root = mkdtempSync(join(tmpdir(), "edo-curation-")); temporaryRoots.push(root);
     mkdirSync(join(root, "data-curation"), { recursive: true }); mkdirSync(join(root, "public", "data"), { recursive: true }); mkdirSync(join(root, "dist", "assets"), { recursive: true });
     writeFileSync(join(root, "data-curation", "edo-place-curation-candidates.json"), JSON.stringify(foundation));
     writeFileSync(join(root, "public", "data", "edo-places.geojson"), JSON.stringify(source));
-    writeFileSync(join(root, "dist", "assets", "index.js"), "const privateField='sourceFeatureSha256';");
-    expect(auditEdoPlaceCurationCandidateRepository(root).errors.some((message) => message.includes("混入"))).toBe(true);
+    writeFileSync(join(root, "dist", "assets", fileName), content);
+    return auditEdoPlaceCurationCandidateRepository(root).errors;
+  }
+
+  it("public historical description identityのsourceFeatureSha256単独は許可する", () => {
+    expect(auditPublishedAsset(JSON.stringify({
+      sourceIdentity: { sourceFeatureSha256: "a".repeat(64) },
+    }), "historical-place-description-public-projection.json")).toEqual([]);
+  });
+
+  it("candidate-shaped公開物は拒否する", () => {
+    const errors = auditPublishedAsset("const leaked={candidateId:'x',proposalType:'rename',review:{}};");
+    expect(errors.some((message) => message.includes("混入"))).toBe(true);
+  });
+
+  it.each(["reviewedBy", "reviewNoteJa"])("bundleへの%s漏洩を拒否する", (marker) => {
+    const errors = auditPublishedAsset(`const privateField='${marker}';`);
+    expect(errors.some((message) => message.includes("混入"))).toBe(true);
   });
 });
