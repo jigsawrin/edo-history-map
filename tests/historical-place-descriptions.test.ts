@@ -83,7 +83,7 @@ describe("historical place description foundation", () => {
     for (const root of temporaryRoots.splice(0)) rmSync(root, { recursive: true, force: true });
   });
 
-  it("実catalogは増上寺proposed 1件でpublic projectionは空", () => {
+  it("実catalogは増上寺approved 1件をprivate fieldなしでpublic projectionへ出す", () => {
     const parsed = validateHistoricalPlaceDescriptionCatalog(catalog, source, rights) as typeof catalog;
     expect(parsed.descriptions).toHaveLength(1);
     expect(parsed.descriptions[0].target).toEqual({
@@ -92,10 +92,23 @@ describe("historical place description foundation", () => {
       entryId: "4-349",
       sourceFeatureSha256: "e4158b329af9e3b357e89c66896ddaa03c2b1ada2a9961d6b0c266ed9f3118b1",
     });
-    expect(parsed.descriptions[0].status).toBe("proposed");
+    expect(parsed.descriptions[0].status).toBe("approved");
+    expect(parsed.descriptions[0].review).toMatchObject({ reviewedBy: "jigsawrin", reviewedAt: "2026-08-15" });
     const generated = createHistoricalPlaceDescriptionPublicProjection(catalog, rights, source);
-    expect(generated.approvedDescriptionCount).toBe(0);
-    expect(generated.descriptions).toEqual([]);
+    expect(generated.approvedDescriptionCount).toBe(1);
+    expect(generated.descriptions[0]).toMatchObject({
+      canonicalContentSha256: "15d5d4d29ca600e712fd5cd94b9ae64980ac3da758e78da46766eb03f003b5b9",
+      sources: [{
+        sourceId: "ndl-landmarks-zojoji",
+        attribution: {
+          requiredText: "出典：国立国会図書館「錦絵と写真でめぐる日本の名所」",
+          licenseNotice: "公共データ利用規約（第1.0版）準拠",
+          modificationNotice: "国立国会図書館の掲載解説をもとに本プロジェクトが独自に編集・要約した旨を表示する。",
+        },
+      }],
+      translations: [],
+    });
+    expect(JSON.stringify(generated.descriptions[0])).not.toMatch(/verifiedFacts|reviewNote|rightsBasisNote|scopeNote|humanVerified|aiUse/);
     expect(() => validateHistoricalPlaceDescriptionPublicProjection(storedProjection, generated)).not.toThrow();
   });
 
