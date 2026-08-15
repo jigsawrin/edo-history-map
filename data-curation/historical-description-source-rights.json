@@ -11,7 +11,7 @@
       "rightsBasisUrls": [
         "https://codh.rois.ac.jp/edo-maps/dataset/"
       ],
-      "rightsCheckedAt": "2026-08-14",
+      "rightsCheckedAt": "2026-08-15",
       "rightsBasisNote": "公式dataset pageがCC BY 4.0と出典表示例を明示していることを確認しました。datasetのidentity、原資料表記、位置情報だけを対象とし、リンク先画像や第三者資料は対象外です。",
       "accessible": "confirmed",
       "commercialUse": "allowed",
@@ -40,7 +40,7 @@
         "https://www.ndl.go.jp/sitepolicy/terms",
         "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
       ],
-      "rightsCheckedAt": "2026-08-14",
+      "rightsCheckedAt": "2026-08-15",
       "rightsBasisNote": "電子展示会の「ご利用について」が掲載解説の申込不要・商用利用可・出典表示必要を明示し、NDL利用規約がPDL1.0準拠で複製、翻訳、変形等を許可していることを確認しました。",
       "accessible": "confirmed",
       "commercialUse": "allowed",
@@ -51,7 +51,7 @@
         "required": true,
         "requiredText": "出典：国立国会図書館「錦絵と写真でめぐる日本の名所」",
         "licenseNotice": "公共データ利用規約（第1.0版）準拠",
-        "modificationNotice": "国立国会図書館の掲載解説をもとに本プロジェクトが独自に編集・要約した旨を表示する。"
+        "modificationNotice": "国立国会図書館「錦絵と写真でめぐる日本の名所」の掲載解説をもとに、いま・むかし地図プロジェクトが編集・要約して作成。"
       },
       "thirdPartyRights": {
         "status": "cleared-for-scope",

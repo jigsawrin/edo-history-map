@@ -3,6 +3,44 @@
   "projectionStatus": "non-runtime-foundation",
   "sourceDataSha256": "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
   "sourceFeatureCount": 8788,
-  "approvedDescriptionCount": 0,
-  "descriptions": []
+  "approvedDescriptionCount": 1,
+  "descriptions": [
+    {
+      "descriptionId": "historical-place-description-edo-7346",
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 7346,
+        "entryId": "4-349",
+        "sourceFeatureSha256": "e4158b329af9e3b357e89c66896ddaa03c2b1ada2a9961d6b0c266ed9f3118b1"
+      },
+      "locale": "ja",
+      "compositionMode": "editorial-summary",
+      "text": "増上寺は徳川将軍家の菩提寺として知られ、江戸の芝に広い寺域を構えた浄土宗の寺院です。1598年、江戸城の改修・拡張に伴って芝へ移転し、境内には本殿や五重塔、徳川家の霊廟などが置かれていました。",
+      "canonicalContentSha256": "15d5d4d29ca600e712fd5cd94b9ae64980ac3da758e78da46766eb03f003b5b9",
+      "epistemicSegments": [
+        {
+          "epistemicStatus": "historical-fact",
+          "text": "増上寺は徳川将軍家の菩提寺として知られ、江戸の芝に広い寺域を構えた浄土宗の寺院です。"
+        },
+        {
+          "epistemicStatus": "historical-fact",
+          "text": "1598年、江戸城の改修・拡張に伴って芝へ移転し、境内には本殿や五重塔、徳川家の霊廟などが置かれていました。"
+        }
+      ],
+      "sources": [
+        {
+          "sourceId": "ndl-landmarks-zojoji",
+          "title": "錦絵と写真でめぐる日本の名所 / 増上寺・芝公園",
+          "provider": "国立国会図書館",
+          "sourceUrl": "https://www.ndl.go.jp/landmarks/sights/zojoji",
+          "attribution": {
+            "requiredText": "出典：国立国会図書館「錦絵と写真でめぐる日本の名所」",
+            "licenseNotice": "公共データ利用規約（第1.0版）準拠",
+            "modificationNotice": "国立国会図書館「錦絵と写真でめぐる日本の名所」の掲載解説をもとに、いま・むかし地図プロジェクトが編集・要約して作成。"
+          }
+        }
+      ],
+      "translations": []
+    }
+  ]
 }

@@ -15,27 +15,27 @@
         "sourceFeatureSha256": "e4158b329af9e3b357e89c66896ddaa03c2b1ada2a9961d6b0c266ed9f3118b1"
       },
       "compositionMode": "editorial-summary",
-      "status": "proposed",
+      "status": "approved",
       "canonicalLocale": "ja",
       "content": {
         "ja": {
-          "text": "増上寺は徳川将軍家の菩提寺として知られる寺院です。江戸城の拡張に伴って1598年に芝へ移り、広い寺域に伽藍や徳川家の霊廟が置かれました。",
+          "text": "増上寺は徳川将軍家の菩提寺として知られ、江戸の芝に広い寺域を構えた浄土宗の寺院です。1598年、江戸城の改修・拡張に伴って芝へ移転し、境内には本殿や五重塔、徳川家の霊廟などが置かれていました。",
           "segments": [
             {
               "segmentId": "zojoji-role",
               "epistemicStatus": "historical-fact",
-              "text": "増上寺は徳川将軍家の菩提寺として知られる寺院です。",
+              "text": "増上寺は徳川将軍家の菩提寺として知られ、江戸の芝に広い寺域を構えた浄土宗の寺院です。",
               "evidenceIds": ["ndl-zojoji-facts"],
               "aiUse": "draft-assistance",
-              "humanVerified": false
+              "humanVerified": true
             },
             {
               "segmentId": "zojoji-relocation",
               "epistemicStatus": "historical-fact",
-              "text": "江戸城の拡張に伴って1598年に芝へ移り、広い寺域に伽藍や徳川家の霊廟が置かれました。",
+              "text": "1598年、江戸城の改修・拡張に伴って芝へ移転し、境内には本殿や五重塔、徳川家の霊廟などが置かれていました。",
               "evidenceIds": ["ndl-zojoji-facts"],
               "aiUse": "draft-assistance",
-              "humanVerified": false
+              "humanVerified": true
             }
           ]
         }
@@ -55,16 +55,16 @@
           "sourceId": "ndl-landmarks-zojoji",
           "role": "text-reuse",
           "verifiedFacts": [
-            "増上寺は徳川将軍家の菩提寺です。",
-            "1598年に現在の芝へ移転しました。",
-            "寺域には伽藍と徳川家の霊廟がありました。"
+            "増上寺は浄土宗の寺院で徳川将軍家の菩提寺です。",
+            "1598年の江戸城改修・拡張に伴い芝へ移転しました。",
+            "芝の寺域には本殿、五重塔、徳川家の霊廟などがありました。"
           ]
         }
       ],
       "review": {
-        "reviewedBy": null,
-        "reviewedAt": null,
-        "reviewNote": "AI支援で作成した独自要約案です。史実、表現、rightsの人手確認前であり、approved化・公開は禁止です。"
+        "reviewedBy": "jigsawrin",
+        "reviewedAt": "2026-08-15",
+        "reviewNote": "2026-08-15のユーザー承認に基づき、修正版本文の史実、表現、rights、各segmentのpublication basisを確認しました。AI支援による初稿作成履歴はprivate metadataに保持します。"
       },
       "translations": []
     }
