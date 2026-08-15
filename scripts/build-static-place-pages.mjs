@@ -46,6 +46,8 @@ const EDO_BOUNDS = Object.freeze({
 });
 const EDO_ALLOWED_ORIGIN = "https://codh.rois.ac.jp";
 const EDO_ALLOWED_PATH_PREFIX = "/edo-maps/";
+const DESCRIPTION_ALLOWED_ORIGIN = "https://www.ndl.go.jp";
+const DESCRIPTION_ALLOWED_PATH_PREFIX = "/landmarks/";
 // eslint-disable-next-line no-control-regex
 const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/gu;
 const KATAKANA = /[\u30a1-\u30f6]/gu;
@@ -410,6 +412,22 @@ function pageFileName(page) {
   return page === 1 ? "index.html" : `page-${page}.html`;
 }
 
+function edoDescription(description) {
+  if (!description) return "";
+  const sourceItems = description.sources.map((source) => `<li>
+    ${externalLink(source.sourceUrl, `${source.provider}「${source.title}」`)}
+    <p>${escapeHtml(source.attribution.requiredText)}</p>
+    <p>${escapeHtml(source.attribution.licenseNotice)}</p>
+    <p>${escapeHtml(source.attribution.modificationNotice)}</p>
+  </li>`).join("\n");
+  return `<section class="place-description" aria-label="この場所について">
+    <h4>この場所について</h4>
+    <p>${escapeHtml(description.text)}</p>
+    <h5>説明文の出典・利用条件</h5>
+    <ul>${sourceItems}</ul>
+  </section>`;
+}
+
 function edoArticle(place) {
   if (place.hidden) {
     return `<li><article id="${place.anchor}" class="place-card" data-place-region="edo">
@@ -426,6 +444,7 @@ function edoArticle(place) {
     <dt>対象年代</dt><dd>江戸後期（嘉永～文久、1849～1862年頃）</dd>
     <dt>位置</dt><dd>ジオリファレンスによる推定位置</dd>
   </dl>
+  ${edoDescription(place.description)}
   <p>位置は現代地図への推定合わせで、数十メートル以上の誤差を含み得ます。測量・境界・権利関係の証拠には使用できません。</p>
   <p class="place-links">${externalLink(place.sourceUrl, "CODHの地名詳細ページを開く")}<a href="../../?region=edo&amp;era=edo-late">地図で東京・江戸を開く</a><a href="#${place.anchor}">この地点へのリンク</a></p>
 </article></li>`;
@@ -464,7 +483,7 @@ function edoPage(items, page, pages) {
   <section aria-labelledby="about-heading"><h2 id="about-heading">この一覧について</h2><p>江戸地名8,788件を100件ずつ88ページに分けています。1ページの大きさとページ数のバランスを取り、低性能端末と印刷でも扱いやすくするため100件を採用しました。地点名を探す場合はブラウザのページ内検索を利用できます。</p></section>
   ${page === 1 ? edoRangeIndex(pages) : ""}
   <section aria-labelledby="places-heading"><h2 id="places-heading">地点一覧</h2>${pagination(page, pageCount)}<ol class="place-list">${items.map(edoArticle).join("\n")}</ol>${pagination(page, pageCount)}</section>
-  <section aria-labelledby="caution-heading"><h2 id="caution-heading">注意事項</h2><p class="notice">江戸地名の位置は江戸切絵図を現代地図へ合わせた推定です。現代住所、読み仮名、英語名、長文解説、史跡状態、座標確度は元データにないため追加していません。</p></section>
+  <section aria-labelledby="caution-heading"><h2 id="caution-heading">注意事項</h2><p class="notice">江戸地名の位置は江戸切絵図を現代地図へ合わせた推定です。現代住所、読み仮名、英語名、史跡状態、座標確度は元データにないため追加していません。承認済みの独自説明文がある地点だけ、出典・利用条件とともに掲載しています。</p></section>
 </main>
 ${footer()}`;
   return pageDocument({
@@ -562,7 +581,50 @@ function validatePresentation(value, label = "京都", extraKeys = []) {
   return value;
 }
 
-export function generateStaticPlaceFiles({ edoRaw, edoProjection, kyotoRaw, sourceData, presentation, shigaRaw, shigaSourceData, shigaPresentation, css, inputSha256, historicalReferenceAssets }) {
+function applyEdoHistoricalDescriptions(places, value, sourceDataSha256) {
+  if (
+    !value || value.schemaVersion !== 1 || value.projectionStatus !== "non-runtime-foundation" ||
+    value.sourceDataSha256 !== sourceDataSha256 || value.sourceFeatureCount !== places.length ||
+    !Array.isArray(value.descriptions) || value.approvedDescriptionCount !== value.descriptions.length
+  ) {
+    fail("説明文public projectionが不正または古くなっています");
+  }
+  const placesBySourceIndex = new Map(places.map((place) => [place.sourceIndex, place]));
+  const bySourceIndex = new Map();
+  for (const description of value.descriptions) {
+    const identity = description?.sourceIdentity;
+    const place = placesBySourceIndex.get(identity?.sourceIndex);
+    if (
+      identity?.datasetId !== "codh-edo-maps-places" || !place ||
+      place.entryId !== identity.entryId || place.featureSha256 !== identity.sourceFeatureSha256 ||
+      description.locale !== "ja" || description.compositionMode !== "editorial-summary" ||
+      typeof description.text !== "string" || description.text.length === 0 ||
+      !Array.isArray(description.sources) || description.sources.length === 0 ||
+      bySourceIndex.has(identity.sourceIndex)
+    ) {
+      fail("説明文public projectionのsource identityが不正です");
+    }
+    for (const source of description.sources) {
+      const sourceUrl = validateExternalSourceUrl(source.sourceUrl, new Set([DESCRIPTION_ALLOWED_ORIGIN]));
+      if (
+        !new URL(sourceUrl).pathname.startsWith(DESCRIPTION_ALLOWED_PATH_PREFIX) ||
+        typeof source.title !== "string" || typeof source.provider !== "string" ||
+        typeof source.attribution?.requiredText !== "string" ||
+        typeof source.attribution?.licenseNotice !== "string" ||
+        typeof source.attribution?.modificationNotice !== "string"
+      ) {
+        fail("説明文public projectionの公開出典が不正です");
+      }
+    }
+    bySourceIndex.set(identity.sourceIndex, description);
+  }
+  return places.map((place) => Object.freeze({
+    ...place,
+    description: bySourceIndex.get(place.sourceIndex) ?? null,
+  }));
+}
+
+export function generateStaticPlaceFiles({ edoRaw, edoProjection, historicalDescriptionProjection, kyotoRaw, sourceData, presentation, shigaRaw, shigaSourceData, shigaPresentation, css, inputSha256, historicalReferenceAssets }) {
   const sourceRegistry = validateSources(sourceData);
   for (const source of sourceRegistry.values()) {
     validateExternalSourceUrl(source.url, new Set([new URL(source.url).origin]));
@@ -573,7 +635,12 @@ export function generateStaticPlaceFiles({ edoRaw, edoProjection, kyotoRaw, sour
     sourceDataSha256: inputSha256["public/data/edo-places.geojson"],
     perPage: STATIC_EDO_PER_PAGE,
   });
-  const edoPlaces = applyEdoStaticPlaceProjection(legacyEdoPlaces, edoProjection);
+  const projectedEdoPlaces = applyEdoStaticPlaceProjection(legacyEdoPlaces, edoProjection);
+  const edoPlaces = applyEdoHistoricalDescriptions(
+    projectedEdoPlaces,
+    historicalDescriptionProjection,
+    inputSha256["public/data/edo-places.geojson"],
+  );
   const kyotoPlaces = parseStaticKyotoPlaces(kyotoRaw, sourceRegistry, checkedPresentation);
   const shigaSources = validateShigaSources(shigaSourceData);
   const checkedShigaPresentation = validatePresentation(shigaPresentation, "滋賀", ["accessWarning"]);
@@ -635,6 +702,7 @@ export function buildStaticPlacePages(root = ROOT, outputRoot = OUTPUT_ROOT) {
   const generated = generateStaticPlaceFiles({
     edoRaw: readUtf8(join(root, "public/data/edo-places.geojson")),
     edoProjection: JSON.parse(readUtf8(join(root, "scripts/edo-static-place-projection.json"))),
+    historicalDescriptionProjection: JSON.parse(readUtf8(join(root, "scripts/historical-place-description-public-projection.json"))),
     kyotoRaw: readUtf8(join(root, "public/data/kyoto-bakumatsu-places.geojson")),
     sourceData: JSON.parse(readUtf8(join(root, "src/kyoto-source-registry.json"))),
     presentation: JSON.parse(readUtf8(join(root, "src/kyoto-place-presentation.json"))),
