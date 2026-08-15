@@ -83,9 +83,9 @@ describe("historical place description foundation", () => {
     for (const root of temporaryRoots.splice(0)) rmSync(root, { recursive: true, force: true });
   });
 
-  it("実catalogは増上寺approved 1件をprivate fieldなしでpublic projectionへ出す", () => {
+  it("実catalogは増上寺approved 1件だけをpublic projectionへ出し浅草寺proposedを非公開に保つ", () => {
     const parsed = validateHistoricalPlaceDescriptionCatalog(catalog, source, rights) as typeof catalog;
-    expect(parsed.descriptions).toHaveLength(1);
+    expect(parsed.descriptions).toHaveLength(2);
     expect(parsed.descriptions[0].target).toEqual({
       datasetId: "codh-edo-maps-places",
       sourceIndex: 7346,
@@ -94,8 +94,31 @@ describe("historical place description foundation", () => {
     });
     expect(parsed.descriptions[0].status).toBe("approved");
     expect(parsed.descriptions[0].review).toMatchObject({ reviewedBy: "jigsawrin", reviewedAt: "2026-08-15" });
+    expect(parsed.descriptions[1]).toMatchObject({
+      descriptionId: "historical-place-description-edo-4847",
+      target: {
+        datasetId: "codh-edo-maps-places",
+        sourceIndex: 4847,
+        entryId: "21-497",
+        sourceFeatureSha256: "4cd349c5d383c0b221ff2d19027f08a03176917d3493560403ea69d5d1836611",
+      },
+      compositionMode: "editorial-summary",
+      status: "proposed",
+      canonicalLocale: "ja",
+    });
+    expect(parsed.descriptions[1].content.ja.segments).toHaveLength(2);
+    for (const segment of parsed.descriptions[1].content.ja.segments) {
+      expect(segment).toMatchObject({
+        epistemicStatus: "historical-fact",
+        evidenceIds: ["ndl-asakusa-sensoji-facts"],
+        aiUse: "draft-assistance",
+        humanVerified: false,
+      });
+    }
+    expect(parsed.descriptions.map((description: { status: string }) => description.status)).toEqual(["approved", "proposed"]);
     const generated = createHistoricalPlaceDescriptionPublicProjection(catalog, rights, source);
     expect(generated.approvedDescriptionCount).toBe(1);
+    expect(generated.descriptions).toHaveLength(1);
     expect(generated.descriptions[0]).toMatchObject({
       canonicalContentSha256: "15d5d4d29ca600e712fd5cd94b9ae64980ac3da758e78da46766eb03f003b5b9",
       sources: [{
@@ -108,6 +131,9 @@ describe("historical place description foundation", () => {
       }],
       translations: [],
     });
+    const publicDescriptions = generated.descriptions as Array<{ descriptionId: string }>;
+    expect(publicDescriptions[0]!.descriptionId).toBe("historical-place-description-edo-7346");
+    expect(publicDescriptions.some((description) => description.descriptionId === "historical-place-description-edo-4847")).toBe(false);
     expect(JSON.stringify(generated.descriptions[0])).not.toMatch(/verifiedFacts|reviewNote|rightsBasisNote|scopeNote|humanVerified|aiUse/);
     expect(() => validateHistoricalPlaceDescriptionPublicProjection(storedProjection, generated)).not.toThrow();
   });
