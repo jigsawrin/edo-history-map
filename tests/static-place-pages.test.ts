@@ -25,6 +25,9 @@ const ROOT = join(__dirname, "..");
 const EDO_STATIC_PROJECTION = JSON.parse(
   readFileSync(join(ROOT, "scripts/edo-static-place-projection.json"), "utf8"),
 );
+const HISTORICAL_DESCRIPTION_PROJECTION = JSON.parse(
+  readFileSync(join(ROOT, "scripts/historical-place-description-public-projection.json"), "utf8"),
+);
 const HISTORICAL_REFERENCE_ASSETS = {
   schemaVersion: 1,
   assetCount: 2,
@@ -48,6 +51,7 @@ beforeAll(() => {
   generated = generateStaticPlaceFiles({
     edoRaw: readFileSync(join(ROOT, "public/data/edo-places.geojson"), "utf8"),
     edoProjection: EDO_STATIC_PROJECTION,
+    historicalDescriptionProjection: HISTORICAL_DESCRIPTION_PROJECTION,
     kyotoRaw: readFileSync(
       join(ROOT, "public/data/kyoto-bakumatsu-places.geojson"),
       "utf8",
@@ -165,6 +169,24 @@ describe("静的地点一覧生成", () => {
     expect(article).not.toContain("位置精度");
   });
 
+  it("7346 / 4-349のlegacy articleだけに本文とNDL attributionを追加する", () => {
+    const matches = [...generated.files].filter(([, html]) => html.includes("徳川将軍家の菩提寺"));
+    expect(matches).toHaveLength(1);
+    const [path, html] = matches[0]!;
+    const start = html.lastIndexOf('<article id="', html.indexOf("徳川将軍家の菩提寺"));
+    const end = html.indexOf("</article>", start);
+    const article = html.slice(start, end + "</article>".length);
+    expect(path).toBe("edo/page-14.html");
+    expect(article).toContain('id="place-edo-64710692975fa7a65467"');
+    expect(article).toContain("徳川将軍家の菩提寺");
+    expect(article).toContain("https://www.ndl.go.jp/landmarks/sights/zojoji");
+    expect(article).toContain("出典：国立国会図書館");
+    expect(article).toContain("公共データ利用規約（第1.0版）準拠");
+    expect(article).toContain("いま・むかし地図プロジェクトが編集・要約して作成");
+    expect(article).toContain("CODHの地名詳細ページを開く");
+    expect((html.slice(0, start).match(/data-place-region="edo"/gu) ?? []).length).toBe(60);
+  });
+
   it("EDO地域先頭に全ページの実在地点名範囲を出力する", () => {
     const html = generated.files.get("edo/index.html") ?? "";
     expect(html).toContain("ページごとの地点名範囲");
@@ -223,6 +245,7 @@ describe("静的地点一覧生成", () => {
     const second = generateStaticPlaceFiles({
       edoRaw: readFileSync(join(ROOT, "public/data/edo-places.geojson"), "utf8"),
       edoProjection: EDO_STATIC_PROJECTION,
+      historicalDescriptionProjection: HISTORICAL_DESCRIPTION_PROJECTION,
       kyotoRaw: readFileSync(join(ROOT, "public/data/kyoto-bakumatsu-places.geojson"), "utf8"),
       sourceData: JSON.parse(readFileSync(join(ROOT, "src/kyoto-source-registry.json"), "utf8")),
       presentation: JSON.parse(readFileSync(join(ROOT, "src/kyoto-place-presentation.json"), "utf8")) as Record<string, unknown>,

@@ -168,6 +168,28 @@ describe("renderPlaceCard", () => {
     expect(container.textContent).toContain("千寿院");
   });
 
+  it("7346 / 4-349だけにapproved説明文とNDL attribution 3要素を表示しCODH出典も保つ", () => {
+    const raw = place({
+      entryId: "4-349",
+      name: "三縁山　増上寺",
+      sourceUrl: "https://codh.rois.ac.jp/edo-maps/owariya/04/1850/4-349.html.ja",
+    });
+    expect(renderPlaceCard(container, raw, undefined, undefined, 7346)).toBe(true);
+    expect(container.textContent).toContain("徳川将軍家の菩提寺");
+    expect(container.textContent).toContain("出典：国立国会図書館");
+    expect(container.textContent).toContain("公共データ利用規約（第1.0版）準拠");
+    expect(container.textContent).toContain("いま・むかし地図プロジェクトが編集・要約して作成");
+    const links = [...container.querySelectorAll("a")];
+    expect(links.some((link) => link.href.startsWith("https://codh.rois.ac.jp/"))).toBe(true);
+    expect(links.some((link) => link.href === "https://www.ndl.go.jp/landmarks/sights/zojoji")).toBe(true);
+  });
+
+  it("descriptionなし地点は従来どおり説明文sectionを表示しない", () => {
+    renderPlaceCard(container, place(), undefined, undefined, 0);
+    expect(container.textContent).not.toContain("この場所について");
+    expect(container.textContent).not.toContain("国立国会図書館");
+  });
+
   it("approved hideは内容もfocusable elementも描画せずfail closedにする", () => {
     const raw = place();
     const resolver = createEdoCardResolver({

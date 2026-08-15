@@ -1,6 +1,7 @@
 import type { PlaceFeature } from "./validate";
 import { resolveEdoCard, type EdoCardResolver } from "./edo-card-projection";
 import type { EdoMapAggregateGroup } from "./edo-map-presentation-projection";
+import { resolveEdoHistoricalDescription } from "./historical-place-description";
 
 /**
  * 歴史情報カードの描画。
@@ -20,6 +21,7 @@ export function renderPlaceCard(
   place: PlaceFeature,
   returnFocus?: HTMLElement,
   resolve: EdoCardResolver = resolveEdoCard,
+  sourceIndex = -1,
 ): boolean {
   const resolution = resolve(place);
   container.replaceChildren();
@@ -45,6 +47,36 @@ export function renderPlaceCard(
     "江戸マップ地名データセット(ROIS-DS人文学オープンデータ共同利用センター作成)CC BY 4.0",
   );
   container.append(dl);
+
+  const description = resolveEdoHistoricalDescription(sourceIndex, place.entryId);
+  if (description) {
+    const descriptionHeading = document.createElement("h3");
+    descriptionHeading.textContent = "この場所について";
+    const descriptionText = document.createElement("p");
+    descriptionText.textContent = description.text;
+    container.append(descriptionHeading, descriptionText);
+
+    const sourceHeading = document.createElement("h4");
+    sourceHeading.textContent = "説明文の出典・利用条件";
+    const sources = document.createElement("ul");
+    for (const source of description.sources) {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = source.sourceUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = `${source.provider}「${source.title}」`;
+      const attribution = document.createElement("p");
+      attribution.textContent = source.attribution.requiredText;
+      const license = document.createElement("p");
+      license.textContent = source.attribution.licenseNotice;
+      const modification = document.createElement("p");
+      modification.textContent = source.attribution.modificationNotice;
+      item.append(link, attribution, license, modification);
+      sources.append(item);
+    }
+    container.append(sourceHeading, sources);
+  }
 
   if (place.sourceUrl) {
     const p = document.createElement("p");

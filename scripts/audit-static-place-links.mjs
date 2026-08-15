@@ -118,6 +118,9 @@ function auditDocument(path, allowedOrigins, documents, dist) {
       ) {
         fail(`${rel}に許可外の外部リンクがあります`);
       }
+      if (url.origin === "https://www.ndl.go.jp" && !url.pathname.startsWith("/landmarks/")) {
+        fail(`${rel}に許可外のNDLリンクがあります`);
+      }
       const relTokens = new Set((link.getAttribute("rel") ?? "").split(/\s+/u));
       if (
         link.getAttribute("target") !== "_blank" ||
@@ -167,7 +170,7 @@ export function auditStaticPlaceLinks(root = ROOT, dist = join(root, "dist")) {
     readFileSync(join(root, "src/kyoto-source-registry.json"), "utf8"),
   );
   const sourceRegistry = validateSources(sourceData);
-  const allowedOrigins = new Set(["https://codh.rois.ac.jp"]);
+  const allowedOrigins = new Set(["https://codh.rois.ac.jp", "https://www.ndl.go.jp"]);
   for (const source of sourceRegistry.values()) {
     allowedOrigins.add(new URL(source.url).origin);
   }

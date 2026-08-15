@@ -59,6 +59,7 @@ export interface StaticPlaceGeneration {
 export function generateStaticPlaceFiles(options: {
   edoRaw: string;
   edoProjection: import("./edo-static-place-projection.mjs").EdoStaticPlaceProjection;
+  historicalDescriptionProjection: unknown;
   kyotoRaw: string;
   sourceData: unknown;
   presentation: Record<string, unknown>;

@@ -70,7 +70,7 @@ describe("createHistoricalLayer", () => {
     const layer = createHistoricalLayer([first, hidden], onSelect, document.createElement("div"), (index) => index === 1);
     expect(layer.normalLayer.getLayers()).toHaveLength(1);
     (layer.normalLayer.getLayers()[0] as L.CircleMarker).fire("click");
-    expect(onSelect).toHaveBeenCalledWith(first);
+    expect(onSelect).toHaveBeenCalledWith(first, 0);
     expect(onSelect.mock.calls[0]![0]).toBe(first);
     expect(onSelect).not.toHaveBeenCalledWith(hidden);
   });

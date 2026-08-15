@@ -19,6 +19,7 @@ const ROOT = join(__dirname, "..");
 const edoRaw = readFileSync(join(ROOT, "public/data/edo-places.geojson"), "utf8");
 const places = parseStaticEdoPlaces(edoRaw);
 const checkedIn = JSON.parse(readFileSync(join(ROOT, "scripts/edo-static-place-projection.json"), "utf8")) as EdoStaticPlaceProjection;
+const descriptionProjection = JSON.parse(readFileSync(join(ROOT, "scripts/historical-place-description-public-projection.json"), "utf8"));
 
 function clone<T>(value: T): T {
   return structuredClone(value);
@@ -41,6 +42,7 @@ function generate(projection: EdoStaticPlaceProjection) {
   return generateStaticPlaceFiles({
     edoRaw,
     edoProjection: projection,
+    historicalDescriptionProjection: descriptionProjection,
     kyotoRaw: readFileSync(join(ROOT, "public/data/kyoto-bakumatsu-places.geojson"), "utf8"),
     sourceData: JSON.parse(readFileSync(join(ROOT, "src/kyoto-source-registry.json"), "utf8")),
     presentation: JSON.parse(readFileSync(join(ROOT, "src/kyoto-place-presentation.json"), "utf8")),

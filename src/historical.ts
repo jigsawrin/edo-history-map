@@ -98,7 +98,7 @@ export function bindNavigationMarkerKeyboard(
 
 export function createHistoricalLayer(
   places: PlaceFeature[],
-  onSelect: (place: PlaceFeature) => void,
+  onSelect: (place: PlaceFeature, sourceIndex: number) => void,
   pane: HTMLElement,
   isHidden: (sourceIndex: number, place: PlaceFeature) => boolean = isEdoMapSourceHidden,
   onSelectAggregate: (group: EdoMapAggregateGroup) => void = () => {},
@@ -112,6 +112,7 @@ export function createHistoricalLayer(
   const group = L.layerGroup(navigationMap ? [] : [normalLayer]);
   const supplementalMarkers = new Map<PlaceFeature, L.CircleMarker>();
   const visiblePlaces = new Set<PlaceFeature>();
+  const sourceIndexByPlace = new Map(places.map((place, sourceIndex) => [place, sourceIndex]));
   const navigationPoints: { id: string; latitude: number; longitude: number }[] = [];
   const presentation = presentationValue === undefined
     ? (places.length === 8788
@@ -188,11 +189,11 @@ export function createHistoricalLayer(
       // スクリーンリーダー・キーボード用: マーカーにフォーカス可能な代替は
       // Leaflet の CircleMarker では限定的なため、情報カード側で補完する
     });
-    marker.on("click", () => onSelect(place));
+    marker.on("click", () => onSelect(place, sourceIndex));
     marker.on("keypress", (e) => {
       const key = (e as unknown as { originalEvent?: KeyboardEvent })
         .originalEvent?.key;
-      if (key === "Enter" || key === " ") onSelect(place);
+      if (key === "Enter" || key === " ") onSelect(place, sourceIndex);
     });
     if (isSupplementalMarkerPlace(place)) {
       supplementalLayer.addLayer(marker);
@@ -276,7 +277,7 @@ export function createHistoricalLayer(
       interactive: true,
       bubblingMouseEvents: false,
     });
-    marker.on("click", () => onSelect(place));
+    marker.on("click", () => onSelect(place, sourceIndexByPlace.get(place) ?? -1));
     return marker;
   };
 

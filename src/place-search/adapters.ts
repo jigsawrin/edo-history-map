@@ -13,6 +13,7 @@ import type {
   SearchableHistoricalPlace,
   SearchablePlaceDatasetId,
 } from "./types";
+import { resolveEdoHistoricalDescription } from "../historical-place-description";
 
 export const KYOTO_CATEGORY_LABELS: Readonly<Record<KyotoPlaceCategory, string>> =
   presentation.categoryLabels;
@@ -32,6 +33,7 @@ export function createEdoSearchRecords(
   }
   return Object.freeze(
     applyEdoSearchProjection(places).map(({ record, name, sourceIndex }) => {
+      const description = resolveEdoHistoricalDescription(sourceIndex, record.entryId);
       const secondaryText = [record.category, record.sheet]
         .filter(Boolean)
         .join("／");
@@ -57,11 +59,12 @@ export function createEdoSearchRecords(
         normalizedAlternateName: "",
         normalizedCategory,
         normalizedSecondary,
-        normalizedDescription: "",
+        normalizedDescription: normalizeSearchText(description?.text ?? ""),
         normalizedSearchText: combinedNormalizedText([
           name,
           record.category,
           record.sheet,
+          description?.text ?? "",
         ]),
         sourceRecord: Object.freeze({
           datasetId: "codh-edo-maps-places" as const,

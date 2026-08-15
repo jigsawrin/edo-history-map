@@ -853,13 +853,13 @@ function main(): void {
     "codh-edo-maps-places": async () => {
       const historical = createHistoricalLayer(
         await datasetRegistry.load("codh-edo-maps-places"),
-        (place) => {
+        (place, sourceIndex) => {
           void selectHistoricalPlace({
             datasetId: "codh-edo-maps-places",
             record: {
               datasetId: "codh-edo-maps-places",
               record: place,
-              sourceIndex: -1,
+              sourceIndex,
             },
             source: "map",
             returnFocus: map.getContainer(),
@@ -996,6 +996,8 @@ function main(): void {
         infoCard,
         selection.record.record,
         selection.returnFocus,
+        undefined,
+        selection.record.sourceIndex,
       );
       if (!rendered) return;
     } else if (selection.record.datasetId === "project-kyoto-bakumatsu-places") {

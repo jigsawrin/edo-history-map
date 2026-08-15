@@ -11,6 +11,7 @@ import {
 import { parsePlacesGeoJson } from "../src/validate";
 import { parseKyotoBakumatsuGeoJson } from "../src/kyoto-bakumatsu-places";
 import { parseShigaSengokuGeoJson } from "../src/shiga-sengoku-places";
+import { searchHistoricalPlaces } from "../src/place-search/query";
 
 const root = join(__dirname, "..");
 
@@ -29,6 +30,22 @@ describe("地域別地点検索アダプター", () => {
     expect(records[0]?.longitude).toBe(source[0]?.lon);
     expect(new Set(records.map((record) => record.key)).size).toBe(8788);
     expect(JSON.stringify(source[0])).toBe(before);
+  }, 60_000);
+
+  it("approved本文だけを7346 / 4-349の検索語へ追加し別recordへ波及しない", () => {
+    const source = parsePlacesGeoJson(
+      readFileSync(join(root, "public/data/edo-places.geojson"), "utf8"),
+    );
+    const records = createEdoSearchRecords(source);
+    const zojoji = records[7346];
+    expect(source[7346]?.entryId).toBe("4-349");
+    for (const query of ["徳川将軍家", "浄土宗", "五重塔"]) {
+      const hits = searchHistoricalPlaces(records, query);
+      expect(hits.some((hit) => hit.sourceRecord.sourceIndex === 7346)).toBe(true);
+    }
+    expect(zojoji?.normalizedSearchText).not.toContain("rightsBasisNote");
+    expect(zojoji?.normalizedSearchText).not.toContain("reviewNote");
+    expect(records.filter((record) => record.normalizedDescription.length > 0)).toHaveLength(1);
   }, 60_000);
 
   it("京都36件を英語名・カテゴリ・年月・要約検索付きで変換する", () => {
