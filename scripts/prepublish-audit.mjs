@@ -49,6 +49,11 @@ import {
   summarizeEdoPlaceSourceIdentityRelations,
 } from "./edo-place-source-identity-relations.mjs";
 import { auditEdoDerivedPlaceRepository } from "./edo-derived-place-model.mjs";
+import {
+  auditHistoricalPlaceDescriptionRepository,
+  DESCRIPTION_CATALOG_PATH,
+  DESCRIPTION_RIGHTS_PATH,
+} from "./historical-place-descriptions.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -186,6 +191,7 @@ const ALLOWED_HOSTS = new Set([
   "www.kunaicho.go.jp",
   "rmda.kulib.kyoto-u.ac.jp",
   "www.ndl.go.jp",
+  "www.digital.go.jp",
   "www.archives.go.jp",
   "ryozen-museum.or.jp",
   "iwakura-tomomi.jp",
@@ -243,6 +249,8 @@ const EDO_PLACE_CURATION_CATALOG_FILE =
   "data-curation/edo-place-curation-candidates.json";
 const EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE =
   "data-curation/edo-place-source-identity-relations.json";
+const HISTORICAL_DESCRIPTION_RIGHTS_FILE = DESCRIPTION_RIGHTS_PATH;
+const HISTORICAL_PLACE_DESCRIPTION_FILE = DESCRIPTION_CATALOG_PATH;
 const EDO_DERIVED_PLACE_SNAPSHOT_FILE =
   "scripts/edo-derived-place-model.mjs";
 const KYOTO_BOUNDS = Object.freeze({
@@ -1245,6 +1253,8 @@ for (const file of allFiles) {
       HISTORICAL_REFERENCE_ASSETS_FILE,
       EDO_PLACE_CURATION_CATALOG_FILE,
       EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE,
+      HISTORICAL_DESCRIPTION_RIGHTS_FILE,
+      HISTORICAL_PLACE_DESCRIPTION_FILE,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
@@ -1561,6 +1571,24 @@ if (edoPlaceSourceIdentityAudit.catalog) {
   );
   infos.push(
     `江戸地名source identity: ${summary.groups}group、${summary.members}member、nonpreferred ${summary.nonpreferred}、source anomaly ${summary.anomalies}`,
+  );
+}
+
+const historicalPlaceDescriptionAudit =
+  auditHistoricalPlaceDescriptionRepository(ROOT);
+for (const message of historicalPlaceDescriptionAudit.errors) {
+  addFinding(
+    "error",
+    "歴史地点説明文",
+    HISTORICAL_PLACE_DESCRIPTION_FILE,
+    0,
+    message,
+  );
+}
+if (historicalPlaceDescriptionAudit.summary) {
+  const summary = historicalPlaceDescriptionAudit.summary;
+  infos.push(
+    `歴史地点説明文: ${summary.count}件、proposed ${summary.proposedCount}、approved ${summary.approvedCount}、public ${summary.publicCount}、SHA-256 ${summary.canonicalOutputSha256}`,
   );
 }
 

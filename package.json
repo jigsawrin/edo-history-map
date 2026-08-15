@@ -16,6 +16,7 @@
     "data:build:edo-place-source-identity-relations": "node scripts/edo-place-source-identity-relations.mjs --build",
     "audit:edo-place-source-identity-relations": "node scripts/edo-place-source-identity-relations.mjs",
     "audit:edo-derived-place-model": "node scripts/edo-derived-place-model.mjs",
+    "audit:historical-place-descriptions": "node scripts/historical-place-descriptions.mjs",
     "data:build:edo-map-presentation": "node scripts/edo-map-presentation-projection.mjs --build",
     "audit:edo-map-presentation": "node scripts/edo-map-presentation-projection.mjs",
     "preview": "vite preview",
