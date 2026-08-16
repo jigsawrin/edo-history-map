@@ -83,9 +83,9 @@ describe("historical place description foundation", () => {
     for (const root of temporaryRoots.splice(0)) rmSync(root, { recursive: true, force: true });
   });
 
-  it("実catalogは増上寺と浅草寺のapproved 2件をpublic projectionへ出す", () => {
+  it("実catalogはapproved 2件と日本橋proposed 1件を保持しpublic projectionは既存2件だけを出す", () => {
     const parsed = validateHistoricalPlaceDescriptionCatalog(catalog, source, rights) as typeof catalog;
-    expect(parsed.descriptions).toHaveLength(2);
+    expect(parsed.descriptions).toHaveLength(3);
     expect(parsed.descriptions[0].target).toEqual({
       datasetId: "codh-edo-maps-places",
       sourceIndex: 7346,
@@ -116,7 +116,46 @@ describe("historical place description foundation", () => {
       });
     }
     expect(parsed.descriptions[1].review).toMatchObject({ reviewedBy: "jigsawrin", reviewedAt: "2026-08-16" });
-    expect(parsed.descriptions.map((description: { status: string }) => description.status)).toEqual(["approved", "approved"]);
+    expect(parsed.descriptions[2]).toMatchObject({
+      descriptionId: "historical-place-description-edo-3652",
+      target: {
+        datasetId: "codh-edo-maps-places",
+        sourceIndex: 3652,
+        entryId: "2-159",
+        sourceFeatureSha256: "700aef29e635de8c8fb3b043b418359be29cf8e68a45dae0c1f11817bc95a227",
+      },
+      compositionMode: "editorial-summary",
+      status: "proposed",
+      canonicalLocale: "ja",
+      review: {
+        reviewedBy: null,
+        reviewedAt: null,
+        reviewNote: null,
+      },
+    });
+    expect(parsed.descriptions[2].content.ja.segments).toHaveLength(2);
+    expect(parsed.descriptions[2].content.ja.segments).toEqual([
+      expect.objectContaining({
+        segmentId: "nihonbashi-road-and-commercial-center",
+        epistemicStatus: "historical-fact",
+        evidenceIds: ["ndl-nihonbashi-road-and-commercial-center-facts"],
+        aiUse: "draft-assistance",
+        humanVerified: false,
+      }),
+      expect.objectContaining({
+        segmentId: "nihonbashi-fish-market",
+        epistemicStatus: "historical-fact",
+        evidenceIds: ["ndl-nihonbashi-fish-market-facts"],
+        aiUse: "draft-assistance",
+        humanVerified: false,
+      }),
+    ]);
+    expect(parsed.descriptions[2].evidence).toEqual(expect.arrayContaining([
+      expect.objectContaining({ sourceId: "codh-edo-map-place-dataset", role: "fact-verification" }),
+      expect.objectContaining({ sourceId: "ndl-landmarks-nihonbashi", role: "text-reuse" }),
+      expect.objectContaining({ sourceId: "ndl-landmarks-nihonbashi", role: "text-reuse" }),
+    ]));
+    expect(parsed.descriptions.map((description: { status: string }) => description.status)).toEqual(["approved", "approved", "proposed"]);
     const generated = createHistoricalPlaceDescriptionPublicProjection(catalog, rights, source);
     expect(generated.approvedDescriptionCount).toBe(2);
     expect(generated.descriptions).toHaveLength(2);
@@ -153,6 +192,7 @@ describe("historical place description foundation", () => {
         },
       }],
     });
+    expect(generatedDescriptions.some((description) => description.descriptionId === "historical-place-description-edo-3652")).toBe(false);
     expect(JSON.stringify(generated.descriptions)).not.toMatch(/verifiedFacts|reviewNote|rightsBasisNote|scopeNote|humanVerified|aiUse/);
     expect(() => validateHistoricalPlaceDescriptionPublicProjection(storedProjection, generated)).not.toThrow();
   });
