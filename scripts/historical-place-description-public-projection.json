@@ -3,8 +3,45 @@
   "projectionStatus": "non-runtime-foundation",
   "sourceDataSha256": "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
   "sourceFeatureCount": 8788,
-  "approvedDescriptionCount": 1,
+  "approvedDescriptionCount": 2,
   "descriptions": [
+    {
+      "descriptionId": "historical-place-description-edo-4847",
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 4847,
+        "entryId": "21-497",
+        "sourceFeatureSha256": "4cd349c5d383c0b221ff2d19027f08a03176917d3493560403ea69d5d1836611"
+      },
+      "locale": "ja",
+      "compositionMode": "editorial-summary",
+      "text": "浅草寺は金龍山を山号とする寺院で、江戸時代には徳川家の祈願所として厚遇されました。浅草観音の名で親しまれ、観音霊地として信仰を集める一方、雷門から仁王門にかけて仲見世の商店が並ぶ、にぎわいの中心でもありました。",
+      "canonicalContentSha256": "caf61089088c9d60eba280a141642ca82cf1d2b4f0c26731c82aba3ffe62bafa",
+      "epistemicSegments": [
+        {
+          "epistemicStatus": "historical-fact",
+          "text": "浅草寺は金龍山を山号とする寺院で、江戸時代には徳川家の祈願所として厚遇されました。"
+        },
+        {
+          "epistemicStatus": "historical-fact",
+          "text": "浅草観音の名で親しまれ、観音霊地として信仰を集める一方、雷門から仁王門にかけて仲見世の商店が並ぶ、にぎわいの中心でもありました。"
+        }
+      ],
+      "sources": [
+        {
+          "sourceId": "ndl-landmarks-asakusa",
+          "title": "錦絵と写真でめぐる日本の名所 / 浅草",
+          "provider": "国立国会図書館",
+          "sourceUrl": "https://www.ndl.go.jp/landmarks/sights/asakusa",
+          "attribution": {
+            "requiredText": "出典：国立国会図書館「錦絵と写真でめぐる日本の名所」",
+            "licenseNotice": "公共データ利用規約（第1.0版）準拠",
+            "modificationNotice": "国立国会図書館「錦絵と写真でめぐる日本の名所」の掲載解説をもとに、いま・むかし地図プロジェクトが編集・要約して作成。"
+          }
+        }
+      ],
+      "translations": []
+    },
     {
       "descriptionId": "historical-place-description-edo-7346",
       "sourceIdentity": {

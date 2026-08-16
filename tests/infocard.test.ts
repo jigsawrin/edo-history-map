@@ -184,6 +184,20 @@ describe("renderPlaceCard", () => {
     expect(links.some((link) => link.href === "https://www.ndl.go.jp/landmarks/sights/zojoji")).toBe(true);
   });
 
+  it("4847 / 21-497にapproved浅草寺本文とNDL attributionを表示する", () => {
+    const raw = place({
+      entryId: "21-497",
+      name: "金龍山浅草寺坂東第十三番目聖観世音",
+      sourceUrl: "https://codh.rois.ac.jp/edo-maps/owariya/21/1853/21-497.html.ja",
+    });
+    expect(renderPlaceCard(container, raw, undefined, undefined, 4847)).toBe(true);
+    expect(container.textContent).toContain("浅草観音の名で親しまれ");
+    expect(container.textContent).toContain("出典：国立国会図書館");
+    expect(container.textContent).toContain("公共データ利用規約（第1.0版）準拠");
+    const links = [...container.querySelectorAll("a")];
+    expect(links.some((link) => link.href === "https://www.ndl.go.jp/landmarks/sights/asakusa")).toBe(true);
+  });
+
   it("descriptionなし地点は従来どおり説明文sectionを表示しない", () => {
     renderPlaceCard(container, place(), undefined, undefined, 0);
     expect(container.textContent).not.toContain("この場所について");

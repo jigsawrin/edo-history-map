@@ -67,6 +67,69 @@
         "reviewNote": "2026-08-15のユーザー承認に基づき、修正版本文の史実、表現、rights、各segmentのpublication basisを確認しました。AI支援による初稿作成履歴はprivate metadataに保持します。"
       },
       "translations": []
+    },
+    {
+      "descriptionId": "historical-place-description-edo-4847",
+      "target": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 4847,
+        "entryId": "21-497",
+        "sourceFeatureSha256": "4cd349c5d383c0b221ff2d19027f08a03176917d3493560403ea69d5d1836611"
+      },
+      "compositionMode": "editorial-summary",
+      "status": "approved",
+      "canonicalLocale": "ja",
+      "content": {
+        "ja": {
+          "text": "浅草寺は金龍山を山号とする寺院で、江戸時代には徳川家の祈願所として厚遇されました。浅草観音の名で親しまれ、観音霊地として信仰を集める一方、雷門から仁王門にかけて仲見世の商店が並ぶ、にぎわいの中心でもありました。",
+          "segments": [
+            {
+              "segmentId": "sensoji-role",
+              "epistemicStatus": "historical-fact",
+              "text": "浅草寺は金龍山を山号とする寺院で、江戸時代には徳川家の祈願所として厚遇されました。",
+              "evidenceIds": ["ndl-asakusa-sensoji-facts"],
+              "aiUse": "draft-assistance",
+              "humanVerified": true
+            },
+            {
+              "segmentId": "sensoji-pilgrimage-and-bustle",
+              "epistemicStatus": "historical-fact",
+              "text": "浅草観音の名で親しまれ、観音霊地として信仰を集める一方、雷門から仁王門にかけて仲見世の商店が並ぶ、にぎわいの中心でもありました。",
+              "evidenceIds": ["ndl-asakusa-sensoji-facts"],
+              "aiUse": "draft-assistance",
+              "humanVerified": true
+            }
+          ]
+        }
+      },
+      "evidence": [
+        {
+          "evidenceId": "codh-sensoji-identity",
+          "sourceId": "codh-edo-map-place-dataset",
+          "role": "fact-verification",
+          "verifiedFacts": [
+            "sourceIndex 4847のentryIdは21-497です。",
+            "原資料表記は金龍山浅草寺坂東第十三番目聖観世音です。"
+          ]
+        },
+        {
+          "evidenceId": "ndl-asakusa-sensoji-facts",
+          "sourceId": "ndl-landmarks-asakusa",
+          "role": "text-reuse",
+          "verifiedFacts": [
+            "浅草寺の山号は金龍山です。",
+            "江戸開府後は徳川家の祈願所として栄えました。",
+            "観音霊地として信仰を集め、関東有数の盛り場でもありました。",
+            "雷門から仁王門までの参道には、境内清掃と引き換えに営業を認められた商店が並び、仲見世の起源となりました。"
+          ]
+        }
+      ],
+      "review": {
+        "reviewedBy": "jigsawrin",
+        "reviewedAt": "2026-08-16",
+        "reviewNote": "2026-08-16のユーザー最終承認に基づき、本文の史実、表現、rights、各segmentのpublication basisを確認しました。AI支援による初稿作成履歴はprivate metadataに保持します。"
+      },
+      "translations": []
     }
   ]
 }
