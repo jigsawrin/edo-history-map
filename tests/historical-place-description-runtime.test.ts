@@ -21,6 +21,13 @@ const sensojiIdentity: HistoricalDescriptionSourceIdentity = {
   sourceFeatureSha256: "4cd349c5d383c0b221ff2d19027f08a03176917d3493560403ea69d5d1836611",
 };
 
+const nihonbashiIdentity: HistoricalDescriptionSourceIdentity = {
+  datasetId: "codh-edo-maps-places",
+  sourceIndex: 3652,
+  entryId: "2-159",
+  sourceFeatureSha256: "700aef29e635de8c8fb3b043b418359be29cf8e68a45dae0c1f11817bc95a227",
+};
+
 describe("historical description runtime resolver", () => {
   it("generated public projectionのexact source identityだけを解決する", () => {
     expect(resolveHistoricalDescription(identity)?.canonicalContentSha256).toBe(
@@ -31,6 +38,10 @@ describe("historical description runtime resolver", () => {
       "caf61089088c9d60eba280a141642ca82cf1d2b4f0c26731c82aba3ffe62bafa",
     );
     expect(resolveEdoHistoricalDescription(4847, "21-497")?.text).toContain("浅草観音");
+    expect(resolveHistoricalDescription(nihonbashiIdentity)?.canonicalContentSha256).toBe(
+      "e0364766da0e2a550a83c582d0f7e11fa7127f1c96f75ed7c53fb9dfa445ae76",
+    );
+    expect(resolveEdoHistoricalDescription(3652, "2-159")?.text).toContain("魚河岸");
   });
 
   it.each([
@@ -44,6 +55,7 @@ describe("historical description runtime resolver", () => {
   it("同名やrelation情報を入力に取らず別recordへ波及しない", () => {
     expect(resolveEdoHistoricalDescription(0, "4-349")).toBeNull();
     expect(resolveEdoHistoricalDescription(7346, "same-name-record")).toBeNull();
+    expect(resolveEdoHistoricalDescription(6727, "3-263")).toBeNull();
   });
 
   it("stale public projectionはfail closedにする", () => {
