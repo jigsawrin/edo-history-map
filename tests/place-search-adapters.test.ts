@@ -32,7 +32,7 @@ describe("地域別地点検索アダプター", () => {
     expect(JSON.stringify(source[0])).toBe(before);
   }, 60_000);
 
-  it("approved本文だけを7346 / 4-349の検索語へ追加し別recordへ波及しない", () => {
+  it("approved本文を増上寺と浅草寺のexact recordだけへ追加し別recordへ波及しない", () => {
     const source = parsePlacesGeoJson(
       readFileSync(join(root, "public/data/edo-places.geojson"), "utf8"),
     );
@@ -45,7 +45,12 @@ describe("地域別地点検索アダプター", () => {
     }
     expect(zojoji?.normalizedSearchText).not.toContain("rightsBasisNote");
     expect(zojoji?.normalizedSearchText).not.toContain("reviewNote");
-    expect(records.filter((record) => record.normalizedDescription.length > 0)).toHaveLength(1);
+    expect(source[4847]?.entryId).toBe("21-497");
+    for (const query of ["浅草観音", "観音霊地", "仲見世"]) {
+      const hits = searchHistoricalPlaces(records, query);
+      expect(hits.some((hit) => hit.sourceRecord.sourceIndex === 4847)).toBe(true);
+    }
+    expect(records.filter((record) => record.normalizedDescription.length > 0)).toHaveLength(2);
   }, 60_000);
 
   it("京都36件を英語名・カテゴリ・年月・要約検索付きで変換する", () => {

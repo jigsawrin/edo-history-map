@@ -187,6 +187,20 @@ describe("静的地点一覧生成", () => {
     expect((html.slice(0, start).match(/data-place-region="edo"/gu) ?? []).length).toBe(60);
   });
 
+  it("4847 / 21-497のlegacy articleだけに浅草寺本文とNDL attributionを追加する", () => {
+    const matches = [...generated.files].filter(([, html]) => html.includes("浅草観音の名で親しまれ"));
+    expect(matches).toHaveLength(1);
+    const [, html] = matches[0]!;
+    const start = html.lastIndexOf('<article id="', html.indexOf("浅草観音の名で親しまれ"));
+    const end = html.indexOf("</article>", start);
+    const article = html.slice(start, end + "</article>".length);
+    expect(article).toContain("浅草観音の名で親しまれ");
+    expect(article).toContain("https://www.ndl.go.jp/landmarks/sights/asakusa");
+    expect(article).toContain("出典：国立国会図書館");
+    expect(article).toContain("公共データ利用規約（第1.0版）準拠");
+    expect(article).toContain("CODHの地名詳細ページを開く");
+  });
+
   it("EDO地域先頭に全ページの実在地点名範囲を出力する", () => {
     const html = generated.files.get("edo/index.html") ?? "";
     expect(html).toContain("ページごとの地点名範囲");

@@ -14,12 +14,23 @@ const identity: HistoricalDescriptionSourceIdentity = {
   sourceFeatureSha256: "e4158b329af9e3b357e89c66896ddaa03c2b1ada2a9961d6b0c266ed9f3118b1",
 };
 
+const sensojiIdentity: HistoricalDescriptionSourceIdentity = {
+  datasetId: "codh-edo-maps-places",
+  sourceIndex: 4847,
+  entryId: "21-497",
+  sourceFeatureSha256: "4cd349c5d383c0b221ff2d19027f08a03176917d3493560403ea69d5d1836611",
+};
+
 describe("historical description runtime resolver", () => {
   it("generated public projectionのexact source identityだけを解決する", () => {
     expect(resolveHistoricalDescription(identity)?.canonicalContentSha256).toBe(
       "15d5d4d29ca600e712fd5cd94b9ae64980ac3da758e78da46766eb03f003b5b9",
     );
     expect(resolveEdoHistoricalDescription(7346, "4-349")?.text).toContain("徳川将軍家");
+    expect(resolveHistoricalDescription(sensojiIdentity)?.canonicalContentSha256).toBe(
+      "caf61089088c9d60eba280a141642ca82cf1d2b4f0c26731c82aba3ffe62bafa",
+    );
+    expect(resolveEdoHistoricalDescription(4847, "21-497")?.text).toContain("浅草観音");
   });
 
   it.each([

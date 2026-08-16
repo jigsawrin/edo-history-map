@@ -77,7 +77,7 @@
         "sourceFeatureSha256": "4cd349c5d383c0b221ff2d19027f08a03176917d3493560403ea69d5d1836611"
       },
       "compositionMode": "editorial-summary",
-      "status": "proposed",
+      "status": "approved",
       "canonicalLocale": "ja",
       "content": {
         "ja": {
@@ -89,7 +89,7 @@
               "text": "浅草寺は金龍山を山号とする寺院で、江戸時代には徳川家の祈願所として厚遇されました。",
               "evidenceIds": ["ndl-asakusa-sensoji-facts"],
               "aiUse": "draft-assistance",
-              "humanVerified": false
+              "humanVerified": true
             },
             {
               "segmentId": "sensoji-pilgrimage-and-bustle",
@@ -97,7 +97,7 @@
               "text": "浅草観音の名で親しまれ、観音霊地として信仰を集める一方、雷門から仁王門にかけて仲見世の商店が並ぶ、にぎわいの中心でもありました。",
               "evidenceIds": ["ndl-asakusa-sensoji-facts"],
               "aiUse": "draft-assistance",
-              "humanVerified": false
+              "humanVerified": true
             }
           ]
         }
@@ -125,9 +125,9 @@
         }
       ],
       "review": {
-        "reviewedBy": null,
-        "reviewedAt": null,
-        "reviewNote": null
+        "reviewedBy": "jigsawrin",
+        "reviewedAt": "2026-08-16",
+        "reviewNote": "2026-08-16のユーザー最終承認に基づき、本文の史実、表現、rights、各segmentのpublication basisを確認しました。AI支援による初稿作成履歴はprivate metadataに保持します。"
       },
       "translations": []
     }

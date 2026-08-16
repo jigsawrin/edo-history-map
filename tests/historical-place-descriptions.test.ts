@@ -83,7 +83,7 @@ describe("historical place description foundation", () => {
     for (const root of temporaryRoots.splice(0)) rmSync(root, { recursive: true, force: true });
   });
 
-  it("実catalogは増上寺approved 1件だけをpublic projectionへ出し浅草寺proposedを非公開に保つ", () => {
+  it("実catalogは増上寺と浅草寺のapproved 2件をpublic projectionへ出す", () => {
     const parsed = validateHistoricalPlaceDescriptionCatalog(catalog, source, rights) as typeof catalog;
     expect(parsed.descriptions).toHaveLength(2);
     expect(parsed.descriptions[0].target).toEqual({
@@ -103,7 +103,7 @@ describe("historical place description foundation", () => {
         sourceFeatureSha256: "4cd349c5d383c0b221ff2d19027f08a03176917d3493560403ea69d5d1836611",
       },
       compositionMode: "editorial-summary",
-      status: "proposed",
+      status: "approved",
       canonicalLocale: "ja",
     });
     expect(parsed.descriptions[1].content.ja.segments).toHaveLength(2);
@@ -112,14 +112,17 @@ describe("historical place description foundation", () => {
         epistemicStatus: "historical-fact",
         evidenceIds: ["ndl-asakusa-sensoji-facts"],
         aiUse: "draft-assistance",
-        humanVerified: false,
+        humanVerified: true,
       });
     }
-    expect(parsed.descriptions.map((description: { status: string }) => description.status)).toEqual(["approved", "proposed"]);
+    expect(parsed.descriptions[1].review).toMatchObject({ reviewedBy: "jigsawrin", reviewedAt: "2026-08-16" });
+    expect(parsed.descriptions.map((description: { status: string }) => description.status)).toEqual(["approved", "approved"]);
     const generated = createHistoricalPlaceDescriptionPublicProjection(catalog, rights, source);
-    expect(generated.approvedDescriptionCount).toBe(1);
-    expect(generated.descriptions).toHaveLength(1);
-    expect(generated.descriptions[0]).toMatchObject({
+    expect(generated.approvedDescriptionCount).toBe(2);
+    expect(generated.descriptions).toHaveLength(2);
+    const generatedDescriptions = generated.descriptions as Array<{ descriptionId: string }>;
+    const zojoji = generatedDescriptions.find((description) => description.descriptionId === "historical-place-description-edo-7346");
+    expect(zojoji).toMatchObject({
       canonicalContentSha256: "15d5d4d29ca600e712fd5cd94b9ae64980ac3da758e78da46766eb03f003b5b9",
       sources: [{
         sourceId: "ndl-landmarks-zojoji",
@@ -131,10 +134,26 @@ describe("historical place description foundation", () => {
       }],
       translations: [],
     });
-    const publicDescriptions = generated.descriptions as Array<{ descriptionId: string }>;
-    expect(publicDescriptions[0]!.descriptionId).toBe("historical-place-description-edo-7346");
-    expect(publicDescriptions.some((description) => description.descriptionId === "historical-place-description-edo-4847")).toBe(false);
-    expect(JSON.stringify(generated.descriptions[0])).not.toMatch(/verifiedFacts|reviewNote|rightsBasisNote|scopeNote|humanVerified|aiUse/);
+    const sensoji = generatedDescriptions.find((description) => description.descriptionId === "historical-place-description-edo-4847");
+    expect(sensoji).toMatchObject({
+      sourceIdentity: {
+        datasetId: "codh-edo-maps-places",
+        sourceIndex: 4847,
+        entryId: "21-497",
+        sourceFeatureSha256: "4cd349c5d383c0b221ff2d19027f08a03176917d3493560403ea69d5d1836611",
+      },
+      canonicalContentSha256: "caf61089088c9d60eba280a141642ca82cf1d2b4f0c26731c82aba3ffe62bafa",
+      sources: [{
+        sourceId: "ndl-landmarks-asakusa",
+        sourceUrl: "https://www.ndl.go.jp/landmarks/sights/asakusa",
+        attribution: {
+          requiredText: "出典：国立国会図書館「錦絵と写真でめぐる日本の名所」",
+          licenseNotice: "公共データ利用規約（第1.0版）準拠",
+          modificationNotice: "国立国会図書館「錦絵と写真でめぐる日本の名所」の掲載解説をもとに、いま・むかし地図プロジェクトが編集・要約して作成。",
+        },
+      }],
+    });
+    expect(JSON.stringify(generated.descriptions)).not.toMatch(/verifiedFacts|reviewNote|rightsBasisNote|scopeNote|humanVerified|aiUse/);
     expect(() => validateHistoricalPlaceDescriptionPublicProjection(storedProjection, generated)).not.toThrow();
   });
 
@@ -150,13 +169,16 @@ describe("historical place description foundation", () => {
 
   it("各segmentにNDL text-reuseがあるapproved editorial-summaryは通す", () => {
     const projection = createHistoricalPlaceDescriptionPublicProjection(approvedCatalog(), rights, source);
-    expect(projection.approvedDescriptionCount).toBe(1);
-    expect(projection.descriptions[0]).toMatchObject({
+    expect(projection.approvedDescriptionCount).toBe(2);
+    const zojoji = (projection.descriptions as Array<{ descriptionId: string }>).find(
+      (description) => description.descriptionId === "historical-place-description-edo-7346",
+    );
+    expect(zojoji).toMatchObject({
       descriptionId: "historical-place-description-edo-7346",
       locale: "ja",
       compositionMode: "editorial-summary",
     });
-    expect(JSON.stringify(projection.descriptions[0])).not.toMatch(/verifiedFacts|reviewNote|rightsBasisNote|humanVerified|aiUse/);
+    expect(JSON.stringify(zojoji)).not.toMatch(/verifiedFacts|reviewNote|rightsBasisNote|humanVerified|aiUse/);
   });
 
   it.each([
