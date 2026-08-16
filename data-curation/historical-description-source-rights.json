@@ -87,6 +87,35 @@
         "note": "国立国会図書館作成の掲載解説だけを対象とします。掲載画像、採録元資料、外部リンク先、第三者名義コンテンツは再利用しません。"
       },
       "scopeNote": "浅草pageの浅草寺に関するNDL作成解説を史実確認とeditorial summary作成に利用します。画像、採録元資料、外部リンク先は対象外です。"
+    },
+    {
+      "sourceId": "ndl-landmarks-nihonbashi",
+      "title": "錦絵と写真でめぐる日本の名所 / 日本橋",
+      "provider": "国立国会図書館",
+      "sourceUrl": "https://www.ndl.go.jp/landmarks/sights/nihonbashi/",
+      "termsUrl": "https://www.ndl.go.jp/landmarks/about",
+      "rightsBasisUrls": [
+        "https://www.ndl.go.jp/sitepolicy/terms",
+        "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
+      ],
+      "rightsCheckedAt": "2026-08-16",
+      "rightsBasisNote": "電子展示会の「ご利用について」が掲載解説の申込不要・商用利用可・出典表示必要を明示し、NDL利用規約がPDL1.0準拠で複製、翻訳、変形等を許可していることを確認しました。",
+      "accessible": "confirmed",
+      "commercialUse": "allowed",
+      "reproduction": "allowed",
+      "modification": "allowed",
+      "summarization": "allowed",
+      "attribution": {
+        "required": true,
+        "requiredText": "出典：国立国会図書館「錦絵と写真でめぐる日本の名所」",
+        "licenseNotice": "公共データ利用規約（第1.0版）準拠",
+        "modificationNotice": "国立国会図書館「錦絵と写真でめぐる日本の名所」の掲載解説をもとに、いま・むかし地図プロジェクトが編集・要約して作成。"
+      },
+      "thirdPartyRights": {
+        "status": "cleared-for-scope",
+        "note": "国立国会図書館作成の日本橋掲載解説だけを対象とします。画像、錦絵、写真、ロゴ、江戸名所図会等の原文、採録元資料、外部リンク先、第三者名義コンテンツは再利用しません。"
+      },
+      "scopeNote": "日本橋pageの国立国会図書館作成解説を史実確認とeditorial summary作成に利用します。画像、錦絵、写真、ロゴ、江戸名所図会等の原文、採録元資料、外部リンク先、第三者名義コンテンツは対象外です。"
     }
   ]
 }
