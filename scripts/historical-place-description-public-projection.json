@@ -3,8 +3,45 @@
   "projectionStatus": "non-runtime-foundation",
   "sourceDataSha256": "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
   "sourceFeatureCount": 8788,
-  "approvedDescriptionCount": 2,
+  "approvedDescriptionCount": 3,
   "descriptions": [
+    {
+      "descriptionId": "historical-place-description-edo-3652",
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 3652,
+        "entryId": "2-159",
+        "sourceFeatureSha256": "700aef29e635de8c8fb3b043b418359be29cf8e68a45dae0c1f11817bc95a227"
+      },
+      "locale": "ja",
+      "compositionMode": "editorial-summary",
+      "text": "日本橋は江戸の五街道と一里塚の起点となった橋で、周辺は幕府の役所や大店が集まる下町の中心としてにぎわいました。橋の北側には魚河岸があり、江戸の魚取引の中心として発展しました。",
+      "canonicalContentSha256": "e0364766da0e2a550a83c582d0f7e11fa7127f1c96f75ed7c53fb9dfa445ae76",
+      "epistemicSegments": [
+        {
+          "epistemicStatus": "historical-fact",
+          "text": "日本橋は江戸の五街道と一里塚の起点となった橋で、周辺は幕府の役所や大店が集まる下町の中心としてにぎわいました。"
+        },
+        {
+          "epistemicStatus": "historical-fact",
+          "text": "橋の北側には魚河岸があり、江戸の魚取引の中心として発展しました。"
+        }
+      ],
+      "sources": [
+        {
+          "sourceId": "ndl-landmarks-nihonbashi",
+          "title": "錦絵と写真でめぐる日本の名所 / 日本橋",
+          "provider": "国立国会図書館",
+          "sourceUrl": "https://www.ndl.go.jp/landmarks/sights/nihonbashi/",
+          "attribution": {
+            "requiredText": "出典：国立国会図書館「錦絵と写真でめぐる日本の名所」",
+            "licenseNotice": "公共データ利用規約（第1.0版）準拠",
+            "modificationNotice": "国立国会図書館「錦絵と写真でめぐる日本の名所」の掲載解説をもとに、いま・むかし地図プロジェクトが編集・要約して作成。"
+          }
+        }
+      ],
+      "translations": []
+    },
     {
       "descriptionId": "historical-place-description-edo-4847",
       "sourceIdentity": {

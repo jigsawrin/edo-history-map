@@ -32,7 +32,7 @@ describe("地域別地点検索アダプター", () => {
     expect(JSON.stringify(source[0])).toBe(before);
   }, 60_000);
 
-  it("approved本文を増上寺と浅草寺のexact recordだけへ追加し別recordへ波及しない", () => {
+  it("approved本文を増上寺・浅草寺・日本橋のexact recordだけへ追加し別recordへ波及しない", () => {
     const source = parsePlacesGeoJson(
       readFileSync(join(root, "public/data/edo-places.geojson"), "utf8"),
     );
@@ -50,7 +50,15 @@ describe("地域別地点検索アダプター", () => {
       const hits = searchHistoricalPlaces(records, query);
       expect(hits.some((hit) => hit.sourceRecord.sourceIndex === 4847)).toBe(true);
     }
-    expect(records.filter((record) => record.normalizedDescription.length > 0)).toHaveLength(2);
+    expect(source[3652]?.entryId).toBe("2-159");
+    for (const query of ["五街道", "一里塚", "魚河岸"]) {
+      const hits = searchHistoricalPlaces(records, query);
+      expect(hits.some((hit) => hit.sourceRecord.sourceIndex === 3652)).toBe(true);
+      expect(hits.some((hit) => hit.sourceRecord.sourceIndex === 6727)).toBe(false);
+    }
+    expect(source[6727]?.entryId).toBe("3-263");
+    expect(records[6727]?.normalizedDescription).toBe("");
+    expect(records.filter((record) => record.normalizedDescription.length > 0)).toHaveLength(3);
   }, 60_000);
 
   it("京都36件を英語名・カテゴリ・年月・要約検索付きで変換する", () => {

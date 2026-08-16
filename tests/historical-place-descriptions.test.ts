@@ -83,7 +83,7 @@ describe("historical place description foundation", () => {
     for (const root of temporaryRoots.splice(0)) rmSync(root, { recursive: true, force: true });
   });
 
-  it("実catalogはapproved 2件と日本橋proposed 1件を保持しpublic projectionは既存2件だけを出す", () => {
+  it("実catalogはapproved 3件を保持しpublic projectionへexact identityだけを出す", () => {
     const parsed = validateHistoricalPlaceDescriptionCatalog(catalog, source, rights) as typeof catalog;
     expect(parsed.descriptions).toHaveLength(3);
     expect(parsed.descriptions[0].target).toEqual({
@@ -125,12 +125,11 @@ describe("historical place description foundation", () => {
         sourceFeatureSha256: "700aef29e635de8c8fb3b043b418359be29cf8e68a45dae0c1f11817bc95a227",
       },
       compositionMode: "editorial-summary",
-      status: "proposed",
+      status: "approved",
       canonicalLocale: "ja",
       review: {
-        reviewedBy: null,
-        reviewedAt: null,
-        reviewNote: null,
+        reviewedBy: "jigsawrin",
+        reviewedAt: "2026-08-16",
       },
     });
     expect(parsed.descriptions[2].content.ja.segments).toHaveLength(2);
@@ -140,14 +139,14 @@ describe("historical place description foundation", () => {
         epistemicStatus: "historical-fact",
         evidenceIds: ["ndl-nihonbashi-road-and-commercial-center-facts"],
         aiUse: "draft-assistance",
-        humanVerified: false,
+        humanVerified: true,
       }),
       expect.objectContaining({
         segmentId: "nihonbashi-fish-market",
         epistemicStatus: "historical-fact",
         evidenceIds: ["ndl-nihonbashi-fish-market-facts"],
         aiUse: "draft-assistance",
-        humanVerified: false,
+        humanVerified: true,
       }),
     ]);
     expect(parsed.descriptions[2].evidence).toEqual(expect.arrayContaining([
@@ -155,10 +154,10 @@ describe("historical place description foundation", () => {
       expect.objectContaining({ sourceId: "ndl-landmarks-nihonbashi", role: "text-reuse" }),
       expect.objectContaining({ sourceId: "ndl-landmarks-nihonbashi", role: "text-reuse" }),
     ]));
-    expect(parsed.descriptions.map((description: { status: string }) => description.status)).toEqual(["approved", "approved", "proposed"]);
+    expect(parsed.descriptions.map((description: { status: string }) => description.status)).toEqual(["approved", "approved", "approved"]);
     const generated = createHistoricalPlaceDescriptionPublicProjection(catalog, rights, source);
-    expect(generated.approvedDescriptionCount).toBe(2);
-    expect(generated.descriptions).toHaveLength(2);
+    expect(generated.approvedDescriptionCount).toBe(3);
+    expect(generated.descriptions).toHaveLength(3);
     const generatedDescriptions = generated.descriptions as Array<{ descriptionId: string }>;
     const zojoji = generatedDescriptions.find((description) => description.descriptionId === "historical-place-description-edo-7346");
     expect(zojoji).toMatchObject({
@@ -192,7 +191,25 @@ describe("historical place description foundation", () => {
         },
       }],
     });
-    expect(generatedDescriptions.some((description) => description.descriptionId === "historical-place-description-edo-3652")).toBe(false);
+    const nihonbashi = generatedDescriptions.find((description) => description.descriptionId === "historical-place-description-edo-3652");
+    expect(nihonbashi).toMatchObject({
+      sourceIdentity: {
+        datasetId: "codh-edo-maps-places",
+        sourceIndex: 3652,
+        entryId: "2-159",
+        sourceFeatureSha256: "700aef29e635de8c8fb3b043b418359be29cf8e68a45dae0c1f11817bc95a227",
+      },
+      canonicalContentSha256: "e0364766da0e2a550a83c582d0f7e11fa7127f1c96f75ed7c53fb9dfa445ae76",
+      sources: [{
+        sourceId: "ndl-landmarks-nihonbashi",
+        sourceUrl: "https://www.ndl.go.jp/landmarks/sights/nihonbashi/",
+        attribution: {
+          requiredText: "出典：国立国会図書館「錦絵と写真でめぐる日本の名所」",
+          licenseNotice: "公共データ利用規約（第1.0版）準拠",
+          modificationNotice: "国立国会図書館「錦絵と写真でめぐる日本の名所」の掲載解説をもとに、いま・むかし地図プロジェクトが編集・要約して作成。",
+        },
+      }],
+    });
     expect(JSON.stringify(generated.descriptions)).not.toMatch(/verifiedFacts|reviewNote|rightsBasisNote|scopeNote|humanVerified|aiUse/);
     expect(() => validateHistoricalPlaceDescriptionPublicProjection(storedProjection, generated)).not.toThrow();
   });
@@ -209,7 +226,7 @@ describe("historical place description foundation", () => {
 
   it("各segmentにNDL text-reuseがあるapproved editorial-summaryは通す", () => {
     const projection = createHistoricalPlaceDescriptionPublicProjection(approvedCatalog(), rights, source);
-    expect(projection.approvedDescriptionCount).toBe(2);
+    expect(projection.approvedDescriptionCount).toBe(3);
     const zojoji = (projection.descriptions as Array<{ descriptionId: string }>).find(
       (description) => description.descriptionId === "historical-place-description-edo-7346",
     );
