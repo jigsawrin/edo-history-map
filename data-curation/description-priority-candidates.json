@@ -1,0 +1,2857 @@
+{
+  "schemaVersion": 1,
+  "catalogStatus": "private-workflow-triage",
+  "purpose": "human-investigation-order-only",
+  "sourceDatasetId": "codh-edo-maps-places",
+  "sourceDataPath": "public/data/edo-places.geojson",
+  "sourceDataSha256": "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
+  "sourceFeatureCount": 8788,
+  "generatorVersion": 1,
+  "selectionContract": {
+    "candidateCount": 72,
+    "perCategory": 8,
+    "categories": [
+      "名所",
+      "寺社",
+      "施設",
+      "海川池",
+      "地名",
+      "商店",
+      "町村字",
+      "屋敷地",
+      "その他"
+    ],
+    "geographicCellDegrees": 0.01,
+    "tieBreak": "score-desc-then-sourceIndex-asc"
+  },
+  "candidates": [
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 2497,
+        "entryId": "16-408",
+        "sourceFeatureSha256": "adc2db425fcaa4af4b86cb969d2a03c01a0f4f3b1c225602f571bdae79838c12"
+      },
+      "sourceName": "梅屋敷",
+      "category": "名所",
+      "suggestedTier": "A",
+      "score": 50,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13982:3570"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 30
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 3451,
+        "entryId": "19-177",
+        "sourceFeatureSha256": "164b375a2bd28b24821aa41549e4f8a43d091c9af1f4643633093b38046b0f57"
+      },
+      "sourceName": "鶴亀",
+      "category": "名所",
+      "suggestedTier": "A",
+      "score": 50,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13972:3571"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 30
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 4543,
+        "entryId": "21-192",
+        "sourceFeatureSha256": "9947c8358e9cc283ef649f15fbf3226539206d54d88787fc3f373fedeaaedd64"
+      },
+      "sourceName": "川原崎座",
+      "category": "名所",
+      "suggestedTier": "A",
+      "score": 50,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13980:3571"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 30
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 4685,
+        "entryId": "21-335",
+        "sourceFeatureSha256": "95ffa73f2a2921a1fae569106f79af0987c3f707e853e80abe1778d472c7adc1"
+      },
+      "sourceName": "（御行松）",
+      "category": "名所",
+      "suggestedTier": "A",
+      "score": 50,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13978:3572"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 30
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 4780,
+        "entryId": "21-430",
+        "sourceFeatureSha256": "cd763a22bd96632b3bc0d1a06bffebba8967bcc818b7da1e4955a2cccf064734"
+      },
+      "sourceName": "都鳥ノ名所ナリ",
+      "category": "名所",
+      "suggestedTier": "A",
+      "score": 50,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13980:3572"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 30
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 4931,
+        "entryId": "22-060",
+        "sourceFeatureSha256": "8f5e10e726aa10e6946cf60b613c036adb56c09b38596589b15483caafb6a2aa"
+      },
+      "sourceName": "四季花屋敷紫泉亭眺望好シ",
+      "category": "名所",
+      "suggestedTier": "A",
+      "score": 50,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13976:3572"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 30
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 5058,
+        "entryId": "22-188",
+        "sourceFeatureSha256": "fc0d160281272b26c8a8ceb4ee30fbd0bc63caedec76250df23819775a5948ae"
+      },
+      "sourceName": "八幡太郎旗掛桜",
+      "category": "名所",
+      "suggestedTier": "A",
+      "score": 50,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13975:3572"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 30
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 5263,
+        "entryId": "23-149",
+        "sourceFeatureSha256": "3310871ace41675bc3a20a8dd2a9f1d70efc55504e76af411b82bc9750320b02"
+      },
+      "sourceName": "（石碑）",
+      "category": "名所",
+      "suggestedTier": "A",
+      "score": 50,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3574"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 30
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 305,
+        "entryId": "11-049",
+        "sourceFeatureSha256": "18f6927faf24695131e7604404fc271f7dd3a26ad0d0313c4dd88cf3c1ba0857"
+      },
+      "sourceName": "光照寺",
+      "category": "寺社",
+      "suggestedTier": "A",
+      "score": 45,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3565"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 25
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 343,
+        "entryId": "11-087",
+        "sourceFeatureSha256": "fcd29123c6d9908fda32c4473cf4a92495917b09d55c3dfe76dbdcb0a9514123"
+      },
+      "sourceName": "正念寺",
+      "category": "寺社",
+      "suggestedTier": "A",
+      "score": 45,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13972:3565"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 25
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 362,
+        "entryId": "11-106",
+        "sourceFeatureSha256": "1ca3bcafc53887bd6ce058e60c77b81f03ebe7642b316af7de66685430e12ed1"
+      },
+      "sourceName": "大法寺",
+      "category": "寺社",
+      "suggestedTier": "A",
+      "score": 45,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13972:3566"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 25
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 365,
+        "entryId": "11-109",
+        "sourceFeatureSha256": "be4f5b77db2b077a4348b78f35b4b5f29fe90c8747c9c284dcbbd653fda2b327"
+      },
+      "sourceName": "清徳寺",
+      "category": "寺社",
+      "suggestedTier": "A",
+      "score": 45,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3566"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 25
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 501,
+        "entryId": "11-246",
+        "sourceFeatureSha256": "7b2a14546d00e43324ccc56d7576668f02bb17afda2b2456c3adfe85739541e8"
+      },
+      "sourceName": "竜沢寺",
+      "category": "寺社",
+      "suggestedTier": "A",
+      "score": 45,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3564"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 25
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 540,
+        "entryId": "11-285",
+        "sourceFeatureSha256": "1c90132f481a6c3acf487032555c4276d88ffb6f95a538e5933c9aec19602918"
+      },
+      "sourceName": "光林寺",
+      "category": "寺社",
+      "suggestedTier": "A",
+      "score": 45,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13972:3564"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 25
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 589,
+        "entryId": "12-007",
+        "sourceFeatureSha256": "de021266545456b2b7c612c630f2bc478f599c4f1ec17ed17e9161a8fa5d64a5"
+      },
+      "sourceName": "茶ノ木稲荷社　市ヶ谷八幡宮　別当東円寺",
+      "category": "寺社",
+      "suggestedTier": "A",
+      "score": 45,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 25
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 626,
+        "entryId": "12-044",
+        "sourceFeatureSha256": "7a4d6fe64ea935756fdbb7de41c050c546881552a72a3e6d597211a9bc3e2b0c"
+      },
+      "sourceName": "若宮八幡宮",
+      "category": "寺社",
+      "suggestedTier": "A",
+      "score": 45,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 25
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 4,
+        "entryId": "1-005",
+        "sourceFeatureSha256": "f9e8af840d071658750c0f9c5a799b5a33ae035758fa706e572f593a1f1adabb"
+      },
+      "sourceName": "御厩諏訪部八十郎",
+      "category": "施設",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13975:3567"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 10,
+        "entryId": "1-011",
+        "sourceFeatureSha256": "e019716dc8d7ba336887258a1a2a865ce2551eb12a20ef3fab9ebf87b80ad970"
+      },
+      "sourceName": "馬場先御門",
+      "category": "施設",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13976:3567"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 11,
+        "entryId": "1-012",
+        "sourceFeatureSha256": "131717c436560720412c461027cbf5f024c0b49027e9d78026e3a0afceb3c50e"
+      },
+      "sourceName": "腰掛",
+      "category": "施設",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13975:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 24,
+        "entryId": "1-025",
+        "sourceFeatureSha256": "b3ab3bdb89a2292b6f988b3e0efe2cf9b5be98f27e681e66391782e75109ba1c"
+      },
+      "sourceName": "和田倉御門",
+      "category": "施設",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13976:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 120,
+        "entryId": "1-121",
+        "sourceFeatureSha256": "4840b44405146b18c59aa5d20161349f52f26bf07bfb2dc17e75bc261569abdb"
+      },
+      "sourceName": "腰掛",
+      "category": "施設",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13975:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 134,
+        "entryId": "10-007",
+        "sourceFeatureSha256": "a9310094a962640c6f07580e8ae1a07b4e50eff32fd7d5ed7573a19fb433512e"
+      },
+      "sourceName": "御用地",
+      "category": "施設",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 175,
+        "entryId": "10-048",
+        "sourceFeatureSha256": "00205c6c81b48262eb485f5d92913e19abe259b0a0972da201ac2f219a208778"
+      },
+      "sourceName": "定火消御役屋敷　千石弥三郎",
+      "category": "施設",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 303,
+        "entryId": "11-047",
+        "sourceFeatureSha256": "cc447b08237697161269ac0e075c86c038bf5d29e6272fc767fcbece0e8610cc"
+      },
+      "sourceName": "馬場",
+      "category": "施設",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3565"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 1334,
+        "entryId": "14-031",
+        "sourceFeatureSha256": "3de6189e33ce2918be7a967e7f66a5c2b2204bb59fffc1cefa7d720721664ce3"
+      },
+      "sourceName": "六間堀",
+      "category": "海川池",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13979:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 1480,
+        "entryId": "14-177",
+        "sourceFeatureSha256": "bd85ec9db9f87e84f2bc54f328f0269c8d0fa3fde5486980ebb6e9d7278985b9"
+      },
+      "sourceName": "小名木川",
+      "category": "海川池",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13980:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 1933,
+        "entryId": "15-044",
+        "sourceFeatureSha256": "a9368fbbd4fc7da2658e7a99771e4a9d229186901073d83e0e79529d4f6c2ba2"
+      },
+      "sourceName": "加二川",
+      "category": "海川池",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13972:3570"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 1982,
+        "entryId": "15-093",
+        "sourceFeatureSha256": "ac269af4b1b4b3d2c911255fb361f46eb8646be053351bd36cb3107cbacc89a4"
+      },
+      "sourceName": "江戸川",
+      "category": "海川池",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3570"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 2221,
+        "entryId": "16-131",
+        "sourceFeatureSha256": "d5bf2274bf3f7283ad5e19e6159c04983f0521f746ad136732641626c4c7f903"
+      },
+      "sourceName": "北割下水",
+      "category": "海川池",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13980:3570"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 2237,
+        "entryId": "16-147",
+        "sourceFeatureSha256": "b7049addba20fcdc16d31cbb8c6cf8b67077ebda33b423250cf792359b66a27d"
+      },
+      "sourceName": "埋堀",
+      "category": "海川池",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13979:3570"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 2365,
+        "entryId": "16-276",
+        "sourceFeatureSha256": "6cb971d18943e1898cc337e462888f5d2aabf493b8b558cc836a8296f3e371ea"
+      },
+      "sourceName": "竪川",
+      "category": "海川池",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13980:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 2910,
+        "entryId": "17-308",
+        "sourceFeatureSha256": "eec23b5b30a6852e397e582d9674ec2e0d3550ba98ae40c03bcd0923a92f7080"
+      },
+      "sourceName": "八番堀",
+      "category": "海川池",
+      "suggestedTier": "B",
+      "score": 40,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13978:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 20
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 58,
+        "entryId": "1-059",
+        "sourceFeatureSha256": "9de6d8ca0f36fc4f6076f02178b9ee458bec9617a9605c5ff84b0afe4c664eb0"
+      },
+      "sourceName": "大名小路",
+      "category": "地名",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13976:3567"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 74,
+        "entryId": "1-075",
+        "sourceFeatureSha256": "0febe111a9e93909814b57ed438b9d51c25b38576a5339e12f56373cf34500e4"
+      },
+      "sourceName": "辰之口",
+      "category": "地名",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13976:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 130,
+        "entryId": "10-003",
+        "sourceFeatureSha256": "7d090343a9e6a386649b4544b6f1167dea380df8f1b131d864730d812b368ffa"
+      },
+      "sourceName": "九段坂",
+      "category": "地名",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 138,
+        "entryId": "10-011",
+        "sourceFeatureSha256": "bddf7a998492f6d40d01882a427aba3b7212ca54e7e81a63e5253b25a53bc96a"
+      },
+      "sourceName": "堀端一番町",
+      "category": "地名",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 168,
+        "entryId": "10-041",
+        "sourceFeatureSha256": "16ef658c4949d50629a44bac9bce0f00e91759338356d3e7f8861de088f190c9"
+      },
+      "sourceName": "裏二番町",
+      "category": "地名",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 288,
+        "entryId": "11-032",
+        "sourceFeatureSha256": "67d8c17ccfd0701ea2c49b64ee7a644b9bf8d8b4d4d9222927f57410d997bea3"
+      },
+      "sourceName": "狸穴坂",
+      "category": "地名",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3565"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 296,
+        "entryId": "11-040",
+        "sourceFeatureSha256": "fb70e90f69aca0ef389389c588b4d796ddae93161c8d51f5aad72c9c409930cb"
+      },
+      "sourceName": "鼠坂",
+      "category": "地名",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3566"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 300,
+        "entryId": "11-044",
+        "sourceFeatureSha256": "083f79755187da7870ff6e8c4f226e51ed2bfccbdd870847455cbbdb2ebd0f8b"
+      },
+      "sourceName": "此辺十番ト云",
+      "category": "地名",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3565"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 327,
+        "entryId": "11-071",
+        "sourceFeatureSha256": "aa6d1bbb11cff8b9d95975fa2b362d3106d257913f5a3b378f296e426c7d197c"
+      },
+      "sourceName": "植木屋",
+      "category": "商店",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3566"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 345,
+        "entryId": "11-089",
+        "sourceFeatureSha256": "9c020d183716cbb17a7286cb70234c7c71bf958675b3eb1be228a32b65990ca5"
+      },
+      "sourceName": "植木屋",
+      "category": "商店",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13972:3565"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 499,
+        "entryId": "11-244",
+        "sourceFeatureSha256": "88e8d9c0acd1ba888d2813a2e00f5caae69629fa10f1d08a5f6382f073357859"
+      },
+      "sourceName": "植木屋",
+      "category": "商店",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3564"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 1466,
+        "entryId": "14-163",
+        "sourceFeatureSha256": "cedf67912cb591203aabb2d3f86b5f8f3140c68b444bd0b54285920fbc410415"
+      },
+      "sourceName": "釜座",
+      "category": "商店",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13982:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 1889,
+        "entryId": "14-591",
+        "sourceFeatureSha256": "34dde2cfe3720b741ac30727afb0edaa6f786ca33b48c1b73eeb8216dc908485"
+      },
+      "sourceName": "藪蕎麦",
+      "category": "商店",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13980:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 3091,
+        "entryId": "18-012",
+        "sourceFeatureSha256": "7c187981cd9da67f281ad30a4bcf266e7a4d1c6e39e79a52abeb38376c9b62f0"
+      },
+      "sourceName": "植木屋",
+      "category": "商店",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13971:3567"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 3896,
+        "entryId": "2-403",
+        "sourceFeatureSha256": "aba1fbe70b2d82d86b6e9c70fe83b705aabd691189fc98a3211db1dbc9740cc0"
+      },
+      "sourceName": "鹿島",
+      "category": "商店",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13978:3567"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 4580,
+        "entryId": "21-229",
+        "sourceFeatureSha256": "b40b5836f10933a76fc97856576b9f1ee62fa6fc9b7f9e06632c4a7c767dc6ea"
+      },
+      "sourceName": "編笠茶屋",
+      "category": "商店",
+      "suggestedTier": "B",
+      "score": 35,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13979:3572"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 15
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 144,
+        "entryId": "10-017",
+        "sourceFeatureSha256": "091c0624d8ca7c31943e612809c3c8763940f72d71cbc716c01f8d55b60ca4a4"
+      },
+      "sourceName": "五番町",
+      "category": "町村字",
+      "suggestedTier": "C",
+      "score": 30,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 10
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 166,
+        "entryId": "10-039",
+        "sourceFeatureSha256": "3d9c970ba5ee40b06a5aaf6a93a82113c5368b70b05ac6157053ea0cefeea85c"
+      },
+      "sourceName": "五番町",
+      "category": "町村字",
+      "suggestedTier": "C",
+      "score": 30,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 10
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 275,
+        "entryId": "11-019",
+        "sourceFeatureSha256": "5b8fcbc4623a27eefbfbd792f80f3edbfccbb97da04b6e206d0b5a6525cc4744"
+      },
+      "sourceName": "築地同朋町代地",
+      "category": "町村字",
+      "suggestedTier": "C",
+      "score": 30,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3565"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 10
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 276,
+        "entryId": "11-020",
+        "sourceFeatureSha256": "bce3c13b6807960c0fceed64fe8efca23e7649cc58e17270db6bb711ca7bdb03"
+      },
+      "sourceName": "南新門前一丁目代地",
+      "category": "町村字",
+      "suggestedTier": "C",
+      "score": 30,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3565"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 10
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 292,
+        "entryId": "11-036",
+        "sourceFeatureSha256": "093d7a6cb079bb1a1855b3b4dadc9b5fe1c9eec9d9ae5d7649c6eeaf5ee04dba"
+      },
+      "sourceName": "飯倉町",
+      "category": "町村字",
+      "suggestedTier": "C",
+      "score": 30,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3566"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 10
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 352,
+        "entryId": "11-096",
+        "sourceFeatureSha256": "7b6fe8f57c8da472d3a0913a4297d6cbf30f177f905c037a0b9359c802b35d6d"
+      },
+      "sourceName": "本村町",
+      "category": "町村字",
+      "suggestedTier": "C",
+      "score": 30,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13972:3565"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 10
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 371,
+        "entryId": "11-115",
+        "sourceFeatureSha256": "cc13daa4d4d154ccc202f95fbc79082ab434e9167db314b2963260681578ba03"
+      },
+      "sourceName": "竜土材木町",
+      "category": "町村字",
+      "suggestedTier": "C",
+      "score": 30,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13972:3566"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 10
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 488,
+        "entryId": "11-232",
+        "sourceFeatureSha256": "84df44b0abed760848c017c438a66698b603ba1ca24446f11b39983d61dfbb1b"
+      },
+      "sourceName": "古川町",
+      "category": "町村字",
+      "suggestedTier": "C",
+      "score": 30,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3564"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 10
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 2,
+        "entryId": "1-003",
+        "sourceFeatureSha256": "3d20b79be7d3a3ed2af0944a6b0f0fe0983da0ee034879197360f8f6fd22a234"
+      },
+      "sourceName": "本庄安芸守",
+      "category": "屋敷地",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13975:3567"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 13,
+        "entryId": "1-014",
+        "sourceFeatureSha256": "40e7f3dc414bcb620ff58ee94c401e93ede8bf376741743916607f8d8e5abba6"
+      },
+      "sourceName": "松平玄蕃頭",
+      "category": "屋敷地",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13975:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 21,
+        "entryId": "1-022",
+        "sourceFeatureSha256": "846227a8edcc0fc97bb27ae401611a1355ef2e56229a6b0a0053c2a257427fb1"
+      },
+      "sourceName": "松平肥後守",
+      "category": "屋敷地",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13976:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 31,
+        "entryId": "1-032",
+        "sourceFeatureSha256": "b5ff571bedba2ff28eee7a4e8e061be6cbb98c7b765833c8dd3ae3a872103130"
+      },
+      "sourceName": "松平主殿頭",
+      "category": "屋敷地",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13976:3567"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 116,
+        "entryId": "1-117",
+        "sourceFeatureSha256": "2cf40e66d80c5998b4b1b0edfc843c23882a6b056135b3c53b79ac366a432b5e"
+      },
+      "sourceName": "一橋殿",
+      "category": "屋敷地",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13976:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 131,
+        "entryId": "10-004",
+        "sourceFeatureSha256": "32ad94a6eaffb6c03797e8f164ef1add216c8409d2e2b94ebd5cc6aed009b9a2"
+      },
+      "sourceName": "清水殿",
+      "category": "屋敷地",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13975:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 143,
+        "entryId": "10-016",
+        "sourceFeatureSha256": "110233ec9c0c2f0a7068a36303d2735a9f2f4f0106f52137adf4a82dcea5c1b1"
+      },
+      "sourceName": "南部丹波守",
+      "category": "屋敷地",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 149,
+        "entryId": "10-022",
+        "sourceFeatureSha256": "f704ef5ee8676e8c532ee3be18edc902461e4816a8e819ae887d1ff7012e8821"
+      },
+      "sourceName": "鳥居丹波守",
+      "category": "屋敷地",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 3055,
+        "entryId": "17-453",
+        "sourceFeatureSha256": "e686a63387f2013e0570e414af3b0da0c4671f18b3f0da6061e976664eb83a43"
+      },
+      "sourceName": "（記号）",
+      "category": "その他",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13978:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 5339,
+        "entryId": "24-027",
+        "sourceFeatureSha256": "9cd6804cad98f5df22bb796d1f15633a58f881ad16b4665a9aa75c10dcd68cbc"
+      },
+      "sourceName": "（橋）",
+      "category": "その他",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13971:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 5814,
+        "entryId": "26-014",
+        "sourceFeatureSha256": "1cee15e044b149373880d4f86d3457daac44eae5c604d7d372e8a49824d378cf"
+      },
+      "sourceName": "筆学所　文淵堂",
+      "category": "その他",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13974:3571"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 6986,
+        "entryId": "30-176",
+        "sourceFeatureSha256": "18dcfa9e7ae8fa6cb82f2da22ddca35428ca4cc106fd876a7aa5571ce281e00a"
+      },
+      "sourceName": "土手",
+      "category": "その他",
+      "suggestedTier": "C",
+      "score": 25,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": false,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13970:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 245,
+        "entryId": "10-118",
+        "sourceFeatureSha256": "99712473b9918999d718233ab2c829adb966fc4ff601dd4e327051d8f4bf5ded"
+      },
+      "sourceName": "（坂道）",
+      "category": "その他",
+      "suggestedTier": "D",
+      "score": 5,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": true,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3568"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity",
+        "supplemental-record"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        },
+        {
+          "signal": "supplemental",
+          "points": -20
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 249,
+        "entryId": "10-122",
+        "sourceFeatureSha256": "5da12490588204be0a19c80bd991eb1aa0abbcba17475c0ca2f1118bb93b0422"
+      },
+      "sourceName": "（坂道）",
+      "category": "その他",
+      "suggestedTier": "D",
+      "score": 5,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": true,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3569"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity",
+        "supplemental-record"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        },
+        {
+          "signal": "supplemental",
+          "points": -20
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 674,
+        "entryId": "12-092",
+        "sourceFeatureSha256": "0d83e9853e53361f354541d845176a3c118f9c7e999f46f1ee7792242f0c4f75"
+      },
+      "sourceName": "（坂道）",
+      "category": "その他",
+      "suggestedTier": "D",
+      "score": 5,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": true,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13973:3570"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity",
+        "supplemental-record"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        },
+        {
+          "signal": "supplemental",
+          "points": -20
+        }
+      ]
+    },
+    {
+      "sourceIdentity": {
+        "datasetId": "codh-edo-maps-places",
+        "sourceIndex": 1297,
+        "entryId": "13-427",
+        "sourceFeatureSha256": "54e0e30b26ee077def84af9597eec1d48e908c462971375fcd0365cabd3f1cd3"
+      },
+      "sourceName": "（坂道）",
+      "category": "その他",
+      "suggestedTier": "D",
+      "score": 5,
+      "signals": {
+        "relationGroupMemberCount": 1,
+        "relationRole": "none",
+        "mapAggregateMemberCount": 1,
+        "supplemental": true,
+        "alreadyDescribed": false,
+        "alreadyCurated": false,
+        "geographicCell": "13977:3571"
+      },
+      "reasonCodes": [
+        "workflow-category-weight",
+        "single-source-identity",
+        "supplemental-record"
+      ],
+      "contributions": [
+        {
+          "signal": "base",
+          "points": 10
+        },
+        {
+          "signal": "category",
+          "points": 5
+        },
+        {
+          "signal": "singleSourceIdentity",
+          "points": 10
+        },
+        {
+          "signal": "supplemental",
+          "points": -20
+        }
+      ]
+    }
+  ]
+}
