@@ -10,12 +10,16 @@ import {
   validateDescriptionPriorityCatalog,
 } from "./validate.mjs";
 
-const PRIVATE_MARKERS = Object.freeze([
+const UNIQUE_PRIVATE_MARKERS = Object.freeze([
+  "private-workflow-triage",
   "human-investigation-order-only",
   "description-priority-candidates.json",
-  "geographicCell",
-  "alreadyDescribed",
-  "alreadyCurated",
+]);
+const PRIORITY_SCHEMA_SIGNATURE = Object.freeze([
+  '"selectionContract"',
+  '"suggestedTier"',
+  '"reasonCodes"',
+  '"contributions"',
 ]);
 
 function filesBelow(directory) {
@@ -38,8 +42,11 @@ export function auditDescriptionPriorityPrivateLeakage(root) {
       if (name === DESCRIPTION_PRIORITY_CATALOG_PATH.split("/").at(-1)) errors.push(`private description priority catalog leaked to ${rel}`);
       if (/\.(?:html|js|css|json|txt|xml|svg)$/iu.test(name ?? "")) {
         const content = readFileSync(path, "utf8");
-        for (const marker of PRIVATE_MARKERS) {
+        for (const marker of UNIQUE_PRIVATE_MARKERS) {
           if (content.includes(marker)) errors.push(`private description priority marker ${marker} leaked to ${rel}`);
+        }
+        if (PRIORITY_SCHEMA_SIGNATURE.every((marker) => content.includes(marker))) {
+          errors.push(`private description priority schema structure leaked to ${rel}`);
         }
       }
     }

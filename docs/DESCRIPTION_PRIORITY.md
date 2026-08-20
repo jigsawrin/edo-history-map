@@ -19,7 +19,7 @@ Scoreは候補整理の説明可能な機械的順序だけを作る。各加点
 |---|---:|---|
 | base | +10 | 全source recordの共通開始値 |
 | category | 名所 +30、寺社 +25、施設/海川池 +20、地名/商店 +15、町村字 +10、屋敷地/その他 +5 | v1 reviewで短い説明候補と構造化候補を混ぜるための明示的な作業配分。歴史的重要度ではない |
-| singleSourceIdentity | +10 | relation catalogに複数memberがなく、supporting record整理を先に必要としない |
+| noMultiMemberSourceRelation | +10 | relation catalogに複数memberのsource relationが記録されていない。歴史的entity identityや単一性は意味しない |
 | relationPreferred | +5 | 複数member groupの調査起点候補。`preferred`を歴史的正しさや表示代表とは扱わない |
 | relationSupporting | -20 | 複数member groupのsupporting record候補 |
 | mapAggregate | -10 | exact name/category/coordinates aggregateのmemberで、個別説明前に重複確認が必要 |

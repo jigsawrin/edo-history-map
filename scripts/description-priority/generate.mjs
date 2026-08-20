@@ -8,8 +8,15 @@ import {
   EDO_SOURCE_DATASET_ID,
   EDO_SOURCE_FEATURE_COUNT,
   EDO_SOURCE_SHA256,
+  validateEdoPlaceCurationCatalog,
 } from "../edo-place-curation-candidates.mjs";
 import { EDO_SOURCE_IDENTITY_CATALOG_PATH } from "../edo-place-source-identity-relations.mjs";
+import {
+  createHistoricalPlaceDescriptionPublicProjection,
+  DESCRIPTION_CATALOG_PATH,
+  DESCRIPTION_RIGHTS_PATH,
+  validateHistoricalPlaceDescriptionPublicProjection,
+} from "../historical-place-descriptions.mjs";
 import {
   DESCRIPTION_PRIORITY_CANDIDATE_COUNT,
   DESCRIPTION_PRIORITY_CATALOG_PATH,
@@ -26,6 +33,8 @@ export const DESCRIPTION_PRIORITY_INPUT_PATHS = Object.freeze({
   relations: EDO_SOURCE_IDENTITY_CATALOG_PATH,
   curation: EDO_CURATION_CATALOG_PATH,
   descriptions: "scripts/historical-place-description-public-projection.json",
+  descriptionCatalog: DESCRIPTION_CATALOG_PATH,
+  descriptionRights: DESCRIPTION_RIGHTS_PATH,
   mapPresentation: "src/edo-map-presentation-projection.json",
 });
 
@@ -43,7 +52,7 @@ export const DESCRIPTION_PRIORITY_CATEGORY_POINTS = Object.freeze({
 
 export const DESCRIPTION_PRIORITY_SCORE_WEIGHTS = Object.freeze({
   base: 10,
-  singleSourceIdentity: 10,
+  noMultiMemberSourceRelation: 10,
   relationPreferred: 5,
   relationSupporting: -20,
   mapAggregate: -10,
@@ -101,8 +110,8 @@ export function scoreDescriptionPriorityRecord({ category, signals }) {
   ];
   const reasonCodes = ["workflow-category-weight"];
   if (signals.relationGroupMemberCount === 1) {
-    contributions.push({ signal: "singleSourceIdentity", points: DESCRIPTION_PRIORITY_SCORE_WEIGHTS.singleSourceIdentity });
-    reasonCodes.push("single-source-identity");
+    contributions.push({ signal: "noMultiMemberSourceRelation", points: DESCRIPTION_PRIORITY_SCORE_WEIGHTS.noMultiMemberSourceRelation });
+    reasonCodes.push("no-multi-member-source-relation");
   } else if (signals.relationRole === "preferred") {
     contributions.push({ signal: "relationPreferred", points: DESCRIPTION_PRIORITY_SCORE_WEIGHTS.relationPreferred });
     reasonCodes.push("relation-preferred-member");
@@ -157,37 +166,51 @@ function selectDiverseCategoryCandidates(records) {
   return selected.sort((a, b) => b.score - a.score || a.sourceIdentity.sourceIndex - b.sourceIdentity.sourceIndex);
 }
 
-export function generateDescriptionPriorityCatalog({ source, relations, curation, descriptions, mapPresentation }) {
+function exactIdentityKey(identity) {
+  return `${identity.datasetId}\u0000${identity.sourceIndex}\u0000${identity.entryId}\u0000${identity.sourceFeatureSha256}`;
+}
+
+export function generateDescriptionPriorityCatalog({ source, relations, curation, descriptions, descriptionCatalog, descriptionRights, mapPresentation }) {
   assert(source?.features?.length === EDO_SOURCE_FEATURE_COUNT, "protected source count changed");
   assert(relations.sourceDataSha256 === EDO_SOURCE_SHA256, "relation catalog source hash changed");
   assert(curation.sourceDataSha256 === EDO_SOURCE_SHA256, "curation catalog source hash changed");
   assert(descriptions.sourceDataSha256 === EDO_SOURCE_SHA256, "description projection source hash changed");
   assert(mapPresentation.sourceDataSha256 === EDO_SOURCE_SHA256, "map presentation source hash changed");
+  validateEdoPlaceCurationCatalog(curation, source);
+  const expectedDescriptions = createHistoricalPlaceDescriptionPublicProjection(descriptionCatalog, descriptionRights, source);
+  validateHistoricalPlaceDescriptionPublicProjection(descriptions, expectedDescriptions);
   const relationByIndex = relationSignals(relations);
   const aggregateByIndex = aggregateSignals(mapPresentation);
-  const curatedIndexes = new Set(curation.candidates.filter((candidate) => candidate.review.status === "approved").map((candidate) => candidate.target.sourceIndex));
-  const describedIndexes = new Set(descriptions.descriptions.map((description) => description.sourceIdentity.sourceIndex));
+  const curatedIdentities = new Set(curation.candidates.filter((candidate) => candidate.review.status === "approved").map((candidate) => exactIdentityKey({
+    datasetId: candidate.sourceDatasetId,
+    sourceIndex: candidate.target.sourceIndex,
+    entryId: candidate.target.entryId,
+    sourceFeatureSha256: candidate.target.sourceFeatureSha256,
+  })));
+  const describedIdentities = new Set(descriptions.descriptions.map((description) => exactIdentityKey(description.sourceIdentity)));
   const recordsByCategory = new Map(DESCRIPTION_PRIORITY_CATEGORIES.map((category) => [category, []]));
 
   for (const [sourceIndex, feature] of source.features.entries()) {
     const relation = relationByIndex.get(sourceIndex) ?? { relationGroupMemberCount: 1, relationRole: "none" };
+    const sourceIdentity = Object.freeze({
+      datasetId: EDO_SOURCE_DATASET_ID,
+      sourceIndex,
+      entryId: feature.properties.id,
+      sourceFeatureSha256: calculateEdoSourceFeatureSha256(feature),
+    });
+    const identityKey = exactIdentityKey(sourceIdentity);
     const signals = Object.freeze({
       relationGroupMemberCount: relation.relationGroupMemberCount,
       relationRole: relation.relationRole,
       mapAggregateMemberCount: aggregateByIndex.get(sourceIndex) ?? 1,
       supplemental: SUPPLEMENTAL_NAMES.has(feature.properties.name),
-      alreadyDescribed: describedIndexes.has(sourceIndex),
-      alreadyCurated: curatedIndexes.has(sourceIndex),
+      alreadyDescribed: describedIdentities.has(identityKey),
+      alreadyCurated: curatedIdentities.has(identityKey),
       geographicCell: geographicCell(feature),
     });
     const score = scoreDescriptionPriorityRecord({ category: feature.properties.category, signals });
     const record = Object.freeze({
-      sourceIdentity: Object.freeze({
-        datasetId: EDO_SOURCE_DATASET_ID,
-        sourceIndex,
-        entryId: feature.properties.id,
-        sourceFeatureSha256: calculateEdoSourceFeatureSha256(feature),
-      }),
+      sourceIdentity,
       sourceName: feature.properties.name,
       category: feature.properties.category,
       suggestedTier: score.suggestedTier,

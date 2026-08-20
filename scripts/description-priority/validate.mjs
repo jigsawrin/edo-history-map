@@ -22,7 +22,7 @@ export const DESCRIPTION_PRIORITY_TIERS = Object.freeze(["A", "B", "C", "D"]);
 export const DESCRIPTION_PRIORITY_RELATION_ROLES = Object.freeze(["none", "preferred", "nonpreferred"]);
 export const DESCRIPTION_PRIORITY_REASON_CODES = Object.freeze([
   "workflow-category-weight",
-  "single-source-identity",
+  "no-multi-member-source-relation",
   "relation-preferred-member",
   "relation-supporting-member",
   "map-aggregate-member",
@@ -33,7 +33,7 @@ export const DESCRIPTION_PRIORITY_REASON_CODES = Object.freeze([
 export const DESCRIPTION_PRIORITY_SCORE_SIGNALS = Object.freeze([
   "base",
   "category",
-  "singleSourceIdentity",
+  "noMultiMemberSourceRelation",
   "relationPreferred",
   "relationSupporting",
   "mapAggregate",

@@ -47,7 +47,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -59,7 +59,7 @@
           "points": 30
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -86,7 +86,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -98,7 +98,7 @@
           "points": 30
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -125,7 +125,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -137,7 +137,7 @@
           "points": 30
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -164,7 +164,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -176,7 +176,7 @@
           "points": 30
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -203,7 +203,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -215,7 +215,7 @@
           "points": 30
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -242,7 +242,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -254,7 +254,7 @@
           "points": 30
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -281,7 +281,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -293,7 +293,7 @@
           "points": 30
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -320,7 +320,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -332,7 +332,7 @@
           "points": 30
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -359,7 +359,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -371,7 +371,7 @@
           "points": 25
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -398,7 +398,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -410,7 +410,7 @@
           "points": 25
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -437,7 +437,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -449,7 +449,7 @@
           "points": 25
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -476,7 +476,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -488,7 +488,7 @@
           "points": 25
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -515,7 +515,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -527,7 +527,7 @@
           "points": 25
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -554,7 +554,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -566,7 +566,7 @@
           "points": 25
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -593,7 +593,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -605,7 +605,7 @@
           "points": 25
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -632,7 +632,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -644,7 +644,7 @@
           "points": 25
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -671,7 +671,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -683,7 +683,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -710,7 +710,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -722,7 +722,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -749,7 +749,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -761,7 +761,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -788,7 +788,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -800,7 +800,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -827,7 +827,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -839,7 +839,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -866,7 +866,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -878,7 +878,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -905,7 +905,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -917,7 +917,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -944,7 +944,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -956,7 +956,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -983,7 +983,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -995,7 +995,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1022,7 +1022,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1034,7 +1034,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1061,7 +1061,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1073,7 +1073,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1100,7 +1100,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1112,7 +1112,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1139,7 +1139,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1151,7 +1151,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1178,7 +1178,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1190,7 +1190,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1217,7 +1217,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1229,7 +1229,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1256,7 +1256,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1268,7 +1268,7 @@
           "points": 20
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1295,7 +1295,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1307,7 +1307,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1334,7 +1334,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1346,7 +1346,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1373,7 +1373,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1385,7 +1385,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1412,7 +1412,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1424,7 +1424,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1451,7 +1451,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1463,7 +1463,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1490,7 +1490,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1502,7 +1502,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1529,7 +1529,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1541,7 +1541,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1568,7 +1568,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1580,7 +1580,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1607,7 +1607,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1619,7 +1619,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1646,7 +1646,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1658,7 +1658,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1685,7 +1685,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1697,7 +1697,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1724,7 +1724,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1736,7 +1736,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1763,7 +1763,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1775,7 +1775,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1802,7 +1802,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1814,7 +1814,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1841,7 +1841,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1853,7 +1853,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1880,7 +1880,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1892,7 +1892,7 @@
           "points": 15
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1919,7 +1919,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1931,7 +1931,7 @@
           "points": 10
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1958,7 +1958,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -1970,7 +1970,7 @@
           "points": 10
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -1997,7 +1997,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2009,7 +2009,7 @@
           "points": 10
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2036,7 +2036,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2048,7 +2048,7 @@
           "points": 10
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2075,7 +2075,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2087,7 +2087,7 @@
           "points": 10
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2114,7 +2114,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2126,7 +2126,7 @@
           "points": 10
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2153,7 +2153,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2165,7 +2165,7 @@
           "points": 10
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2192,7 +2192,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2204,7 +2204,7 @@
           "points": 10
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2231,7 +2231,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2243,7 +2243,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2270,7 +2270,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2282,7 +2282,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2309,7 +2309,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2321,7 +2321,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2348,7 +2348,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2360,7 +2360,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2387,7 +2387,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2399,7 +2399,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2426,7 +2426,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2438,7 +2438,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2465,7 +2465,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2477,7 +2477,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2504,7 +2504,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2516,7 +2516,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2543,7 +2543,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2555,7 +2555,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2582,7 +2582,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2594,7 +2594,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2621,7 +2621,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2633,7 +2633,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2660,7 +2660,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity"
+        "no-multi-member-source-relation"
       ],
       "contributions": [
         {
@@ -2672,7 +2672,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         }
       ]
@@ -2699,7 +2699,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity",
+        "no-multi-member-source-relation",
         "supplemental-record"
       ],
       "contributions": [
@@ -2712,7 +2712,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         },
         {
@@ -2743,7 +2743,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity",
+        "no-multi-member-source-relation",
         "supplemental-record"
       ],
       "contributions": [
@@ -2756,7 +2756,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         },
         {
@@ -2787,7 +2787,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity",
+        "no-multi-member-source-relation",
         "supplemental-record"
       ],
       "contributions": [
@@ -2800,7 +2800,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         },
         {
@@ -2831,7 +2831,7 @@
       },
       "reasonCodes": [
         "workflow-category-weight",
-        "single-source-identity",
+        "no-multi-member-source-relation",
         "supplemental-record"
       ],
       "contributions": [
@@ -2844,7 +2844,7 @@
           "points": 5
         },
         {
-          "signal": "singleSourceIdentity",
+          "signal": "noMultiMemberSourceRelation",
           "points": 10
         },
         {

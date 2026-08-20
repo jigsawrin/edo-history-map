@@ -1,9 +1,10 @@
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import {
   DESCRIPTION_PRIORITY_CATEGORY_POINTS,
+  DESCRIPTION_PRIORITY_INPUT_PATHS,
   DESCRIPTION_PRIORITY_SCORE_WEIGHTS,
   generateDescriptionPriorityCatalog,
   loadDescriptionPriorityInputs,
@@ -41,6 +42,20 @@ function basicSignals(overrides: Record<string, unknown> = {}) {
     geographicCell: "13975:3568",
     ...overrides,
   };
+}
+
+function auditFixture(overrides: Record<string, unknown> = {}): string {
+  const root = mkdtempSync(join(tmpdir(), "description-priority-audit-")); temporaryRoots.push(root);
+  for (const [key, path] of Object.entries(DESCRIPTION_PRIORITY_INPUT_PATHS)) {
+    const output = join(root, path);
+    mkdirSync(dirname(output), { recursive: true });
+    const override = overrides[key];
+    writeFileSync(output, override === undefined ? readFileSync(join(ROOT, path)) : `${JSON.stringify(override)}\n`);
+  }
+  const catalogPath = join(root, "data-curation/description-priority-candidates.json");
+  mkdirSync(dirname(catalogPath), { recursive: true });
+  writeFileSync(catalogPath, readFileSync(join(ROOT, "data-curation/description-priority-candidates.json")));
+  return root;
 }
 
 afterAll(() => {
@@ -100,6 +115,30 @@ describe("Description Priority Foundation", () => {
     expect(scored.score).toBe(-55);
   });
 
+  it.each(["entryId", "sourceFeatureSha256"])("fails closed when description %s is corrupted", (field) => {
+    const changed = clone(inputs);
+    changed.descriptions.descriptions[0].sourceIdentity[field] = field === "entryId" ? "wrong-entry" : "0".repeat(64);
+    expect(() => generateDescriptionPriorityCatalog(changed)).toThrow();
+  });
+
+  it("fails closed when an approved curation target identity is corrupted", () => {
+    const changed = clone(inputs);
+    changed.curation.candidates[0].target.entryId = "wrong-entry";
+    expect(() => generateDescriptionPriorityCatalog(changed)).toThrow(/identity|target/i);
+  });
+
+  it("makes the repository audit fail closed on a corrupted description identity", () => {
+    const descriptions = clone(inputs.descriptions);
+    descriptions.descriptions[0].sourceIdentity.sourceFeatureSha256 = "0".repeat(64);
+    expect(auditDescriptionPriorityRepository(auditFixture({ descriptions })).errors).not.toEqual([]);
+  });
+
+  it("makes the repository audit fail closed on a corrupted curation identity", () => {
+    const curation = clone(inputs.curation);
+    curation.candidates[0].target.entryId = "wrong-entry";
+    expect(auditDescriptionPriorityRepository(auditFixture({ curation })).errors).not.toEqual([]);
+  });
+
   it("preserves the protected source count and does not mutate inputs", () => {
     const before = JSON.stringify(inputs.source);
     const generated = generateDescriptionPriorityCatalog(inputs);
@@ -115,10 +154,18 @@ describe("Description Priority Foundation", () => {
     mkdirSync(join(root, "dist", "assets"), { recursive: true });
     mkdirSync(join(root, "src"), { recursive: true });
     writeFileSync(join(root, "public", "description-priority-candidates.json"), "{}");
-    writeFileSync(join(root, "dist", "assets", "app.js"), "const x={geographicCell:'private'};");
+    writeFileSync(join(root, "dist", "assets", "app.js"), 'const x={"selectionContract":{},"suggestedTier":"A","reasonCodes":[],"contributions":[]};');
     const errors = auditDescriptionPriorityPrivateLeakage(root);
     expect(errors.some((error) => error.includes("private description priority catalog"))).toBe(true);
-    expect(errors.some((error) => error.includes("geographicCell"))).toBe(true);
+    expect(errors.some((error) => error.includes("schema structure"))).toBe(true);
+  });
+
+  it("does not treat unrelated generic runtime fields as Priority leakage", () => {
+    const root = mkdtempSync(join(tmpdir(), "description-priority-generic-")); temporaryRoots.push(root);
+    mkdirSync(join(root, "dist", "assets"), { recursive: true });
+    mkdirSync(join(root, "src"), { recursive: true });
+    writeFileSync(join(root, "dist", "assets", "app.js"), "const map={geographicCell:'x',alreadyDescribed:false,alreadyCurated:false};");
+    expect(auditDescriptionPriorityPrivateLeakage(root)).toEqual([]);
   });
 
   it("rejects a runtime import of the private priority catalog", () => {
