@@ -60,6 +60,11 @@ import {
 import {
   DESCRIPTION_PRIORITY_CATALOG_PATH,
 } from "./description-priority/validate.mjs";
+import { auditDescriptionPriorityReviewRepository } from "./description-priority-review/audit.mjs";
+import {
+  DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH,
+  DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH,
+} from "./description-priority-review/validate.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -1262,6 +1267,8 @@ for (const file of allFiles) {
       HISTORICAL_DESCRIPTION_RIGHTS_FILE,
       HISTORICAL_PLACE_DESCRIPTION_FILE,
       DESCRIPTION_PRIORITY_CATALOG_PATH,
+      DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH,
+      DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
@@ -1607,6 +1614,23 @@ for (const message of descriptionPriorityAudit.errors) {
     DESCRIPTION_PRIORITY_CATALOG_PATH,
     0,
     message,
+  );
+}
+
+const descriptionPriorityReviewAudit = auditDescriptionPriorityReviewRepository(ROOT);
+for (const message of descriptionPriorityReviewAudit.errors) {
+  addFinding(
+    "error",
+    "Description Priority Human Review",
+    DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH,
+    0,
+    message,
+  );
+}
+if (descriptionPriorityReviewAudit.summary) {
+  const summary = descriptionPriorityReviewAudit.summary;
+  infos.push(
+    `Description Priority Human Review: ${summary.reviewState.reviewed} reviewed、${summary.reviewState.unreviewed} unreviewed`,
   );
 }
 if (descriptionPriorityAudit.summary) {
