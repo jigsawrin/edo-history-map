@@ -48,10 +48,15 @@ export function descriptionPriorityReviewIdentityKey(identity) {
   return `${identity.datasetId}\u0000${identity.sourceIndex}\u0000${identity.entryId}\u0000${identity.sourceFeatureSha256}`;
 }
 
-export function validateDescriptionPriorityReviewCatalog(value, priorityCatalog, sourceGeoJson) {
+export function validateFrozenDescriptionPriorityCatalog(priorityCatalog, sourceGeoJson) {
   validateDescriptionPriorityCatalog(priorityCatalog, sourceGeoJson);
   const prioritySha = canonicalDescriptionPriorityCatalogSha256(priorityCatalog);
   assert(prioritySha === FROZEN_DESCRIPTION_PRIORITY_SHA256, "frozen Description Priority artifact SHA-256 mismatch");
+  return prioritySha;
+}
+
+export function validateDescriptionPriorityReviewCatalog(value, priorityCatalog, sourceGeoJson) {
+  const prioritySha = validateFrozenDescriptionPriorityCatalog(priorityCatalog, sourceGeoJson);
 
   exactKeys(value, TOP_KEYS, "description priority review catalog");
   assert(value.schemaVersion === DESCRIPTION_PRIORITY_REVIEW_SCHEMA_VERSION, "review schemaVersion is invalid");

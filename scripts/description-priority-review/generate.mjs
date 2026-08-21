@@ -1,6 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath, URL } from "node:url";
 import { DESCRIPTION_PRIORITY_CATALOG_PATH } from "../description-priority/validate.mjs";
 import { EDO_SOURCE_DATA_PATH } from "../edo-place-curation-candidates.mjs";
 import {
@@ -9,6 +8,7 @@ import {
   DESCRIPTION_PRIORITY_REVIEW_SCHEMA_VERSION,
   FROZEN_DESCRIPTION_PRIORITY_SHA256,
   validateDescriptionPriorityReviewCatalog,
+  validateFrozenDescriptionPriorityCatalog,
 } from "./validate.mjs";
 
 export function generateInitialDescriptionPriorityReviewCatalog(priorityCatalog) {
@@ -78,17 +78,31 @@ export function renderDescriptionPriorityReviewReport(reviewCatalog, priorityCat
   return lines.join("\n");
 }
 
-function runCli() {
-  const root = resolve(fileURLToPath(new URL("../..", import.meta.url)));
+export function loadDescriptionPriorityReviewInputs(root) {
   const priority = JSON.parse(readFileSync(resolve(root, DESCRIPTION_PRIORITY_CATALOG_PATH), "utf8"));
   const source = JSON.parse(readFileSync(resolve(root, EDO_SOURCE_DATA_PATH), "utf8"));
-  const review = generateInitialDescriptionPriorityReviewCatalog(priority);
-  validateDescriptionPriorityReviewCatalog(review, priority, source);
-  const report = renderDescriptionPriorityReviewReport(review, priority);
-  for (const [path, content] of [[DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH, `${JSON.stringify(review, null, 2)}\n`], [DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH, report]]) {
-    const output = resolve(root, path); mkdirSync(dirname(output), { recursive: true }); writeFileSync(output, content);
-  }
-  console.log(`DESCRIPTION_PRIORITY_REVIEW_GENERATE_OK ${JSON.stringify({ reviewEntryCount: review.reviewEntries.length, reportPath: DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH })}`);
+  return { priority, source };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) runCli();
+export function initializeDescriptionPriorityReviewCatalog(root) {
+  const { priority, source } = loadDescriptionPriorityReviewInputs(root);
+  validateFrozenDescriptionPriorityCatalog(priority, source);
+  const review = generateInitialDescriptionPriorityReviewCatalog(priority);
+  validateDescriptionPriorityReviewCatalog(review, priority, source);
+  const output = resolve(root, DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH);
+  mkdirSync(dirname(output), { recursive: true });
+  writeFileSync(output, `${JSON.stringify(review, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+  return review;
+}
+
+export function buildDescriptionPriorityReviewReport(root) {
+  const { priority, source } = loadDescriptionPriorityReviewInputs(root);
+  const catalogPath = resolve(root, DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH);
+  const review = JSON.parse(readFileSync(catalogPath, "utf8"));
+  validateDescriptionPriorityReviewCatalog(review, priority, source);
+  const report = renderDescriptionPriorityReviewReport(review, priority);
+  const output = resolve(root, DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH);
+  mkdirSync(dirname(output), { recursive: true });
+  writeFileSync(output, report, "utf8");
+  return { review, report, summary: summarizeDescriptionPriorityReview(review) };
+}

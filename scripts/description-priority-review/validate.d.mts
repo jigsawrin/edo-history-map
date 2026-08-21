@@ -8,4 +8,5 @@ export const REVIEW_CLASSIFICATIONS: readonly string[];
 export const HUMAN_PRIORITIES: readonly string[];
 export const HUMAN_REASON_CODES: readonly string[];
 export function descriptionPriorityReviewIdentityKey(identity: any): string;
+export function validateFrozenDescriptionPriorityCatalog(priorityCatalog: any, sourceGeoJson: any): string;
 export function validateDescriptionPriorityReviewCatalog(value: any, priorityCatalog: any, sourceGeoJson: any): any;

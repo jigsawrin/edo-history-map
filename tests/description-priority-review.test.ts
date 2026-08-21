@@ -7,7 +7,9 @@ import {
   auditDescriptionPriorityReviewPrivateLeakage,
 } from "../scripts/description-priority-review/audit.mjs";
 import {
+  buildDescriptionPriorityReviewReport,
   generateInitialDescriptionPriorityReviewCatalog,
+  initializeDescriptionPriorityReviewCatalog,
   renderDescriptionPriorityReviewReport,
   summarizeDescriptionPriorityReview,
 } from "../scripts/description-priority-review/generate.mjs";
@@ -31,6 +33,27 @@ afterAll(() => {
 
 function clone<T>(value: T): T { return structuredClone(value); }
 function sha256(value: Buffer): string { return createHash("sha256").update(value).digest("hex"); }
+
+function reviewedCatalog() {
+  const changed = clone(review);
+  changed.reviewEntries[0].reviewState = "reviewed";
+  changed.reviewEntries[0].classification = "good-candidate";
+  changed.reviewEntries[0].humanPriority = "high";
+  changed.reviewEntries[0].humanReasonCodes = ["historically-recognizable"];
+  changed.reviewEntries[0].note = "Reviewed by a human for calibration.";
+  return changed;
+}
+
+function repositoryFixture(reviewValue?: unknown, report = "existing report\n") {
+  const root = mkdtempSync(join(tmpdir(), "description-priority-review-repository-")); temporaryRoots.push(root);
+  mkdirSync(join(root, "public/data"), { recursive: true });
+  mkdirSync(join(root, "data-curation/reports"), { recursive: true });
+  writeFileSync(join(root, "public/data/edo-places.geojson"), sourceBytes);
+  writeFileSync(join(root, "data-curation/description-priority-candidates.json"), priorityBytes);
+  if (reviewValue !== undefined) writeFileSync(join(root, "data-curation/description-priority-review.json"), `${JSON.stringify(reviewValue, null, 2)}\n`);
+  writeFileSync(join(root, "data-curation/reports/description-priority-review.md"), report);
+  return root;
+}
 
 describe("Description Priority Human Review Catalog", () => {
   it("binds all 72 entries exactly once to frozen Priority identities", () => {
@@ -70,6 +93,39 @@ describe("Description Priority Human Review Catalog", () => {
     expect(review.reviewEntries.every((entry: { reviewState: string; classification: null; humanPriority: string; humanReasonCodes: string[]; note: null }) => entry.reviewState === "unreviewed" && entry.classification === null && entry.humanPriority === "undecided" && entry.humanReasonCodes.length === 0 && entry.note === null)).toBe(true);
     const generated = generateInitialDescriptionPriorityReviewCatalog(priority);
     expect(generated).toEqual(review);
+    const root = repositoryFixture();
+    const initialized = initializeDescriptionPriorityReviewCatalog(root);
+    expect(initialized.reviewEntries.filter((entry: { reviewState: string }) => entry.reviewState === "reviewed")).toHaveLength(0);
+    expect(initialized.reviewEntries.filter((entry: { reviewState: string }) => entry.reviewState === "unreviewed")).toHaveLength(72);
+  });
+
+  it("refuses to overwrite an existing human review catalog byte-for-byte", () => {
+    const root = repositoryFixture(reviewedCatalog());
+    const path = join(root, "data-curation/description-priority-review.json");
+    const before = readFileSync(path);
+    expect(() => initializeDescriptionPriorityReviewCatalog(root)).toThrow(/exist/i);
+    expect(readFileSync(path).equals(before)).toBe(true);
+  });
+
+  it("rebuilds only the report while preserving reviewed catalog bytes", () => {
+    const root = repositoryFixture(reviewedCatalog());
+    const catalogPath = join(root, "data-curation/description-priority-review.json");
+    const before = readFileSync(catalogPath);
+    const result = buildDescriptionPriorityReviewReport(root);
+    expect(readFileSync(catalogPath).equals(before)).toBe(true);
+    expect(result.report).toContain("good-candidate");
+    expect(result.report).toContain("historically-recognizable");
+    expect(result.report).toContain("Reviewed by a human for calibration.");
+    expect(result.summary.reviewState).toEqual({ reviewed: 1, unreviewed: 71 });
+  });
+
+  it("rejects an invalid catalog before replacing the existing report", () => {
+    const invalid = reviewedCatalog(); invalid.reviewEntries[0].prioritySnapshot.score += 1;
+    const root = repositoryFixture(invalid);
+    const reportPath = join(root, "data-curation/reports/description-priority-review.md");
+    const before = readFileSync(reportPath);
+    expect(() => buildDescriptionPriorityReviewReport(root)).toThrow(/snapshot mismatch/);
+    expect(readFileSync(reportPath).equals(before)).toBe(true);
   });
 
   it("rejects substantive judgment on unreviewed and requires reviewed classification", () => {
@@ -105,5 +161,12 @@ describe("Description Priority Human Review Catalog", () => {
     expect(sha256(readFileSync(join(ROOT, "data-curation/description-priority-candidates.json")))).toBe("b06067f2e41b89834ad92b6fabd21260fb65761b891bc8d843c7cdef1a17729b");
     expect(sha256(readFileSync(join(ROOT, "public/data/edo-places.geojson")))).toBe("7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4");
     expect(canonicalDescriptionPriorityCatalogSha256(priority)).toBe(FROZEN_DESCRIPTION_PRIORITY_SHA256);
+  });
+
+  it("exposes only explicit one-time initialization and safe report-build commands", () => {
+    const scripts = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).scripts;
+    expect(scripts["data:init:description-priority-review"]).toBe("node scripts/description-priority-review/init.mjs");
+    expect(scripts["data:build:description-priority-review-report"]).toBe("node scripts/description-priority-review/build-report.mjs");
+    expect(scripts["data:build:description-priority-review"]).toBeUndefined();
   });
 });
