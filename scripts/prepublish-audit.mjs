@@ -54,6 +54,12 @@ import {
   DESCRIPTION_CATALOG_PATH,
   DESCRIPTION_RIGHTS_PATH,
 } from "./historical-place-descriptions.mjs";
+import {
+  auditDescriptionPriorityRepository,
+} from "./description-priority/audit.mjs";
+import {
+  DESCRIPTION_PRIORITY_CATALOG_PATH,
+} from "./description-priority/validate.mjs";
 
 const ROOT = process.cwd();
 const findings = []; // {severity, category, file, line, note}
@@ -1255,6 +1261,7 @@ for (const file of allFiles) {
       EDO_PLACE_SOURCE_IDENTITY_CATALOG_FILE,
       HISTORICAL_DESCRIPTION_RIGHTS_FILE,
       HISTORICAL_PLACE_DESCRIPTION_FILE,
+      DESCRIPTION_PRIORITY_CATALOG_PATH,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");
@@ -1589,6 +1596,23 @@ if (historicalPlaceDescriptionAudit.summary) {
   const summary = historicalPlaceDescriptionAudit.summary;
   infos.push(
     `歴史地点説明文: ${summary.count}件、proposed ${summary.proposedCount}、approved ${summary.approvedCount}、public ${summary.publicCount}、SHA-256 ${summary.canonicalOutputSha256}`,
+  );
+}
+
+const descriptionPriorityAudit = auditDescriptionPriorityRepository(ROOT);
+for (const message of descriptionPriorityAudit.errors) {
+  addFinding(
+    "error",
+    "Description Priority",
+    DESCRIPTION_PRIORITY_CATALOG_PATH,
+    0,
+    message,
+  );
+}
+if (descriptionPriorityAudit.summary) {
+  const summary = descriptionPriorityAudit.summary;
+  infos.push(
+    `Description Priority: private候補 ${summary.candidateCount}件、tier ${JSON.stringify(summary.tierDistribution)}、SHA-256 ${summary.canonicalOutputSha256}`,
   );
 }
 
