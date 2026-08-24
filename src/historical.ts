@@ -114,7 +114,7 @@ export function createHistoricalLayer(
   onSelectAggregate: (group: EdoMapAggregateGroup) => void = () => {},
   presentationValue?: unknown,
   navigationMap?: EdoNavigationMap,
-  onSelectDeclutterAggregate: (group: EdoDeclutterAggregate) => void = () => {},
+  onSelectDeclutterAggregate: (group: EdoDeclutterAggregate, returnFocus?: HTMLElement) => void = () => {},
 ): EdoHistoricalLayer {
   const navigationLayer = L.layerGroup();
   const declutterLayer = L.layerGroup();
@@ -320,6 +320,7 @@ export function createHistoricalLayer(
   let declutterVisible = false;
   let normalVisible = !navigationMap;
   const declutterMarkerCounts = new Map<number, number>();
+  const declutterKeyboardElements = new WeakSet<HTMLElement>();
   const syncDeclutterViewport = (zoom: number, pixelBounds: L.Bounds): void => {
     if (!navigationMap) return;
     declutterLayer.clearLayers();
@@ -371,8 +372,16 @@ export function createHistoricalLayer(
           iconAnchor: [24, 24],
         }),
       });
-      marker.on("click", () => onSelectDeclutterAggregate(aggregate));
-      marker.on("add", () => marker.getElement()?.setAttribute("aria-label", label));
+      const activate = (): void => onSelectDeclutterAggregate(aggregate, marker.getElement() ?? undefined);
+      marker.on("click", activate);
+      marker.on("add", () => {
+        const element = marker.getElement();
+        if (!element) return;
+        element.setAttribute("aria-label", label);
+        if (declutterKeyboardElements.has(element)) return;
+        declutterKeyboardElements.add(element);
+        bindNavigationMarkerKeyboard(element, activate);
+      });
       declutterLayer.addLayer(marker);
       count += 1;
     }

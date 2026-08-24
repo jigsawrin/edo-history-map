@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { renderAggregatePlaceCard, renderPlaceCard, renderNoData } from "../src/infocard";
+import { renderAggregatePlaceCard, renderDeclutteredPlaceCard, renderPlaceCard, renderNoData } from "../src/infocard";
 import type { PlaceFeature } from "../src/validate";
 import { createEdoCardResolver } from "../src/edo-card-projection";
 
@@ -23,6 +23,27 @@ beforeEach(() => {
   container = document.createElement("section");
   container.hidden = true;
   document.body.append(container);
+});
+
+describe("renderDeclutteredPlaceCard", () => {
+  it("returns focus to the triggering aggregate marker when closed", () => {
+    const trigger = document.createElement("button");
+    document.body.append(trigger);
+    renderDeclutteredPlaceCard(container, {
+      key: "12/1/1",
+      hiddenSourceCount: 2,
+      members: [{
+        id: "source:1",
+        sourceName: "（木戸）",
+        category: "施設",
+        latitude: 35.68,
+        longitude: 139.75,
+        sourceIndexes: [1, 2],
+      }],
+    }, trigger);
+    (container.querySelector("button") as HTMLButtonElement).click();
+    expect(document.activeElement).toBe(trigger);
+  });
 });
 
 describe("renderPlaceCard", () => {

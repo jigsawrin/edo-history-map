@@ -28,11 +28,12 @@ export interface EdoDeclutterRule {
   readonly representatives: number;
 }
 
-export const EDO_DECLUTTER_MIN_ZOOM = 13;
+export const EDO_DECLUTTER_MIN_ZOOM = 12;
 export const EDO_DECLUTTER_MAX_ZOOM = 16;
 
 export function edoDeclutterRule(zoom: number): EdoDeclutterRule {
-  if (zoom <= 13) return { cellSize: 144, representatives: 1 };
+  if (zoom <= 12) return { cellSize: 144, representatives: 0 };
+  if (zoom === 13) return { cellSize: 144, representatives: 1 };
   if (zoom === 14) return { cellSize: 120, representatives: 1 };
   if (zoom === 15) return { cellSize: 96, representatives: 2 };
   return { cellSize: 72, representatives: 4 };
@@ -82,7 +83,9 @@ export function selectEdoDisplayCells(
   }
   return [...byCell.entries()].map(([key, cell]) => {
     const sorted = [...cell.members].sort(compareEdoDisplayCandidates);
-    const visibleCount = sorted.length <= rule.representatives + 1 ? sorted.length : rule.representatives;
+    const visibleCount = rule.representatives === 0
+      ? (sorted.length === 1 ? 1 : 0)
+      : (sorted.length <= rule.representatives + 1 ? sorted.length : rule.representatives);
     const hidden = sorted.slice(visibleCount);
     return {
       key,

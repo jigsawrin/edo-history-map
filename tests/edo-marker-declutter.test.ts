@@ -40,9 +40,21 @@ describe("Edo candidate marker decluttering", () => {
     expect(selectEdoDisplayCells(input, 13, project)[0]?.hiddenSourceCount).toBe(7);
   });
 
+  it("collapses dense z12 cells without representatives but leaves a singleton visible", () => {
+    const dense = selectEdoDisplayCells([
+      candidate("1", "神田門", 0),
+      candidate("2", "（木戸）", 1),
+    ], 12, project)[0];
+    const sparse = selectEdoDisplayCells([candidate("3", "日本橋", 0)], 12, project)[0];
+    expect(dense?.visible).toHaveLength(0);
+    expect(dense?.hiddenSourceCount).toBe(2);
+    expect(sparse?.visible.map((item) => item.id)).toEqual(["3"]);
+    expect(sparse?.hiddenSourceCount).toBe(0);
+  });
+
   it("keeps sparse cells individually accessible", () => {
-    const cell = selectEdoDisplayCells([candidate("1", "地点", 0), candidate("2", "地点二", 1)], 13, project)[0];
-    expect(cell?.visible).toHaveLength(2);
+    const cell = selectEdoDisplayCells([candidate("1", "地点", 0)], 12, project)[0];
+    expect(cell?.visible).toHaveLength(1);
     expect(cell?.hidden).toHaveLength(0);
   });
 });

@@ -873,7 +873,7 @@ function main(): void {
         },
         undefined,
         map,
-        (group) => renderDeclutteredPlaceCard(infoCard, group, map.getContainer()),
+        (group, returnFocus) => renderDeclutteredPlaceCard(infoCard, group, returnFocus ?? map.getContainer()),
       );
       historical.syncZoom(map.getZoom());
       edoHistoricalLayer = historical;
