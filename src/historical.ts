@@ -8,19 +8,10 @@ import {
   type EdoMapAggregateGroup,
 } from "./edo-map-presentation-projection";
 import {
-  buildEdoNavigationGrid,
-  EDO_NAVIGATION_MAX_ZOOM,
-  EDO_NAVIGATION_MIN_ZOOM,
-  navigationCellIntersectsPixelBounds,
-} from "./edo-navigation-grid";
-import {
-  EDO_DECLUTTER_MAX_ZOOM,
-  EDO_DECLUTTER_MIN_ZOOM,
-  edoDeclutterRule,
-  selectEdoDisplayCells,
-  type EdoDeclutterAggregate,
+  EDO_PROGRESSIVE_REVEAL_MIN_ZOOM,
+  selectEdoProgressiveReveal,
   type EdoDisplayCandidate,
-} from "./edo-marker-declutter";
+} from "./edo-progressive-reveal";
 
 /**
  * 歴史レイヤー(江戸後期の地名ポイント)。
@@ -58,52 +49,35 @@ export interface HistoricalLayer {
 }
 
 export interface EdoHistoricalLayer extends HistoricalLayer {
-  navigationLayer: L.LayerGroup;
-  declutterLayer: L.LayerGroup;
+  progressiveLayer: L.LayerGroup;
   normalLayer: L.LayerGroup;
-  supplementalLayer: L.LayerGroup;
+  maximumDetailLayer: L.LayerGroup;
   temporaryLayer: L.LayerGroup;
   normalMarkerCount: number;
-  supplementalMarkerCount: number;
+  maximumDetailMarkerCount: number;
   aggregateMarkerCount: number;
   presentationMarkerCount: number;
-  navigationMarkerCounts: ReadonlyMap<number, number>;
-  declutterMarkerCounts: ReadonlyMap<number, number>;
+  progressiveMarkerCounts: ReadonlyMap<number, EdoProgressiveMarkerCount>;
   syncZoom(zoom: number): void;
   syncView(zoom: number, pixelBounds: L.Bounds): void;
   showTemporaryPlace(place: PlaceFeature, zoom: number): boolean;
-  showTemporarySupplemental(place: PlaceFeature, zoom: number): boolean;
-  clearTemporarySupplemental(): void;
+  clearTemporaryPlace(): void;
 }
 
-export const SUPPLEMENTAL_MARKER_MIN_ZOOM = 17;
+export interface EdoProgressiveMarkerCount {
+  readonly eligible: number;
+  readonly visible: number;
+  readonly aggregates: number;
+  readonly bracketed: number;
+}
 
-interface EdoNavigationMap {
+interface EdoProgressiveMap {
   project(latlng: L.LatLngExpression, zoom: number): L.Point;
-  unproject(point: L.PointExpression, zoom: number): L.LatLng;
   getPixelBounds(): L.Bounds;
-  setView(center: L.LatLngExpression, zoom: number): unknown;
 }
 
-const SUPPLEMENTAL_EXACT_NAMES = new Set([
-  "（辻番）",
-  "（木戸）",
-  "（坂道）",
-]);
-
-export function isSupplementalMarkerPlace(place: Pick<PlaceFeature, "name">): boolean {
-  return SUPPLEMENTAL_EXACT_NAMES.has(place.name);
-}
-
-export function bindNavigationMarkerKeyboard(
-  element: HTMLElement,
-  navigate: () => void,
-): void {
-  element.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    navigate();
-  });
+export function isMaximumDetailPlace(place: Pick<PlaceFeature, "name">): boolean {
+  return place.name.startsWith("（");
 }
 
 export function createHistoricalLayer(
@@ -113,21 +87,18 @@ export function createHistoricalLayer(
   isHidden: (sourceIndex: number, place: PlaceFeature) => boolean = isEdoMapSourceHidden,
   onSelectAggregate: (group: EdoMapAggregateGroup) => void = () => {},
   presentationValue?: unknown,
-  navigationMap?: EdoNavigationMap,
-  onSelectDeclutterAggregate: (group: EdoDeclutterAggregate, returnFocus?: HTMLElement) => void = () => {},
+  progressiveMap?: EdoProgressiveMap,
 ): EdoHistoricalLayer {
-  const navigationLayer = L.layerGroup();
-  const declutterLayer = L.layerGroup();
+  const progressiveLayer = L.layerGroup();
   const normalLayer = L.layerGroup();
-  const supplementalLayer = L.layerGroup();
+  const maximumDetailLayer = L.layerGroup();
   const temporaryLayer = L.layerGroup();
-  const group = L.layerGroup(navigationMap ? [] : [normalLayer]);
-  const supplementalMarkers = new Map<PlaceFeature, L.CircleMarker>();
+  const group = L.layerGroup(progressiveMap ? [] : [normalLayer, maximumDetailLayer]);
   const visiblePlaces = new Set<PlaceFeature>();
   const sourceIndexByPlace = new Map(places.map((place, sourceIndex) => [place, sourceIndex]));
-  const navigationPoints: { id: string; latitude: number; longitude: number }[] = [];
   const displayCandidates: EdoDisplayCandidate[] = [];
   const displayMarkerById = new Map<string, L.Layer>();
+  const displayIdBySourceIndex = new Map<number, string>();
   const presentation = presentationValue === undefined
     ? (places.length === 8788
         ? resolveEdoMapPresentation(places)
@@ -141,7 +112,6 @@ export function createHistoricalLayer(
       .filter((aggregate) => aggregate.members.every((member) => !hiddenIndexes.has(member.sourceIndex)))
       .map((aggregate) => aggregate.groupId),
   );
-  let supplementalVisible = false;
   let temporaryMarker: L.CircleMarker | null = null;
   let temporaryPlace: PlaceFeature | null = null;
   let aggregateMarkerCount = 0;
@@ -152,39 +122,25 @@ export function createHistoricalLayer(
     if (aggregate && aggregatableGroupIds.has(aggregate.groupId)) {
       if (sourceIndex !== aggregate.members[0]?.sourceIndex) continue;
       const style = categoryStyle(aggregate.category);
-      const size = aggregate.memberCount === 2 ? 28 : aggregate.memberCount === 3 ? 32 : 36;
-      const accessibleName = `${aggregate.name}、原資料${aggregate.memberCount}件`;
-      const markerContent = document.createElement("span");
-      markerContent.className = "edo-aggregate-marker";
-      markerContent.textContent = String(aggregate.memberCount);
-      markerContent.setAttribute("aria-hidden", "true");
-      markerContent.style.setProperty("--edo-marker-color", style.color);
-      const marker = L.marker([aggregate.latitude, aggregate.longitude], {
+      const marker = L.circleMarker([aggregate.latitude, aggregate.longitude], {
+        radius: 6,
+        color: style.color,
+        weight: 2,
+        dashArray: style.dashArray,
+        fillColor: style.color,
+        fillOpacity: 0.5,
+        opacity: 0.9,
         pane: HISTORICAL_PANE,
         interactive: true,
         bubblingMouseEvents: false,
-        title: accessibleName,
-        alt: accessibleName,
-        icon: L.divIcon({
-          className: "edo-aggregate-marker-shell",
-          html: markerContent,
-          iconSize: [size, size],
-          iconAnchor: [size / 2, size / 2],
-        }),
       });
       marker.on("click", () => onSelectAggregate(aggregate));
-      marker.on("add", () => marker.getElement()?.setAttribute("aria-label", accessibleName));
       marker.on("keypress", (event) => {
         const key = (event as unknown as { originalEvent?: KeyboardEvent }).originalEvent?.key;
         if (key === "Enter" || key === " ") onSelectAggregate(aggregate);
       });
       normalLayer.addLayer(marker);
       const displayId = `aggregate:${aggregate.groupId}`;
-      navigationPoints.push({
-        id: displayId,
-        latitude: aggregate.latitude,
-        longitude: aggregate.longitude,
-      });
       displayCandidates.push({
         id: displayId,
         sourceName: aggregate.name,
@@ -192,7 +148,9 @@ export function createHistoricalLayer(
         latitude: aggregate.latitude,
         longitude: aggregate.longitude,
         sourceIndexes: aggregate.members.map((member) => member.sourceIndex),
+        aggregate: true,
       });
+      for (const member of aggregate.members) displayIdBySourceIndex.set(member.sourceIndex, displayId);
       displayMarkerById.set(displayId, marker);
       aggregateMarkerCount += 1;
       continue;
@@ -219,12 +177,10 @@ export function createHistoricalLayer(
         .originalEvent?.key;
       if (key === "Enter" || key === " ") onSelect(place, sourceIndex);
     });
-    if (isSupplementalMarkerPlace(place)) {
-      supplementalLayer.addLayer(marker);
-      supplementalMarkers.set(place, marker);
+    if (isMaximumDetailPlace(place)) {
+      maximumDetailLayer.addLayer(marker);
     } else {
       normalLayer.addLayer(marker);
-      navigationPoints.push({ id: `source:${sourceIndex}`, latitude: place.lat, longitude: place.lon });
     }
     const displayId = `source:${sourceIndex}`;
     displayCandidates.push({
@@ -234,64 +190,12 @@ export function createHistoricalLayer(
       latitude: place.lat,
       longitude: place.lon,
       sourceIndexes: [sourceIndex],
-      supplemental: isSupplementalMarkerPlace(place),
     });
+    displayIdBySourceIndex.set(sourceIndex, displayId);
     displayMarkerById.set(displayId, marker);
   }
 
-  const navigationGrid = navigationMap
-    ? buildEdoNavigationGrid(
-        navigationPoints,
-        (latitude, longitude, zoom) => navigationMap.project([latitude, longitude], zoom),
-      )
-    : null;
-  const navigationMarkers = new Map<string, L.Marker>();
-  const navigationKeyByMarker = new Map<L.Layer, string>();
-  const navigationKeyboardElements = new WeakSet<HTMLElement>();
-  const navigationMarkerCounts = new Map<number, number>();
-  if (navigationMap && navigationGrid) {
-    for (let zoom = EDO_NAVIGATION_MIN_ZOOM; zoom <= EDO_NAVIGATION_MAX_ZOOM; zoom += 1) {
-      const cells = navigationGrid.cellsByZoom.get(zoom) ?? [];
-      navigationMarkerCounts.set(zoom, cells.length);
-      for (const cell of cells) {
-        const label = `この範囲に${cell.memberCount}地点。拡大して個別地点を表示`;
-        const content = document.createElement("span");
-        content.className = "edo-navigation-marker";
-        content.textContent = String(cell.memberCount);
-        content.setAttribute("aria-hidden", "true");
-        const center = navigationMap.unproject([cell.centerX, cell.centerY], zoom);
-        const marker = L.marker(center, {
-          pane: HISTORICAL_PANE,
-          interactive: true,
-          bubblingMouseEvents: false,
-          title: label,
-          alt: label,
-          icon: L.divIcon({
-            className: "edo-navigation-marker-shell",
-            html: content,
-            iconSize: [48, 48],
-            iconAnchor: [24, 24],
-          }),
-        });
-        const navigate = (): void => {
-          navigationMap.setView(center, navigationGrid.firstSplittingZoom(cell));
-        };
-        marker.on("click", navigate);
-        marker.on("add", () => {
-          const element = marker.getElement();
-          if (!element) return;
-          element.setAttribute("aria-label", label);
-          if (navigationKeyboardElements.has(element)) return;
-          navigationKeyboardElements.add(element);
-          bindNavigationMarkerKeyboard(element, navigate);
-        });
-        navigationMarkers.set(cell.key, marker);
-        navigationKeyByMarker.set(marker, cell.key);
-      }
-    }
-  }
-
-  const clearTemporarySupplemental = (): void => {
+  const clearTemporaryPlace = (): void => {
     if (group.hasLayer(temporaryLayer)) group.removeLayer(temporaryLayer);
     if (temporaryMarker) temporaryLayer.removeLayer(temporaryMarker);
     temporaryMarker = null;
@@ -316,162 +220,71 @@ export function createHistoricalLayer(
     return marker;
   };
 
-  let navigationVisible = false;
-  let declutterVisible = false;
-  let normalVisible = !navigationMap;
-  const declutterMarkerCounts = new Map<number, number>();
-  const declutterKeyboardElements = new WeakSet<HTMLElement>();
-  const syncDeclutterViewport = (zoom: number, pixelBounds: L.Bounds): void => {
-    if (!navigationMap) return;
-    declutterLayer.clearLayers();
-    const rule = edoDeclutterRule(zoom);
+  const progressiveMarkerCounts = new Map<number, EdoProgressiveMarkerCount>();
+  const visibleDisplayIds = new Set<string>();
+  const syncView = (zoom: number, pixelBounds: L.Bounds): void => {
+    if (!progressiveMap) return;
+    progressiveLayer.clearLayers();
+    visibleDisplayIds.clear();
     const min = pixelBounds.min;
     const max = pixelBounds.max;
     if (!min || !max) return;
-    const cells = selectEdoDisplayCells(
+    const selection = selectEdoProgressiveReveal(
       displayCandidates,
       zoom,
-      (latitude, longitude, cellZoom) => navigationMap.project([latitude, longitude], cellZoom),
-    ).filter((cell) =>
-      cell.centerX + rule.cellSize / 2 >= min.x &&
-      cell.centerX - rule.cellSize / 2 <= max.x &&
-      cell.centerY + rule.cellSize / 2 >= min.y &&
-      cell.centerY - rule.cellSize / 2 <= max.y
+      (latitude, longitude, cellZoom) => progressiveMap.project([latitude, longitude], cellZoom),
     );
-    let count = 0;
-    for (const cell of cells) {
-      for (const candidate of cell.visible) {
-        const marker = displayMarkerById.get(candidate.id);
-        if (marker) {
-          declutterLayer.addLayer(marker);
-          count += 1;
-        }
-      }
-      if (cell.hiddenSourceCount === 0) continue;
-      const aggregate: EdoDeclutterAggregate = {
-        key: cell.key,
-        hiddenSourceCount: cell.hiddenSourceCount,
-        members: cell.hidden,
-      };
-      const label = `この範囲の非表示候補${cell.hiddenSourceCount}件。選択して一覧を表示`;
-      const content = document.createElement("span");
-      content.className = "edo-navigation-marker edo-declutter-marker";
-      content.textContent = `+${cell.hiddenSourceCount}`;
-      content.setAttribute("aria-hidden", "true");
-      const center = navigationMap.unproject([cell.centerX, cell.centerY], zoom);
-      const marker = L.marker(center, {
-        pane: HISTORICAL_PANE,
-        interactive: true,
-        bubblingMouseEvents: false,
-        title: label,
-        alt: label,
-        icon: L.divIcon({
-          className: "edo-navigation-marker-shell",
-          html: content,
-          iconSize: [48, 48],
-          iconAnchor: [24, 24],
-        }),
-      });
-      const activate = (): void => onSelectDeclutterAggregate(aggregate, marker.getElement() ?? undefined);
-      marker.on("click", activate);
-      marker.on("add", () => {
-        const element = marker.getElement();
-        if (!element) return;
-        element.setAttribute("aria-label", label);
-        if (declutterKeyboardElements.has(element)) return;
-        declutterKeyboardElements.add(element);
-        bindNavigationMarkerKeyboard(element, activate);
-      });
-      declutterLayer.addLayer(marker);
-      count += 1;
+    const inViewport = (candidate: EdoDisplayCandidate): boolean => {
+      const point = progressiveMap.project([candidate.latitude, candidate.longitude], zoom);
+      return point.x >= min.x && point.x <= max.x && point.y >= min.y && point.y <= max.y;
+    };
+    const eligible = selection.eligible.filter(inViewport);
+    const visible = selection.visible.filter(inViewport);
+    for (const candidate of visible) {
+      const marker = displayMarkerById.get(candidate.id);
+      if (!marker) continue;
+      progressiveLayer.addLayer(marker);
+      visibleDisplayIds.add(candidate.id);
     }
-    declutterMarkerCounts.set(zoom, count);
-  };
-  const syncNavigationViewport = (zoom: number, pixelBounds: L.Bounds): void => {
-    if (!navigationGrid || zoom < EDO_NAVIGATION_MIN_ZOOM || zoom > EDO_NAVIGATION_MAX_ZOOM) return;
-    const cells = navigationGrid.cellsByZoom.get(zoom) ?? [];
-    const visibleKeys = new Set(cells
-      .filter((cell) => navigationCellIntersectsPixelBounds(cell, pixelBounds))
-      .map((cell) => cell.key));
-    for (const layer of navigationLayer.getLayers()) {
-      const key = navigationKeyByMarker.get(layer);
-      if (key && !visibleKeys.has(key)) navigationLayer.removeLayer(layer);
-    }
-    for (const key of visibleKeys) {
-      const marker = navigationMarkers.get(key);
-      if (marker && !navigationLayer.hasLayer(marker)) navigationLayer.addLayer(marker);
-    }
-  };
-
-  const syncView = (zoom: number, pixelBounds: L.Bounds): void => {
-    const shouldShowNavigation = Boolean(navigationMap) && zoom < EDO_DECLUTTER_MIN_ZOOM;
-    const shouldShowDeclutter = Boolean(navigationMap) &&
-      zoom >= EDO_DECLUTTER_MIN_ZOOM && zoom <= EDO_DECLUTTER_MAX_ZOOM;
-    if (shouldShowNavigation) {
-      if (normalVisible && group.hasLayer(normalLayer)) group.removeLayer(normalLayer);
-      normalVisible = false;
-      syncNavigationViewport(zoom, pixelBounds);
-      if (!navigationVisible) group.addLayer(navigationLayer);
-      navigationVisible = true;
-      if (declutterVisible && group.hasLayer(declutterLayer)) group.removeLayer(declutterLayer);
-      declutterVisible = false;
-    } else if (shouldShowDeclutter) {
-      if (navigationVisible && group.hasLayer(navigationLayer)) group.removeLayer(navigationLayer);
-      navigationVisible = false;
-      if (normalVisible && group.hasLayer(normalLayer)) group.removeLayer(normalLayer);
-      normalVisible = false;
-      syncDeclutterViewport(zoom, pixelBounds);
-      if (!declutterVisible) group.addLayer(declutterLayer);
-      declutterVisible = true;
-    } else {
-      if (navigationVisible && group.hasLayer(navigationLayer)) group.removeLayer(navigationLayer);
-      navigationVisible = false;
-      if (declutterVisible && group.hasLayer(declutterLayer)) group.removeLayer(declutterLayer);
-      declutterVisible = false;
-      if (!normalVisible) group.addLayer(normalLayer);
-      normalVisible = true;
-      if (temporaryPlace && !isSupplementalMarkerPlace(temporaryPlace)) clearTemporarySupplemental();
-    }
-
-    const shouldShowSupplemental = zoom >= SUPPLEMENTAL_MARKER_MIN_ZOOM;
-    if (shouldShowSupplemental !== supplementalVisible) {
-      supplementalVisible = shouldShowSupplemental;
-      if (shouldShowSupplemental) {
-        if (group.hasLayer(temporaryLayer)) group.removeLayer(temporaryLayer);
-        if (!group.hasLayer(supplementalLayer)) group.addLayer(supplementalLayer);
-      } else {
-        if (group.hasLayer(supplementalLayer)) group.removeLayer(supplementalLayer);
-        if (temporaryMarker && temporaryPlace && isSupplementalMarkerPlace(temporaryPlace) && !group.hasLayer(temporaryLayer)) group.addLayer(temporaryLayer);
-      }
+    progressiveMarkerCounts.set(zoom, {
+      eligible: eligible.length,
+      visible: visible.length,
+      aggregates: visible.filter((candidate) => candidate.aggregate).length,
+      bracketed: visible.filter((candidate) => candidate.sourceName.startsWith("（")).length,
+    });
+    if (zoom >= EDO_PROGRESSIVE_REVEAL_MIN_ZOOM && !group.hasLayer(progressiveLayer)) group.addLayer(progressiveLayer);
+    if (zoom < EDO_PROGRESSIVE_REVEAL_MIN_ZOOM && group.hasLayer(progressiveLayer)) group.removeLayer(progressiveLayer);
+    if (temporaryPlace) {
+      const sourceIndex = sourceIndexByPlace.get(temporaryPlace);
+      const displayId = sourceIndex === undefined ? undefined : displayIdBySourceIndex.get(sourceIndex);
+      if (displayId && visibleDisplayIds.has(displayId)) clearTemporaryPlace();
     }
   };
 
   const syncZoom = (zoom: number): void => {
-    syncView(zoom, navigationMap?.getPixelBounds() ?? L.bounds([0, 0], [0, 0]));
+    syncView(zoom, progressiveMap?.getPixelBounds() ?? L.bounds([0, 0], [0, 0]));
   };
 
   return {
     layer: group,
-    navigationLayer,
-    declutterLayer,
+    progressiveLayer,
     normalLayer,
-    supplementalLayer,
+    maximumDetailLayer,
     temporaryLayer,
     normalMarkerCount: normalLayer.getLayers().length,
-    supplementalMarkerCount: supplementalLayer.getLayers().length,
+    maximumDetailMarkerCount: maximumDetailLayer.getLayers().length,
     aggregateMarkerCount,
-    presentationMarkerCount: normalLayer.getLayers().length + supplementalLayer.getLayers().length,
-    navigationMarkerCounts,
-    declutterMarkerCounts,
+    presentationMarkerCount: normalLayer.getLayers().length + maximumDetailLayer.getLayers().length,
+    progressiveMarkerCounts,
     syncZoom,
     syncView,
-    showTemporaryPlace(place, zoom) {
-      clearTemporarySupplemental();
+    showTemporaryPlace(place) {
+      clearTemporaryPlace();
       if (!visiblePlaces.has(place)) return false;
-      const isSupplemental = isSupplementalMarkerPlace(place);
-      if (zoom >= SUPPLEMENTAL_MARKER_MIN_ZOOM) return true;
-      const marker = isSupplemental ? supplementalMarkers.get(place) : createTemporaryMarker(place);
-      if (!marker) return false;
+      const sourceIndex = sourceIndexByPlace.get(place);
+      const displayId = sourceIndex === undefined ? undefined : displayIdBySourceIndex.get(sourceIndex);
+      if (displayId && visibleDisplayIds.has(displayId)) return true;
+      const marker = createTemporaryMarker(place);
       temporaryMarker = marker;
       temporaryPlace = place;
       temporaryLayer.addLayer(marker);
@@ -480,11 +293,7 @@ export function createHistoricalLayer(
       }
       return true;
     },
-    showTemporarySupplemental(place, zoom) {
-      if (!isSupplementalMarkerPlace(place)) return false;
-      return this.showTemporaryPlace(place, zoom);
-    },
-    clearTemporarySupplemental,
+    clearTemporaryPlace,
     setOpacity(opacity: number) {
       const clamped = Math.min(1, Math.max(0, opacity));
       pane.style.opacity = String(clamped);

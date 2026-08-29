@@ -12,7 +12,7 @@ import {
   type BaseLayerKey,
 } from "./config";
 import { createHistoricalLayer, type EdoHistoricalLayer, type HistoricalLayer } from "./historical";
-import { renderAggregatePlaceCard, renderDeclutteredPlaceCard, renderPlaceCard, renderNoData } from "./infocard";
+import { renderAggregatePlaceCard, renderPlaceCard, renderNoData } from "./infocard";
 import { renderKyotoNoData, renderKyotoPlaceCard } from "./kyoto-infocard";
 import { createKyotoBakumatsuLayer } from "./kyoto-layer";
 import { renderShigaNoData, renderShigaPlaceCard } from "./shiga-infocard";
@@ -868,12 +868,11 @@ function main(): void {
         panes.get(MAP_PANES.historicalPoints) as HTMLElement,
         undefined,
         (group) => {
-          edoHistoricalLayer?.clearTemporarySupplemental();
+          edoHistoricalLayer?.clearTemporaryPlace();
           renderAggregatePlaceCard(infoCard, group, map.getContainer());
         },
         undefined,
         map,
-        (group, returnFocus) => renderDeclutteredPlaceCard(infoCard, group, returnFocus ?? map.getContainer()),
       );
       historical.syncZoom(map.getZoom());
       edoHistoricalLayer = historical;
@@ -989,7 +988,7 @@ function main(): void {
     if (selection.record.datasetId === "codh-edo-maps-places" && selection.source === "search") {
       edoHistoricalLayer?.showTemporaryPlace(selection.record.record, map.getZoom());
     } else {
-      edoHistoricalLayer?.clearTemporarySupplemental();
+      edoHistoricalLayer?.clearTemporaryPlace();
     }
 
     if (selection.record.datasetId === "codh-edo-maps-places") {
@@ -1195,7 +1194,7 @@ function main(): void {
   }
 
   function activateRegion(pack: Readonly<RegionPack>, moveMap: boolean): void {
-    edoHistoricalLayer?.clearTemporarySupplemental();
+    edoHistoricalLayer?.clearTemporaryPlace();
     transitions.switchTo([], 0);
     activeHistoricalRaster?.historical.dispose();
     activeHistoricalRaster = null;
@@ -1238,7 +1237,7 @@ function main(): void {
 
   eraSelect.addEventListener("change", () => {
     curatedSelectionGeneration += 1;
-    edoHistoricalLayer?.clearTemporarySupplemental();
+    edoHistoricalLayer?.clearTemporaryPlace();
     applyEra(true);
     requestHistoricalRaster();
     updateReferencePrompt();

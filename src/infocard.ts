@@ -1,7 +1,6 @@
 import type { PlaceFeature } from "./validate";
 import { resolveEdoCard, type EdoCardResolver } from "./edo-card-projection";
 import type { EdoMapAggregateGroup } from "./edo-map-presentation-projection";
-import type { EdoDeclutterAggregate } from "./edo-marker-declutter";
 import { resolveEdoHistoricalDescription } from "./historical-place-description";
 
 /**
@@ -158,42 +157,6 @@ export function renderAggregatePlaceCard(
   close.type = "button";
   close.textContent = "閉じる";
   close.setAttribute("aria-label", "地点情報を閉じる");
-  close.addEventListener("click", () => {
-    container.hidden = true;
-    container.replaceChildren();
-    returnFocus?.focus();
-  });
-  container.append(close);
-}
-
-export function renderDeclutteredPlaceCard(
-  container: HTMLElement,
-  group: EdoDeclutterAggregate,
-  returnFocus?: HTMLElement,
-): void {
-  container.replaceChildren();
-  container.hidden = false;
-  const heading = document.createElement("h2");
-  heading.textContent = `この範囲の候補 ${group.hiddenSourceCount}件`;
-  container.append(heading);
-  const note = document.createElement("p");
-  note.className = "card-note";
-  note.textContent = "地図を読みやすくするため、この縮尺では一部の候補をまとめています。拡大すると個別表示が増えます。";
-  container.append(note);
-  const list = document.createElement("ol");
-  list.className = "aggregate-source-list edo-declutter-list";
-  for (const member of group.members) {
-    const item = document.createElement("li");
-    const name = document.createElement("strong");
-    name.textContent = member.sourceName;
-    const count = member.sourceIndexes.length > 1 ? `（原資料${member.sourceIndexes.length}件）` : "";
-    item.append(name, document.createTextNode(` — ${member.category}${count}`));
-    list.append(item);
-  }
-  container.append(list);
-  const close = document.createElement("button");
-  close.type = "button";
-  close.textContent = "閉じる";
   close.addEventListener("click", () => {
     container.hidden = true;
     container.replaceChildren();
