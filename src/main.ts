@@ -12,7 +12,7 @@ import {
   type BaseLayerKey,
 } from "./config";
 import { createHistoricalLayer, type EdoHistoricalLayer, type HistoricalLayer } from "./historical";
-import { renderAggregatePlaceCard, renderPlaceCard, renderNoData } from "./infocard";
+import { renderAggregatePlaceCard, renderDeclutteredPlaceCard, renderPlaceCard, renderNoData } from "./infocard";
 import { renderKyotoNoData, renderKyotoPlaceCard } from "./kyoto-infocard";
 import { createKyotoBakumatsuLayer } from "./kyoto-layer";
 import { renderShigaNoData, renderShigaPlaceCard } from "./shiga-infocard";
@@ -873,6 +873,7 @@ function main(): void {
         },
         undefined,
         map,
+        (group, returnFocus) => renderDeclutteredPlaceCard(infoCard, group, returnFocus ?? map.getContainer()),
       );
       historical.syncZoom(map.getZoom());
       edoHistoricalLayer = historical;

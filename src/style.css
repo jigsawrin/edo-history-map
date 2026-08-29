@@ -652,6 +652,21 @@ a:focus-visible,
   width: 38px;
 }
 
+.edo-declutter-marker {
+  background: #3f352f;
+  border-color: #fffdf7;
+  border-radius: 999px;
+  color: #fffdf7;
+  font-size: 0.72rem;
+  min-width: 44px;
+  width: auto;
+}
+
+.edo-declutter-list {
+  max-height: min(18rem, 45vh);
+  overflow-y: auto;
+}
+
 .aggregate-source-list {
   margin: 0.5rem 0;
   padding-left: 1.5rem;

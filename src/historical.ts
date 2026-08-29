@@ -13,6 +13,14 @@ import {
   EDO_NAVIGATION_MIN_ZOOM,
   navigationCellIntersectsPixelBounds,
 } from "./edo-navigation-grid";
+import {
+  EDO_DECLUTTER_MAX_ZOOM,
+  EDO_DECLUTTER_MIN_ZOOM,
+  edoDeclutterRule,
+  selectEdoDisplayCells,
+  type EdoDeclutterAggregate,
+  type EdoDisplayCandidate,
+} from "./edo-marker-declutter";
 
 /**
  * 歴史レイヤー(江戸後期の地名ポイント)。
@@ -51,6 +59,7 @@ export interface HistoricalLayer {
 
 export interface EdoHistoricalLayer extends HistoricalLayer {
   navigationLayer: L.LayerGroup;
+  declutterLayer: L.LayerGroup;
   normalLayer: L.LayerGroup;
   supplementalLayer: L.LayerGroup;
   temporaryLayer: L.LayerGroup;
@@ -59,6 +68,7 @@ export interface EdoHistoricalLayer extends HistoricalLayer {
   aggregateMarkerCount: number;
   presentationMarkerCount: number;
   navigationMarkerCounts: ReadonlyMap<number, number>;
+  declutterMarkerCounts: ReadonlyMap<number, number>;
   syncZoom(zoom: number): void;
   syncView(zoom: number, pixelBounds: L.Bounds): void;
   showTemporaryPlace(place: PlaceFeature, zoom: number): boolean;
@@ -66,7 +76,7 @@ export interface EdoHistoricalLayer extends HistoricalLayer {
   clearTemporarySupplemental(): void;
 }
 
-export const SUPPLEMENTAL_MARKER_MIN_ZOOM = 16;
+export const SUPPLEMENTAL_MARKER_MIN_ZOOM = 17;
 
 interface EdoNavigationMap {
   project(latlng: L.LatLngExpression, zoom: number): L.Point;
@@ -104,8 +114,10 @@ export function createHistoricalLayer(
   onSelectAggregate: (group: EdoMapAggregateGroup) => void = () => {},
   presentationValue?: unknown,
   navigationMap?: EdoNavigationMap,
+  onSelectDeclutterAggregate: (group: EdoDeclutterAggregate, returnFocus?: HTMLElement) => void = () => {},
 ): EdoHistoricalLayer {
   const navigationLayer = L.layerGroup();
+  const declutterLayer = L.layerGroup();
   const normalLayer = L.layerGroup();
   const supplementalLayer = L.layerGroup();
   const temporaryLayer = L.layerGroup();
@@ -114,6 +126,8 @@ export function createHistoricalLayer(
   const visiblePlaces = new Set<PlaceFeature>();
   const sourceIndexByPlace = new Map(places.map((place, sourceIndex) => [place, sourceIndex]));
   const navigationPoints: { id: string; latitude: number; longitude: number }[] = [];
+  const displayCandidates: EdoDisplayCandidate[] = [];
+  const displayMarkerById = new Map<string, L.Layer>();
   const presentation = presentationValue === undefined
     ? (places.length === 8788
         ? resolveEdoMapPresentation(places)
@@ -165,11 +179,21 @@ export function createHistoricalLayer(
         if (key === "Enter" || key === " ") onSelectAggregate(aggregate);
       });
       normalLayer.addLayer(marker);
+      const displayId = `aggregate:${aggregate.groupId}`;
       navigationPoints.push({
-        id: `aggregate:${aggregate.groupId}`,
+        id: displayId,
         latitude: aggregate.latitude,
         longitude: aggregate.longitude,
       });
+      displayCandidates.push({
+        id: displayId,
+        sourceName: aggregate.name,
+        category: aggregate.category,
+        latitude: aggregate.latitude,
+        longitude: aggregate.longitude,
+        sourceIndexes: aggregate.members.map((member) => member.sourceIndex),
+      });
+      displayMarkerById.set(displayId, marker);
       aggregateMarkerCount += 1;
       continue;
     }
@@ -202,6 +226,17 @@ export function createHistoricalLayer(
       normalLayer.addLayer(marker);
       navigationPoints.push({ id: `source:${sourceIndex}`, latitude: place.lat, longitude: place.lon });
     }
+    const displayId = `source:${sourceIndex}`;
+    displayCandidates.push({
+      id: displayId,
+      sourceName: place.name,
+      category: place.category,
+      latitude: place.lat,
+      longitude: place.lon,
+      sourceIndexes: [sourceIndex],
+      supplemental: isSupplementalMarkerPlace(place),
+    });
+    displayMarkerById.set(displayId, marker);
   }
 
   const navigationGrid = navigationMap
@@ -282,7 +317,76 @@ export function createHistoricalLayer(
   };
 
   let navigationVisible = false;
+  let declutterVisible = false;
   let normalVisible = !navigationMap;
+  const declutterMarkerCounts = new Map<number, number>();
+  const declutterKeyboardElements = new WeakSet<HTMLElement>();
+  const syncDeclutterViewport = (zoom: number, pixelBounds: L.Bounds): void => {
+    if (!navigationMap) return;
+    declutterLayer.clearLayers();
+    const rule = edoDeclutterRule(zoom);
+    const min = pixelBounds.min;
+    const max = pixelBounds.max;
+    if (!min || !max) return;
+    const cells = selectEdoDisplayCells(
+      displayCandidates,
+      zoom,
+      (latitude, longitude, cellZoom) => navigationMap.project([latitude, longitude], cellZoom),
+    ).filter((cell) =>
+      cell.centerX + rule.cellSize / 2 >= min.x &&
+      cell.centerX - rule.cellSize / 2 <= max.x &&
+      cell.centerY + rule.cellSize / 2 >= min.y &&
+      cell.centerY - rule.cellSize / 2 <= max.y
+    );
+    let count = 0;
+    for (const cell of cells) {
+      for (const candidate of cell.visible) {
+        const marker = displayMarkerById.get(candidate.id);
+        if (marker) {
+          declutterLayer.addLayer(marker);
+          count += 1;
+        }
+      }
+      if (cell.hiddenSourceCount === 0) continue;
+      const aggregate: EdoDeclutterAggregate = {
+        key: cell.key,
+        hiddenSourceCount: cell.hiddenSourceCount,
+        members: cell.hidden,
+      };
+      const label = `この範囲の非表示候補${cell.hiddenSourceCount}件。選択して一覧を表示`;
+      const content = document.createElement("span");
+      content.className = "edo-navigation-marker edo-declutter-marker";
+      content.textContent = `+${cell.hiddenSourceCount}`;
+      content.setAttribute("aria-hidden", "true");
+      const center = navigationMap.unproject([cell.centerX, cell.centerY], zoom);
+      const marker = L.marker(center, {
+        pane: HISTORICAL_PANE,
+        interactive: true,
+        bubblingMouseEvents: false,
+        title: label,
+        alt: label,
+        icon: L.divIcon({
+          className: "edo-navigation-marker-shell",
+          html: content,
+          iconSize: [48, 48],
+          iconAnchor: [24, 24],
+        }),
+      });
+      const activate = (): void => onSelectDeclutterAggregate(aggregate, marker.getElement() ?? undefined);
+      marker.on("click", activate);
+      marker.on("add", () => {
+        const element = marker.getElement();
+        if (!element) return;
+        element.setAttribute("aria-label", label);
+        if (declutterKeyboardElements.has(element)) return;
+        declutterKeyboardElements.add(element);
+        bindNavigationMarkerKeyboard(element, activate);
+      });
+      declutterLayer.addLayer(marker);
+      count += 1;
+    }
+    declutterMarkerCounts.set(zoom, count);
+  };
   const syncNavigationViewport = (zoom: number, pixelBounds: L.Bounds): void => {
     if (!navigationGrid || zoom < EDO_NAVIGATION_MIN_ZOOM || zoom > EDO_NAVIGATION_MAX_ZOOM) return;
     const cells = navigationGrid.cellsByZoom.get(zoom) ?? [];
@@ -300,16 +404,30 @@ export function createHistoricalLayer(
   };
 
   const syncView = (zoom: number, pixelBounds: L.Bounds): void => {
-    const shouldShowNavigation = Boolean(navigationMap) && zoom <= EDO_NAVIGATION_MAX_ZOOM;
+    const shouldShowNavigation = Boolean(navigationMap) && zoom < EDO_DECLUTTER_MIN_ZOOM;
+    const shouldShowDeclutter = Boolean(navigationMap) &&
+      zoom >= EDO_DECLUTTER_MIN_ZOOM && zoom <= EDO_DECLUTTER_MAX_ZOOM;
     if (shouldShowNavigation) {
       if (normalVisible && group.hasLayer(normalLayer)) group.removeLayer(normalLayer);
       normalVisible = false;
       syncNavigationViewport(zoom, pixelBounds);
       if (!navigationVisible) group.addLayer(navigationLayer);
       navigationVisible = true;
+      if (declutterVisible && group.hasLayer(declutterLayer)) group.removeLayer(declutterLayer);
+      declutterVisible = false;
+    } else if (shouldShowDeclutter) {
+      if (navigationVisible && group.hasLayer(navigationLayer)) group.removeLayer(navigationLayer);
+      navigationVisible = false;
+      if (normalVisible && group.hasLayer(normalLayer)) group.removeLayer(normalLayer);
+      normalVisible = false;
+      syncDeclutterViewport(zoom, pixelBounds);
+      if (!declutterVisible) group.addLayer(declutterLayer);
+      declutterVisible = true;
     } else {
       if (navigationVisible && group.hasLayer(navigationLayer)) group.removeLayer(navigationLayer);
       navigationVisible = false;
+      if (declutterVisible && group.hasLayer(declutterLayer)) group.removeLayer(declutterLayer);
+      declutterVisible = false;
       if (!normalVisible) group.addLayer(normalLayer);
       normalVisible = true;
       if (temporaryPlace && !isSupplementalMarkerPlace(temporaryPlace)) clearTemporarySupplemental();
@@ -335,6 +453,7 @@ export function createHistoricalLayer(
   return {
     layer: group,
     navigationLayer,
+    declutterLayer,
     normalLayer,
     supplementalLayer,
     temporaryLayer,
@@ -343,13 +462,14 @@ export function createHistoricalLayer(
     aggregateMarkerCount,
     presentationMarkerCount: normalLayer.getLayers().length + supplementalLayer.getLayers().length,
     navigationMarkerCounts,
+    declutterMarkerCounts,
     syncZoom,
     syncView,
     showTemporaryPlace(place, zoom) {
       clearTemporarySupplemental();
       if (!visiblePlaces.has(place)) return false;
       const isSupplemental = isSupplementalMarkerPlace(place);
-      if ((!isSupplemental && zoom >= 15) || (isSupplemental && zoom >= 16)) return true;
+      if (zoom >= SUPPLEMENTAL_MARKER_MIN_ZOOM) return true;
       const marker = isSupplemental ? supplementalMarkers.get(place) : createTemporaryMarker(place);
       if (!marker) return false;
       temporaryMarker = marker;

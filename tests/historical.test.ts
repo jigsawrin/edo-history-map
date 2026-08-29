@@ -161,29 +161,51 @@ describe("createHistoricalLayer", () => {
     expect(temporary.getLatLng()).toEqual(L.latLng(aggregateMember.lat, aggregateMember.lon));
   }, 30_000);
 
-  it("switches navigation, normal, and supplemental groups only at their boundaries", () => {
+  it("reduces the fixed dense-Tokyo z12 viewport from 83 grid badges to 16 declutter markers", () => {
+    const sources = parsePlacesGeoJson(readFileSync(join(__dirname, "../public/data/edo-places.geojson"), "utf8"));
+    const map = navigationMap();
+    const center = map.project([35.685, 139.755], 12);
+    const bounds = L.bounds(
+      [center.x - 632.5, center.y - 348],
+      [center.x + 632.5, center.y + 348],
+    );
+    const layer = createHistoricalLayer(sources, () => {}, document.createElement("div"), undefined, undefined, undefined, map);
+    layer.syncView(12, bounds);
+    const markers = layer.declutterLayer.getLayers() as L.Marker[];
+    const badges = markers.filter((marker) => {
+      const content = (marker.options.icon as L.DivIcon | undefined)?.options.html;
+      return content instanceof HTMLElement && content.classList.contains("edo-declutter-marker");
+    });
+    expect(layer.navigationMarkerCounts.get(12)).toBe(83);
+    expect(markers).toHaveLength(16);
+    expect(badges).toHaveLength(15);
+    expect(markers.length - badges.length).toBe(1);
+  }, 30_000);
+
+  it("switches navigation, declutter, normal, and supplemental groups only at their boundaries", () => {
     const map = navigationMap();
     const supplemental = place({ name: "（辻番）", entryId: "supplemental" });
     const layer = createHistoricalLayer([place(), supplemental], () => {}, document.createElement("div"), undefined, undefined, undefined, map);
     const normalMarker = layer.normalLayer.getLayers()[0];
     layer.syncView(14, map.getPixelBounds());
-    expect(layer.layer.hasLayer(layer.navigationLayer)).toBe(true);
+    expect(layer.layer.hasLayer(layer.declutterLayer)).toBe(true);
     expect(layer.layer.hasLayer(layer.normalLayer)).toBe(false);
     layer.syncView(15, map.getPixelBounds());
-    expect(layer.layer.hasLayer(layer.navigationLayer)).toBe(false);
+    expect(layer.layer.hasLayer(layer.declutterLayer)).toBe(true);
+    expect(layer.layer.hasLayer(layer.normalLayer)).toBe(false);
+    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
+    layer.syncView(17, map.getPixelBounds());
     expect(layer.layer.hasLayer(layer.normalLayer)).toBe(true);
     expect(layer.normalLayer.getLayers()[0]).toBe(normalMarker);
-    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
-    layer.syncView(16, map.getPixelBounds());
     expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(true);
-    layer.syncView(14, map.getPixelBounds());
+    layer.syncView(11, map.getPixelBounds());
     expect(layer.layer.hasLayer(layer.navigationLayer)).toBe(true);
     expect(layer.layer.hasLayer(layer.normalLayer)).toBe(false);
     expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
     for (let index = 0; index < 3; index += 1) {
-      layer.syncView(15, map.getPixelBounds());
-      layer.syncView(16, map.getPixelBounds());
       layer.syncView(14, map.getPixelBounds());
+      layer.syncView(17, map.getPixelBounds());
+      layer.syncView(11, map.getPixelBounds());
     }
     expect(layer.layer.getLayers().filter((item) => item === layer.navigationLayer)).toHaveLength(1);
     expect(layer.layer.getLayers().filter((item) => item === layer.normalLayer)).toHaveLength(0);
@@ -205,7 +227,42 @@ describe("createHistoricalLayer", () => {
     expect(map.setView).toHaveBeenCalledWith(expect.any(L.LatLng), expect.any(Number));
   });
 
-  it("shows one selected normal source temporarily at z14 and cleans it at z15", () => {
+  it("opens a z12 declutter aggregate with Enter and Space without duplicate handlers", () => {
+    const navigation = navigationMap();
+    const onDeclutter = vi.fn();
+    const layer = createHistoricalLayer(
+      [place(), place({ entryId: "second", name: "（木戸）" })],
+      () => {},
+      document.createElement("div"),
+      undefined,
+      undefined,
+      undefined,
+      navigation,
+      onDeclutter,
+    );
+    layer.syncView(12, navigation.getPixelBounds());
+    const mapElement = document.createElement("div");
+    mapElement.style.width = "400px";
+    mapElement.style.height = "300px";
+    document.body.append(mapElement);
+    const leafletMap = L.map(mapElement).setView([35.68, 139.75], 12);
+    leafletMap.createPane(HISTORICAL_PANE);
+    layer.layer.addTo(leafletMap);
+    const aggregate = layer.declutterLayer.getLayers()[0] as L.Marker;
+    const element = aggregate.getElement();
+    expect(element).toBeInstanceOf(HTMLElement);
+    aggregate.removeFrom(leafletMap);
+    aggregate.addTo(leafletMap);
+    const currentElement = aggregate.getElement();
+    currentElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", cancelable: true }));
+    currentElement?.dispatchEvent(new KeyboardEvent("keydown", { key: " ", cancelable: true }));
+    currentElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true }));
+    expect(onDeclutter).toHaveBeenCalledTimes(2);
+    expect(onDeclutter.mock.calls[0]?.[1]).toBe(currentElement);
+    leafletMap.remove();
+  });
+
+  it("shows one selected normal source temporarily while decluttered and cleans it at z17", () => {
     const map = navigationMap();
     const normal = place();
     const layer = createHistoricalLayer([normal], () => {}, document.createElement("div"), undefined, undefined, undefined, map);
@@ -213,7 +270,7 @@ describe("createHistoricalLayer", () => {
     expect(layer.showTemporaryPlace(normal, 14)).toBe(true);
     expect(layer.temporaryLayer.getLayers()).toHaveLength(1);
     expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(true);
-    layer.syncView(15, map.getPixelBounds());
+    layer.syncView(17, map.getPixelBounds());
     expect(layer.temporaryLayer.getLayers()).toHaveLength(0);
     expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(false);
   });
@@ -268,7 +325,7 @@ describe("createHistoricalLayer", () => {
     expect(isSupplementalMarkerPlace(place({ name: "榎坂" }))).toBe(false);
   });
 
-  it("reuses supplemental markers and changes nested groups only when crossing z16", () => {
+  it("reuses supplemental markers and changes nested groups only when crossing z17", () => {
     const supplemental = place({ name: "（辻番）", entryId: "supplemental" });
     const layer = createHistoricalLayer([place(), supplemental], () => {}, document.createElement("div"));
     const marker = layer.supplementalLayer.getLayers()[0];
@@ -289,7 +346,7 @@ describe("createHistoricalLayer", () => {
     expect(removeLayer).toHaveBeenCalledTimes(1);
   });
 
-  it("shows only the selected supplemental marker below z16 without stale or duplicate layers", () => {
+  it("shows only the selected supplemental marker below z17 without stale or duplicate layers", () => {
     const first = place({ name: "（辻番）", entryId: "first-supplemental" });
     const second = place({ name: "（木戸）", entryId: "second-supplemental" });
     const layer = createHistoricalLayer([place(), first, second], () => {}, document.createElement("div"));
@@ -301,7 +358,7 @@ describe("createHistoricalLayer", () => {
     expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(true);
     expect(layer.showTemporarySupplemental(second, 15)).toBe(true);
     expect(layer.temporaryLayer.getLayers()).toEqual([secondMarker]);
-    layer.syncZoom(16);
+    layer.syncZoom(17);
     expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(false);
     expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(true);
     expect(layer.supplementalLayer.getLayers()).toEqual([firstMarker, secondMarker]);
