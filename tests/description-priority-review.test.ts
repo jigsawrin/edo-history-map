@@ -26,6 +26,43 @@ const priorityBytes = readFileSync(join(ROOT, "data-curation/description-priorit
 const priority = JSON.parse(priorityBytes.toString("utf8"));
 const review = JSON.parse(readFileSync(join(ROOT, "data-curation/description-priority-review.json"), "utf8"));
 const temporaryRoots: string[] = [];
+const CALIBRATION_BATCH_1 = [
+  [2497, "16-408"], [4543, "21-192"], [4685, "21-335"], [5058, "22-188"],
+  [5263, "23-149"], [305, "11-049"], [589, "12-007"], [10, "1-011"],
+  [24, "1-025"], [1480, "14-177"], [1982, "15-093"], [130, "10-003"],
+  [1889, "14-591"], [327, "11-071"], [144, "10-017"], [21, "1-022"],
+  [116, "1-117"], [3055, "17-453"], [5339, "24-027"], [5814, "26-014"],
+  [245, "10-118"], [249, "10-122"], [674, "12-092"], [1297, "13-427"],
+] as const;
+const batchIdentityKeys = new Set(CALIBRATION_BATCH_1.map(([sourceIndex, entryId]) =>
+  `codh-edo-maps-places\0${sourceIndex}\0${entryId}`
+));
+const batchJudgments = new Map<string, readonly [string, string, readonly string[]]>([
+  ["2497/16-408", ["good-candidate", "high", ["historically-recognizable", "landmark-linked"]]],
+  ["4543/21-192", ["good-candidate", "high", ["historically-recognizable", "institution-linked"]]],
+  ["4685/21-335", ["structured-only", "low", ["landmark-linked", "low-information-name"]]],
+  ["5058/22-188", ["good-candidate", "medium", ["landmark-linked", "needs-evidence"]]],
+  ["5263/23-149", ["low-value", "low", ["generic-name", "low-information-name"]]],
+  ["305/11-049", ["good-candidate", "medium", ["institution-linked", "strong-local-context"]]],
+  ["589/12-007", ["good-candidate", "high", ["historically-recognizable", "institution-linked"]]],
+  ["10/1-011", ["good-candidate", "high", ["historically-recognizable", "landmark-linked"]]],
+  ["24/1-025", ["good-candidate", "high", ["historically-recognizable", "landmark-linked"]]],
+  ["1480/14-177", ["good-candidate", "high", ["historically-recognizable", "transport-linked"]]],
+  ["1982/15-093", ["good-candidate", "high", ["historically-recognizable", "strong-local-context"]]],
+  ["130/10-003", ["good-candidate", "high", ["historically-recognizable", "landmark-linked"]]],
+  ["1889/14-591", ["good-candidate", "medium", ["strong-local-context", "needs-evidence"]]],
+  ["327/11-071", ["structured-only", "low", ["generic-name", "low-information-name"]]],
+  ["144/10-017", ["good-candidate", "medium", ["strong-local-context"]]],
+  ["21/1-022", ["uncertain", "medium", ["person-linked", "needs-identity-review", "needs-evidence"]]],
+  ["116/1-117", ["good-candidate", "high", ["historically-recognizable", "institution-linked"]]],
+  ["3055/17-453", ["low-value", "low", ["generic-name", "low-information-name"]]],
+  ["5339/24-027", ["low-value", "low", ["generic-name", "low-information-name"]]],
+  ["5814/26-014", ["good-candidate", "medium", ["institution-linked", "needs-evidence"]]],
+  ["245/10-118", ["low-value", "low", ["supporting-record", "low-information-name"]]],
+  ["249/10-122", ["low-value", "low", ["supporting-record", "low-information-name"]]],
+  ["674/12-092", ["low-value", "low", ["supporting-record", "low-information-name"]]],
+  ["1297/13-427", ["low-value", "low", ["supporting-record", "low-information-name"]]],
+]);
 
 afterAll(() => {
   for (const root of temporaryRoots) rmSync(root, { recursive: true, force: true });
@@ -35,7 +72,7 @@ function clone<T>(value: T): T { return structuredClone(value); }
 function sha256(value: Buffer): string { return createHash("sha256").update(value).digest("hex"); }
 
 function reviewedCatalog() {
-  const changed = clone(review);
+  const changed = generateInitialDescriptionPriorityReviewCatalog(priority);
   changed.reviewEntries[0].reviewState = "reviewed";
   changed.reviewEntries[0].classification = "good-candidate";
   changed.reviewEntries[0].humanPriority = "high";
@@ -89,10 +126,26 @@ describe("Description Priority Human Review Catalog", () => {
     expect(() => validateDescriptionPriorityReviewCatalog(invalid, priority, source)).toThrow(/humanPriority/);
   });
 
-  it("keeps every initialized entry substantively unreviewed", () => {
-    expect(review.reviewEntries.every((entry: { reviewState: string; classification: null; humanPriority: string; humanReasonCodes: string[]; note: null }) => entry.reviewState === "unreviewed" && entry.classification === null && entry.humanPriority === "undecided" && entry.humanReasonCodes.length === 0 && entry.note === null)).toBe(true);
+  it("keeps only the approved first 24 identities reviewed and the other 48 substantively unreviewed", () => {
+    const reviewed = review.reviewEntries.filter((entry: { reviewState: string }) => entry.reviewState === "reviewed");
+    const unreviewed = review.reviewEntries.filter((entry: { reviewState: string }) => entry.reviewState === "unreviewed");
+    expect(reviewed).toHaveLength(24);
+    expect(unreviewed).toHaveLength(48);
+    expect(new Set(reviewed.map((entry: { sourceIdentity: { datasetId: string; sourceIndex: number; entryId: string } }) =>
+      `${entry.sourceIdentity.datasetId}\0${entry.sourceIdentity.sourceIndex}\0${entry.sourceIdentity.entryId}`
+    ))).toEqual(batchIdentityKeys);
+    for (const entry of reviewed) {
+      const expected = batchJudgments.get(`${entry.sourceIdentity.sourceIndex}/${entry.sourceIdentity.entryId}`);
+      expect([entry.classification, entry.humanPriority, entry.humanReasonCodes]).toEqual(expected);
+      expect(entry.note).toBeNull();
+    }
+    expect(unreviewed.every((entry: { classification: null; humanPriority: string; humanReasonCodes: string[]; note: null }) =>
+      entry.classification === null && entry.humanPriority === "undecided" && entry.humanReasonCodes.length === 0 && entry.note === null
+    )).toBe(true);
     const generated = generateInitialDescriptionPriorityReviewCatalog(priority);
-    expect(generated).toEqual(review);
+    expect(generated.reviewEntries.every((entry: { reviewState: string; classification: null; humanPriority: string; humanReasonCodes: string[]; note: null }) =>
+      entry.reviewState === "unreviewed" && entry.classification === null && entry.humanPriority === "undecided" && entry.humanReasonCodes.length === 0 && entry.note === null
+    )).toBe(true);
     const root = repositoryFixture();
     const initialized = initializeDescriptionPriorityReviewCatalog(root);
     expect(initialized.reviewEntries.filter((entry: { reviewState: string }) => entry.reviewState === "reviewed")).toHaveLength(0);
@@ -129,9 +182,10 @@ describe("Description Priority Human Review Catalog", () => {
   });
 
   it("rejects substantive judgment on unreviewed and requires reviewed classification", () => {
-    const unreviewed = clone(review); unreviewed.reviewEntries[0].humanReasonCodes = ["needs-evidence"];
+    const unreviewedIndex = review.reviewEntries.findIndex((entry: { reviewState: string }) => entry.reviewState === "unreviewed");
+    const unreviewed = clone(review); unreviewed.reviewEntries[unreviewedIndex].humanReasonCodes = ["needs-evidence"];
     expect(() => validateDescriptionPriorityReviewCatalog(unreviewed, priority, source)).toThrow(/substantive human judgment/);
-    const reviewed = clone(review); reviewed.reviewEntries[0].reviewState = "reviewed";
+    const reviewed = clone(review); reviewed.reviewEntries[unreviewedIndex].reviewState = "reviewed";
     expect(() => validateDescriptionPriorityReviewCatalog(reviewed, priority, source)).toThrow(/requires a valid human classification/);
   });
 
@@ -140,10 +194,15 @@ describe("Description Priority Human Review Catalog", () => {
     expect(first).toBe(renderDescriptionPriorityReviewReport(review, priority));
     expect(first.indexOf("Suggested tier A")).toBeLessThan(first.indexOf("Suggested tier D"));
     expect(summarizeDescriptionPriorityReview(review)).toEqual({
-      reviewState: { reviewed: 0, unreviewed: 72 },
-      classification: { "good-candidate": 0, "structured-only": 0, "supporting-or-duplicate": 0, "low-value": 0, uncertain: 0 },
-      humanPriority: { high: 0, medium: 0, low: 0, undecided: 72 },
-      tierByClassification: Object.fromEntries(["A", "B", "C", "D"].map((tier) => [tier, { "good-candidate": 0, "structured-only": 0, "supporting-or-duplicate": 0, "low-value": 0, uncertain: 0 }])),
+      reviewState: { reviewed: 24, unreviewed: 48 },
+      classification: { "good-candidate": 14, "structured-only": 2, "supporting-or-duplicate": 0, "low-value": 7, uncertain: 1 },
+      humanPriority: { high: 9, medium: 6, low: 9, undecided: 48 },
+      tierByClassification: {
+        A: { "good-candidate": 5, "structured-only": 1, "supporting-or-duplicate": 0, "low-value": 1, uncertain: 0 },
+        B: { "good-candidate": 6, "structured-only": 1, "supporting-or-duplicate": 0, "low-value": 0, uncertain: 0 },
+        C: { "good-candidate": 3, "structured-only": 0, "supporting-or-duplicate": 0, "low-value": 2, uncertain: 1 },
+        D: { "good-candidate": 0, "structured-only": 0, "supporting-or-duplicate": 0, "low-value": 4, uncertain: 0 },
+      },
     });
   });
 
