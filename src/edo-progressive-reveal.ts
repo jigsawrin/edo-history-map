@@ -11,8 +11,7 @@ export interface EdoDisplayCandidate {
 }
 
 export interface EdoProgressiveRevealRule {
-  readonly cellSize: number | null;
-  readonly representatives: number | null;
+  readonly collisionDistance: number | null;
 }
 
 export interface EdoProgressiveRevealSelection {
@@ -55,13 +54,13 @@ export function minDisplayZoom(
 }
 
 export function edoProgressiveRevealRule(zoom: number, maximumZoom = MAX_ZOOM): EdoProgressiveRevealRule {
-  if (zoom <= 12) return { cellSize: 144, representatives: 1 };
-  if (zoom === 13) return { cellSize: 120, representatives: 1 };
-  if (zoom === 14) return { cellSize: 96, representatives: 2 };
-  if (zoom === 15) return { cellSize: 72, representatives: 3 };
-  if (zoom === 16) return { cellSize: 56, representatives: 4 };
-  if (zoom >= 17 && zoom <= maximumZoom) return { cellSize: null, representatives: null };
-  return { cellSize: null, representatives: 0 };
+  if (zoom <= 12) return { collisionDistance: 48 };
+  if (zoom === 13) return { collisionDistance: 40 };
+  if (zoom === 14) return { collisionDistance: 32 };
+  if (zoom === 15) return { collisionDistance: 24 };
+  if (zoom === 16) return { collisionDistance: 16 };
+  if (zoom >= 17 && zoom <= maximumZoom) return { collisionDistance: null };
+  return { collisionDistance: null };
 }
 
 export function compareEdoDisplayCandidates(a: EdoDisplayCandidate, b: EdoDisplayCandidate): number {
@@ -80,19 +79,45 @@ export function selectEdoProgressiveReveal(
   const eligible = candidates
     .filter((candidate) => zoom >= minDisplayZoom(candidate, maximumZoom))
     .sort(compareEdoDisplayCandidates);
-  const rule = edoProgressiveRevealRule(zoom, maximumZoom);
-  if (rule.cellSize === null || rule.representatives === null) {
+  if (zoom >= 17) {
     return { eligible, visible: eligible };
   }
-  const cellCounts = new Map<string, number>();
-  const visible: EdoDisplayCandidate[] = [];
-  for (const candidate of eligible) {
-    const point = project(candidate.latitude, candidate.longitude, zoom);
-    const key = `${zoom}/${Math.floor(point.x / rule.cellSize)}/${Math.floor(point.y / rule.cellSize)}`;
-    const count = cellCounts.get(key) ?? 0;
-    if (count >= rule.representatives) continue;
-    cellCounts.set(key, count + 1);
-    visible.push(candidate);
+
+  const acceptedIds = new Set<string>();
+  // Seed each stage with every earlier winner so zooming in can only add markers.
+  for (let stageZoom = EDO_PROGRESSIVE_REVEAL_MIN_ZOOM; stageZoom <= zoom; stageZoom += 1) {
+    const distance = edoProgressiveRevealRule(stageZoom, maximumZoom).collisionDistance;
+    if (distance === null) break;
+    const buckets = new Map<string, { readonly x: number; readonly y: number }[]>();
+    const addPoint = (x: number, y: number): void => {
+      const key = `${Math.floor(x / distance)}/${Math.floor(y / distance)}`;
+      const bucket = buckets.get(key) ?? [];
+      bucket.push({ x, y });
+      buckets.set(key, bucket);
+    };
+    for (const candidate of eligible) {
+      if (!acceptedIds.has(candidate.id) || stageZoom < minDisplayZoom(candidate, maximumZoom)) continue;
+      const point = project(candidate.latitude, candidate.longitude, stageZoom);
+      addPoint(point.x, point.y);
+    }
+    const stageEligible = eligible.filter((candidate) => stageZoom >= minDisplayZoom(candidate, maximumZoom));
+    for (const candidate of stageEligible) {
+      if (acceptedIds.has(candidate.id)) continue;
+      const point = project(candidate.latitude, candidate.longitude, stageZoom);
+      const bucketX = Math.floor(point.x / distance);
+      const bucketY = Math.floor(point.y / distance);
+      let collides = false;
+      for (let x = bucketX - 1; x <= bucketX + 1 && !collides; x += 1) {
+        for (let y = bucketY - 1; y <= bucketY + 1 && !collides; y += 1) {
+          collides = (buckets.get(`${x}/${y}`) ?? []).some((accepted) =>
+            (accepted.x - point.x) ** 2 + (accepted.y - point.y) ** 2 < distance ** 2
+          );
+        }
+      }
+      if (collides) continue;
+      acceptedIds.add(candidate.id);
+      addPoint(point.x, point.y);
+    }
   }
-  return { eligible, visible };
+  return { eligible, visible: eligible.filter((candidate) => acceptedIds.has(candidate.id)) };
 }

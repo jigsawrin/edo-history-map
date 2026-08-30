@@ -22,7 +22,10 @@ const candidate = (
   longitude: 0,
   sourceIndexes: [Number(id.replace(/\D/g, "")) || 0],
 });
-const project = (latitude: number): { x: number; y: number } => ({ x: latitude, y: 0 });
+const project = (latitude: number, longitude: number, zoom: number): { x: number; y: number } => ({
+  x: latitude * 2 ** (zoom - 12),
+  y: longitude * 2 ** (zoom - 12),
+});
 
 describe("Edo progressive marker reveal", () => {
   it("maps runtime priority to explicit minimum zoom bands", () => {
@@ -48,13 +51,13 @@ describe("Edo progressive marker reveal", () => {
   it("uses the requested collision bands", () => {
     expect([12, 13, 14, 15, 16, 17, 18].map((zoom) => edoProgressiveRevealRule(zoom, 18)))
       .toEqual([
-        { cellSize: 144, representatives: 1 },
-        { cellSize: 120, representatives: 1 },
-        { cellSize: 96, representatives: 2 },
-        { cellSize: 72, representatives: 3 },
-        { cellSize: 56, representatives: 4 },
-        { cellSize: null, representatives: null },
-        { cellSize: null, representatives: null },
+        { collisionDistance: 48 },
+        { collisionDistance: 40 },
+        { collisionDistance: 32 },
+        { collisionDistance: 24 },
+        { collisionDistance: 16 },
+        { collisionDistance: null },
+        { collisionDistance: null },
       ]);
   });
 
@@ -74,14 +77,45 @@ describe("Edo progressive marker reveal", () => {
 
   it("reveals lower-priority places without removing an earlier high-priority winner", () => {
     const high = candidate("1", "神田川", "海川池", 0);
-    const medium = candidate("2", "増上寺", "寺社", 1);
-    const low = candidate("3", "辻", "その他", 2);
+    const medium = candidate("2", "増上寺", "寺社", 20);
+    const low = candidate("3", "辻", "その他", 40);
     const z12 = selectEdoProgressiveReveal([low, medium, high], 12, project).visible;
     const z14 = selectEdoProgressiveReveal([low, medium, high], 14, project).visible;
     const z17 = selectEdoProgressiveReveal([low, medium, high], 17, project).visible;
     expect(z12.map((item) => item.id)).toEqual(["1"]);
     expect(z14.map((item) => item.id)).toEqual(["1", "2"]);
     expect(z17.map((item) => item.id)).toEqual(["1", "2", "3"]);
+  });
+
+  it("preserves z12 winners across the former z13 cell-boundary collision", () => {
+    const first = candidate("1", "神田川", "海川池", 121);
+    const second = candidate("2", "日本橋", "海川池", 179);
+    expect(Math.floor(121 / 144)).not.toBe(Math.floor(179 / 144));
+    expect(Math.floor((121 * 2) / 120)).toBe(Math.floor((179 * 2) / 120));
+    expect(selectEdoProgressiveReveal([first, second], 12, project).visible.map((item) => item.id))
+      .toEqual(["1", "2"]);
+    expect(selectEdoProgressiveReveal([first, second], 13, project).visible.map((item) => item.id))
+      .toEqual(["1", "2"]);
+  });
+
+  it("keeps every visible set as a subset of the next zoom for an adversarial population", () => {
+    const bands = [
+      ["神田川", "海川池"], ["桜田御門", "施設"], ["増上寺", "寺社"],
+      ["江戸町", "地名"], ["町屋敷", "屋敷地"], ["辻", "その他"],
+    ] as const;
+    const population = Array.from({ length: 72 }, (_, index) => {
+      const [name, category] = bands[index % bands.length]!;
+      return candidate(`place-${index}`, name, category, (index * 29) % 317);
+    });
+    const visibleByZoom = [12, 13, 14, 15, 16, 17].map((zoom) =>
+      new Set(selectEdoProgressiveReveal(population, zoom, project).visible.map((item) => item.id))
+    );
+    for (let index = 0; index < visibleByZoom.length - 1; index += 1) {
+      const current = visibleByZoom[index]!;
+      const next = visibleByZoom[index + 1]!;
+      expect([...current].every((id) => next.has(id))).toBe(true);
+      expect(next.size).toBeGreaterThanOrEqual(current.size);
+    }
   });
 
   it("shows no candidates at overview zooms", () => {

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import L from "leaflet";
 import { addHistoricalImageLayer, categoryStyle, createHistoricalLayer, HISTORICAL_PANE, isMaximumDetailPlace } from "../src/historical";
+import { createEdoMapSourceHiddenPredicate } from "../src/edo-map-projection";
 import { parsePlacesGeoJson, type PlaceFeature } from "../src/validate";
 
 function place(overrides: Partial<PlaceFeature> = {}): PlaceFeature {
@@ -39,7 +40,56 @@ describe("createHistoricalLayer", () => {
     expect(layer.presentationMarkerCount).toBe(1);
     (layer.normalLayer.getLayers()[0] as L.CircleMarker).fire("click");
     expect(onSelect).toHaveBeenCalledWith(first, 0);
+    expect(onSelect.mock.calls[0]![0]).toBe(first);
+    expect(onSelect).not.toHaveBeenCalledWith(hidden);
   });
+
+  it("applies a source-bound production projection before marker and listener creation", () => {
+    const first = place({ entryId: "first" });
+    const hidden = place({ entryId: "hidden" });
+    const projection = {
+      schemaVersion: 1,
+      sourceDataSha256: "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
+      sourceFeatureCount: 8788,
+      applicableSourceCount: 2,
+      visibleMarkerCount: 1,
+      overrides: [{ sourceRecordId: "hidden", sourceIndex: 1, featureSha256: "a".repeat(64), hidden: true }],
+    };
+    const onSelect = vi.fn();
+    const layer = createHistoricalLayer(
+      [first, hidden], onSelect, document.createElement("div"), createEdoMapSourceHiddenPredicate(projection),
+    );
+    expect(layer.normalLayer.getLayers()).toHaveLength(1);
+    (layer.normalLayer.getLayers()[0] as L.CircleMarker).fire("click");
+    expect(onSelect.mock.calls[0]![0]).toBe(first);
+    expect(onSelect).not.toHaveBeenCalledWith(hidden);
+  });
+
+  it("keeps 8,788 raw sources while applying an approved hide before presentation grouping", () => {
+    const sources = parsePlacesGeoJson(readFileSync(join(__dirname, "../public/data/edo-places.geojson"), "utf8"));
+    const hiddenSource = sources[0]!;
+    const projection = {
+      schemaVersion: 1,
+      sourceDataSha256: "7ad162a348c45379c5fcd894bd185935d473aae1ad494d03c9a850ad3d994dd4",
+      sourceFeatureCount: 8788,
+      applicableSourceCount: 8788,
+      visibleMarkerCount: 8787,
+      overrides: [{ sourceRecordId: hiddenSource.entryId, sourceIndex: 0, featureSha256: "a".repeat(64), hidden: true }],
+    };
+    const onSelect = vi.fn();
+    const layer = createHistoricalLayer(
+      sources, onSelect, document.createElement("div"), createEdoMapSourceHiddenPredicate(projection, sources),
+    );
+    expect(sources).toHaveLength(8788);
+    expect(layer.presentationMarkerCount).toBe(8234);
+    for (const marker of layer.normalLayer.getLayers()) {
+      (marker as L.Layer).fire("click");
+      if (onSelect.mock.calls.length > 0) break;
+    }
+    expect(sources).toContain(onSelect.mock.calls[0]![0]);
+    expect(onSelect).not.toHaveBeenCalledWith(hiddenSource);
+    expect(sources[0]).toBe(hiddenSource);
+  }, 30_000);
 
   it("shows no Edo presentation markers at z5-z11", () => {
     const map = navigationMap();
@@ -74,6 +124,29 @@ describe("createHistoricalLayer", () => {
     layer.syncView(18, map.getPixelBounds());
     expect(layer.temporaryLayer.getLayers()).toHaveLength(0);
     expect(layer.progressiveLayer.getLayers()).toHaveLength(1);
+  });
+
+  it("replaces repeated temporary selections without stale or duplicate layers", () => {
+    const first = place({ name: "（辻番）", entryId: "first-temporary" });
+    const second = place({ name: "（木戸）", entryId: "second-temporary", lat: 35.69 });
+    const layer = createHistoricalLayer([first, second], () => {}, document.createElement("div"));
+    expect(layer.showTemporaryPlace(first, 15)).toBe(true);
+    const firstMarker = layer.temporaryLayer.getLayers()[0];
+    expect(layer.showTemporaryPlace(second, 15)).toBe(true);
+    expect(layer.temporaryLayer.getLayers()).toHaveLength(1);
+    expect(layer.temporaryLayer.getLayers()[0]).not.toBe(firstMarker);
+    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(true);
+    expect(layer.showTemporaryPlace(second, 15)).toBe(true);
+    expect(layer.temporaryLayer.getLayers()).toHaveLength(1);
+  });
+
+  it("clears the temporary selection layer explicitly", () => {
+    const temporary = place({ name: "（木戸）" });
+    const layer = createHistoricalLayer([temporary], () => {}, document.createElement("div"));
+    expect(layer.showTemporaryPlace(temporary, 15)).toBe(true);
+    layer.clearTemporaryPlace();
+    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(false);
+    expect(layer.temporaryLayer.getLayers()).toHaveLength(0);
   });
 
   it("keeps same-name ungrouped records as separate markers at maximum zoom", () => {
@@ -143,6 +216,10 @@ describe("createHistoricalLayer", () => {
     layer.setOpacity(0.5);
     expect(pane.style.opacity).toBe("0.5");
     expect(setStyle).not.toHaveBeenCalled();
+    layer.setOpacity(-1);
+    expect(pane.style.opacity).toBe("0");
+    layer.setOpacity(2);
+    expect(pane.style.opacity).toBe("1");
   });
 
   it("classifies all full-width bracketed labels as maximum detail", () => {
