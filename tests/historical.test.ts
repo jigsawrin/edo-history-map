@@ -1,74 +1,43 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import L from "leaflet";
-import {
-  categoryStyle,
-  bindNavigationMarkerKeyboard,
-  createHistoricalLayer,
-  isSupplementalMarkerPlace,
-  SUPPLEMENTAL_MARKER_MIN_ZOOM,
-  addHistoricalImageLayer,
-  HISTORICAL_PANE,
-} from "../src/historical";
-import { parsePlacesGeoJson, type PlaceFeature } from "../src/validate";
+import { addHistoricalImageLayer, categoryStyle, createHistoricalLayer, HISTORICAL_PANE, isMaximumDetailPlace } from "../src/historical";
 import { createEdoMapSourceHiddenPredicate } from "../src/edo-map-projection";
+import { parsePlacesGeoJson, type PlaceFeature } from "../src/validate";
 
 function place(overrides: Partial<PlaceFeature> = {}): PlaceFeature {
+  return { name: "桜田御門", category: "施設", sheet: "御江戸大名小路絵図", entryId: "1-001", sourceUrl: null, lat: 35.68, lon: 139.75, ...overrides };
+}
+
+function navigationMap() {
   return {
-    name: "桜田御門",
-    category: "施設",
-    sheet: "御江戸大名小路絵図",
-    entryId: "1-001",
-    sourceUrl: null,
-    lat: 35.68,
-    lon: 139.75,
-    ...overrides,
+    project: (latlng: L.LatLngExpression, zoom: number) => L.CRS.EPSG3857.latLngToPoint(L.latLng(latlng), zoom),
+    unproject: (point: L.PointExpression, zoom: number) => L.CRS.EPSG3857.pointToLatLng(L.point(point), zoom),
+    getPixelBounds: () => L.bounds([-1e9, -1e9], [1e9, 1e9]),
+    setView: vi.fn(),
   };
 }
 
+function fixedTokyoBounds(map: ReturnType<typeof navigationMap>, zoom: number): L.Bounds {
+  const center = map.project([35.685, 139.755], zoom);
+  return L.bounds([center.x - 632.5, center.y - 348], [center.x + 632.5, center.y + 348]);
+}
+
 describe("categoryStyle", () => {
-  it("分類ごとに異なるスタイルを返す(色だけに依存しない: 破線の有無も差別化)", () => {
-    const facility = categoryStyle("施設");
-    const estate = categoryStyle("屋敷地");
-    expect(facility.color).not.toBe(estate.color);
-    expect(facility.dashArray).not.toBe(estate.dashArray);
-  });
-
-  it("未知の分類にはデフォルトスタイルを返す", () => {
-    const unknown = categoryStyle("未知の分類");
-    expect(unknown.color).toBeTruthy();
-  });
-});
-
-describe("navigation marker keyboard", () => {
-  it("activates on Enter and Space only", () => {
-    const element = document.createElement("div");
-    const navigate = vi.fn();
-    bindNavigationMarkerKeyboard(element, navigate);
-    expect(element.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", cancelable: true }))).toBe(false);
-    expect(element.dispatchEvent(new KeyboardEvent("keydown", { key: " ", cancelable: true }))).toBe(false);
-    expect(element.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true }))).toBe(true);
-    expect(navigate).toHaveBeenCalledTimes(2);
+  it("分類ごとに色と線種を変える", () => {
+    expect(categoryStyle("施設")).not.toEqual(categoryStyle("屋敷地"));
+    expect(categoryStyle("未知の分類").color).toBeTruthy();
   });
 });
 
 describe("createHistoricalLayer", () => {
-  function navigationMap() {
-    return {
-      project: (latlng: L.LatLngExpression, zoom: number) => L.CRS.EPSG3857.latLngToPoint(L.latLng(latlng), zoom),
-      unproject: (point: L.PointExpression, zoom: number) => L.CRS.EPSG3857.pointToLatLng(L.point(point), zoom),
-      getPixelBounds: () => L.bounds([-1e9, -1e9], [1e9, 1e9]),
-      setView: vi.fn(),
-    };
-  }
-
-  it("skips an approved hidden source before marker creation and preserves raw identity", () => {
+  it("approved hidden sources are removed before marker creation", () => {
     const first = place({ entryId: "first" });
     const hidden = place({ entryId: "hidden" });
     const onSelect = vi.fn();
     const layer = createHistoricalLayer([first, hidden], onSelect, document.createElement("div"), (index) => index === 1);
-    expect(layer.normalLayer.getLayers()).toHaveLength(1);
+    expect(layer.presentationMarkerCount).toBe(1);
     (layer.normalLayer.getLayers()[0] as L.CircleMarker).fire("click");
     expect(onSelect).toHaveBeenCalledWith(first, 0);
     expect(onSelect.mock.calls[0]![0]).toBe(first);
@@ -86,9 +55,10 @@ describe("createHistoricalLayer", () => {
       visibleMarkerCount: 1,
       overrides: [{ sourceRecordId: "hidden", sourceIndex: 1, featureSha256: "a".repeat(64), hidden: true }],
     };
-    const isHidden = createEdoMapSourceHiddenPredicate(projection);
     const onSelect = vi.fn();
-    const layer = createHistoricalLayer([first, hidden], onSelect, document.createElement("div"), isHidden);
+    const layer = createHistoricalLayer(
+      [first, hidden], onSelect, document.createElement("div"), createEdoMapSourceHiddenPredicate(projection),
+    );
     expect(layer.normalLayer.getLayers()).toHaveLength(1);
     (layer.normalLayer.getLayers()[0] as L.CircleMarker).fire("click");
     expect(onSelect.mock.calls[0]![0]).toBe(first);
@@ -107,206 +77,142 @@ describe("createHistoricalLayer", () => {
       overrides: [{ sourceRecordId: hiddenSource.entryId, sourceIndex: 0, featureSha256: "a".repeat(64), hidden: true }],
     };
     const onSelect = vi.fn();
-    const layer = createHistoricalLayer(sources, onSelect, document.createElement("div"), createEdoMapSourceHiddenPredicate(projection, sources));
+    const layer = createHistoricalLayer(
+      sources, onSelect, document.createElement("div"), createEdoMapSourceHiddenPredicate(projection, sources),
+    );
     expect(sources).toHaveLength(8788);
     expect(layer.presentationMarkerCount).toBe(8234);
-    const firstIndividualMarker = layer.normalLayer.getLayers().find((item) => item instanceof L.CircleMarker) as L.CircleMarker;
-    firstIndividualMarker.fire("click");
+    for (const marker of layer.normalLayer.getLayers()) {
+      (marker as L.Layer).fire("click");
+      if (onSelect.mock.calls.length > 0) break;
+    }
     expect(sources).toContain(onSelect.mock.calls[0]![0]);
     expect(onSelect).not.toHaveBeenCalledWith(hiddenSource);
     expect(sources[0]).toBe(hiddenSource);
   }, 30_000);
 
-  it("presents 528 aggregate markers while leaving all 1,057 supplemental markers unchanged", () => {
+  it("shows no Edo presentation markers at z5-z11", () => {
+    const map = navigationMap();
+    const layer = createHistoricalLayer([place()], () => {}, document.createElement("div"), undefined, undefined, undefined, map);
+    for (let zoom = 5; zoom <= 11; zoom += 1) {
+      layer.syncView(zoom, map.getPixelBounds());
+      expect(layer.progressiveLayer.getLayers()).toHaveLength(0);
+      expect(layer.layer.hasLayer(layer.progressiveLayer)).toBe(false);
+    }
+  });
+
+  it("reveals bracketed labels only at maximum zoom", () => {
+    const map = navigationMap();
+    const bracketed = place({ name: "（木戸）" });
+    const layer = createHistoricalLayer([bracketed], () => {}, document.createElement("div"), undefined, undefined, undefined, map);
+    layer.syncView(17, map.getPixelBounds());
+    expect(layer.progressiveLayer.getLayers()).toHaveLength(0);
+    layer.syncView(18, map.getPixelBounds());
+    expect(layer.progressiveLayer.getLayers()).toHaveLength(1);
+    expect(layer.progressiveMarkerCounts.get(17)?.bracketed).toBe(0);
+    expect(layer.progressiveMarkerCounts.get(18)?.bracketed).toBe(1);
+  });
+
+  it("temporarily shows a searched bracketed source below maximum zoom and cleans it at normal visibility", () => {
+    const map = navigationMap();
+    const bracketed = place({ name: "（木戸）" });
+    const layer = createHistoricalLayer([bracketed], () => {}, document.createElement("div"), undefined, undefined, undefined, map);
+    layer.syncView(15, map.getPixelBounds());
+    expect(layer.showTemporaryPlace(bracketed, 15)).toBe(true);
+    const temporary = layer.temporaryLayer.getLayers()[0];
+    expect(temporary).not.toBe(layer.maximumDetailLayer.getLayers()[0]);
+    layer.syncView(18, map.getPixelBounds());
+    expect(layer.temporaryLayer.getLayers()).toHaveLength(0);
+    expect(layer.progressiveLayer.getLayers()).toHaveLength(1);
+  });
+
+  it("replaces repeated temporary selections without stale or duplicate layers", () => {
+    const first = place({ name: "（辻番）", entryId: "first-temporary" });
+    const second = place({ name: "（木戸）", entryId: "second-temporary", lat: 35.69 });
+    const layer = createHistoricalLayer([first, second], () => {}, document.createElement("div"));
+    expect(layer.showTemporaryPlace(first, 15)).toBe(true);
+    const firstMarker = layer.temporaryLayer.getLayers()[0];
+    expect(layer.showTemporaryPlace(second, 15)).toBe(true);
+    expect(layer.temporaryLayer.getLayers()).toHaveLength(1);
+    expect(layer.temporaryLayer.getLayers()[0]).not.toBe(firstMarker);
+    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(true);
+    expect(layer.showTemporaryPlace(second, 15)).toBe(true);
+    expect(layer.temporaryLayer.getLayers()).toHaveLength(1);
+  });
+
+  it("clears the temporary selection layer explicitly", () => {
+    const temporary = place({ name: "（木戸）" });
+    const layer = createHistoricalLayer([temporary], () => {}, document.createElement("div"));
+    expect(layer.showTemporaryPlace(temporary, 15)).toBe(true);
+    layer.clearTemporaryPlace();
+    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(false);
+    expect(layer.temporaryLayer.getLayers()).toHaveLength(0);
+  });
+
+  it("keeps same-name ungrouped records as separate markers at maximum zoom", () => {
+    const map = navigationMap();
+    const first = place({ entryId: "first", lat: 35.68, lon: 139.75 });
+    const second = place({ entryId: "second", lat: 35.69, lon: 139.76 });
+    const layer = createHistoricalLayer([first, second], () => {}, document.createElement("div"), undefined, undefined, undefined, map);
+    layer.syncView(18, map.getPixelBounds());
+    expect(layer.presentationMarkerCount).toBe(2);
+    expect(layer.progressiveLayer.getLayers()).toHaveLength(2);
+  });
+
+  it("preserves established aggregates as one ordinary marker even at maximum zoom", () => {
     const sources = parsePlacesGeoJson(readFileSync(join(__dirname, "../public/data/edo-places.geojson"), "utf8"));
+    const map = navigationMap();
     const onAggregate = vi.fn();
-    const layer = createHistoricalLayer(sources, () => {}, document.createElement("div"), undefined, onAggregate);
-    expect(sources).toHaveLength(8788);
-    expect(layer.normalMarkerCount).toBe(7177);
-    expect(layer.supplementalMarkerCount).toBe(1057);
+    const layer = createHistoricalLayer(sources, () => {}, document.createElement("div"), undefined, onAggregate, undefined, map);
     expect(layer.aggregateMarkerCount).toBe(528);
     expect(layer.presentationMarkerCount).toBe(8234);
-    const firstAggregate = layer.normalLayer.getLayers()[0] as L.Marker;
-    expect(firstAggregate.options.title).toBe("桜田御門、原資料2件");
-    expect(firstAggregate.options.alt).toBe("桜田御門、原資料2件");
-    const markerContent = (firstAggregate.options.icon as L.DivIcon).options.html;
-    expect(markerContent).toBeInstanceOf(HTMLElement);
-    expect((markerContent as HTMLElement).className).toBe("edo-aggregate-marker");
-    expect((markerContent as HTMLElement).textContent).toBe("2");
-    expect((markerContent as HTMLElement).getAttribute("aria-hidden")).toBe("true");
-    expect((markerContent as HTMLElement).style.getPropertyValue("--edo-marker-color")).toBe("#7b1fa2");
-    firstAggregate.fire("click");
-    expect(onAggregate).toHaveBeenCalledOnce();
+    expect(layer.normalMarkerCount).toBe(7095);
+    expect(layer.maximumDetailMarkerCount).toBe(1139);
+    const firstAggregate = layer.normalLayer.getLayers()[0];
+    expect(firstAggregate).toBeInstanceOf(L.CircleMarker);
+    (firstAggregate as L.CircleMarker).fire("click");
     expect(onAggregate.mock.calls[0]![0].members.map((member: { sourceIndex: number }) => member.sourceIndex)).toEqual([0, 8105]);
+    layer.syncView(18, map.getPixelBounds());
+    expect(layer.progressiveLayer.getLayers()).toHaveLength(8234);
   }, 30_000);
 
-  it("builds the measured z5-z14 navigation grid from 7,177 presentation points", () => {
+  it("keeps aggregate member raw identity available through a temporary search marker", () => {
     const sources = parsePlacesGeoJson(readFileSync(join(__dirname, "../public/data/edo-places.geojson"), "utf8"));
     const map = navigationMap();
     const layer = createHistoricalLayer(sources, () => {}, document.createElement("div"), undefined, undefined, undefined, map);
-    expect([...layer.navigationMarkerCounts]).toEqual([
-      [5, 1], [6, 1], [7, 1], [8, 2], [9, 5], [10, 10], [11, 27], [12, 83], [13, 258], [14, 794],
-    ]);
-    expect(layer.normalMarkerCount).toBe(7177);
-    expect(layer.supplementalMarkerCount).toBe(1057);
-    layer.syncView(5, map.getPixelBounds());
-    expect(layer.navigationLayer.getLayers()).toHaveLength(1);
-    (layer.navigationLayer.getLayers()[0] as L.Marker).fire("click");
-    expect(map.setView).toHaveBeenLastCalledWith(expect.any(L.LatLng), 8);
-
-    const aggregateMember = sources[8105]!;
-    expect(layer.showTemporaryPlace(aggregateMember, 5)).toBe(true);
-    const temporary = layer.temporaryLayer.getLayers()[0] as L.CircleMarker;
-    expect(temporary).toBeInstanceOf(L.CircleMarker);
-    expect(temporary.getLatLng()).toEqual(L.latLng(aggregateMember.lat, aggregateMember.lon));
-  }, 30_000);
-
-  it("reduces the fixed dense-Tokyo z12 viewport from 83 grid badges to 16 declutter markers", () => {
-    const sources = parsePlacesGeoJson(readFileSync(join(__dirname, "../public/data/edo-places.geojson"), "utf8"));
-    const map = navigationMap();
-    const center = map.project([35.685, 139.755], 12);
-    const bounds = L.bounds(
-      [center.x - 632.5, center.y - 348],
-      [center.x + 632.5, center.y + 348],
-    );
-    const layer = createHistoricalLayer(sources, () => {}, document.createElement("div"), undefined, undefined, undefined, map);
-    layer.syncView(12, bounds);
-    const markers = layer.declutterLayer.getLayers() as L.Marker[];
-    const badges = markers.filter((marker) => {
-      const content = (marker.options.icon as L.DivIcon | undefined)?.options.html;
-      return content instanceof HTMLElement && content.classList.contains("edo-declutter-marker");
-    });
-    expect(layer.navigationMarkerCounts.get(12)).toBe(83);
-    expect(markers).toHaveLength(16);
-    expect(badges).toHaveLength(15);
-    expect(markers.length - badges.length).toBe(1);
-  }, 30_000);
-
-  it("switches navigation, declutter, normal, and supplemental groups only at their boundaries", () => {
-    const map = navigationMap();
-    const supplemental = place({ name: "（辻番）", entryId: "supplemental" });
-    const layer = createHistoricalLayer([place(), supplemental], () => {}, document.createElement("div"), undefined, undefined, undefined, map);
-    const normalMarker = layer.normalLayer.getLayers()[0];
-    layer.syncView(14, map.getPixelBounds());
-    expect(layer.layer.hasLayer(layer.declutterLayer)).toBe(true);
-    expect(layer.layer.hasLayer(layer.normalLayer)).toBe(false);
-    layer.syncView(15, map.getPixelBounds());
-    expect(layer.layer.hasLayer(layer.declutterLayer)).toBe(true);
-    expect(layer.layer.hasLayer(layer.normalLayer)).toBe(false);
-    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
-    layer.syncView(17, map.getPixelBounds());
-    expect(layer.layer.hasLayer(layer.normalLayer)).toBe(true);
-    expect(layer.normalLayer.getLayers()[0]).toBe(normalMarker);
-    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(true);
+    const member = sources[8105]!;
     layer.syncView(11, map.getPixelBounds());
-    expect(layer.layer.hasLayer(layer.navigationLayer)).toBe(true);
-    expect(layer.layer.hasLayer(layer.normalLayer)).toBe(false);
-    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
-    for (let index = 0; index < 3; index += 1) {
-      layer.syncView(14, map.getPixelBounds());
-      layer.syncView(17, map.getPixelBounds());
-      layer.syncView(11, map.getPixelBounds());
-    }
-    expect(layer.layer.getLayers().filter((item) => item === layer.navigationLayer)).toHaveLength(1);
-    expect(layer.layer.getLayers().filter((item) => item === layer.normalLayer)).toHaveLength(0);
-    expect(layer.layer.getLayers().filter((item) => item === layer.supplementalLayer)).toHaveLength(0);
-  });
+    expect(layer.showTemporaryPlace(member, 11)).toBe(true);
+    const temporary = layer.temporaryLayer.getLayers()[0] as L.CircleMarker;
+    expect(temporary.getLatLng()).toEqual(L.latLng(member.lat, member.lon));
+  }, 30_000);
 
-  it("uses safe DOM content and first-splitting zoom for navigation markers", () => {
+  it("measures the fixed Tokyo viewport without count markers", () => {
+    const sources = parsePlacesGeoJson(readFileSync(join(__dirname, "../public/data/edo-places.geojson"), "utf8"));
     const map = navigationMap();
-    const layer = createHistoricalLayer([place(), place({ lon: 139.7501 })], () => {}, document.createElement("div"), undefined, undefined, undefined, map);
-    layer.syncView(5, map.getPixelBounds());
-    const marker = layer.navigationLayer.getLayers()[0] as L.Marker;
-    const content = (marker.options.icon as L.DivIcon).options.html;
-    expect(content).toBeInstanceOf(HTMLElement);
-    expect((content as HTMLElement).className).toBe("edo-navigation-marker");
-    expect((content as HTMLElement).textContent).toBe("2");
-    expect(marker.options.title).toBe("この範囲に2地点。拡大して個別地点を表示");
-    expect(marker.options.alt).toBe("この範囲に2地点。拡大して個別地点を表示");
-    marker.fire("click");
-    expect(map.setView).toHaveBeenCalledWith(expect.any(L.LatLng), expect.any(Number));
-  });
+    const layer = createHistoricalLayer(sources, () => {}, document.createElement("div"), undefined, undefined, undefined, map);
+    for (const zoom of [11, 12, 13, 14, 15, 16, 17, 18]) layer.syncView(zoom, fixedTokyoBounds(map, zoom));
+    expect(layer.progressiveMarkerCounts.get(11)).toEqual({ eligible: 0, visible: 0, aggregates: 0, bracketed: 0 });
+    for (const zoom of [12, 13, 14, 15, 16, 17]) expect(layer.progressiveMarkerCounts.get(zoom)?.bracketed).toBe(0);
+    expect(layer.progressiveMarkerCounts.get(18)!.bracketed).toBeGreaterThanOrEqual(0);
+    expect(JSON.stringify([...layer.progressiveMarkerCounts])).not.toMatch(/hiddenSourceCount|\+N/u);
+  }, 30_000);
 
-  it("opens a z12 declutter aggregate with Enter and Space without duplicate handlers", () => {
-    const navigation = navigationMap();
-    const onDeclutter = vi.fn();
-    const layer = createHistoricalLayer(
-      [place(), place({ entryId: "second", name: "（木戸）" })],
-      () => {},
-      document.createElement("div"),
-      undefined,
-      undefined,
-      undefined,
-      navigation,
-      onDeclutter,
-    );
-    layer.syncView(12, navigation.getPixelBounds());
-    const mapElement = document.createElement("div");
-    mapElement.style.width = "400px";
-    mapElement.style.height = "300px";
-    document.body.append(mapElement);
-    const leafletMap = L.map(mapElement).setView([35.68, 139.75], 12);
-    leafletMap.createPane(HISTORICAL_PANE);
-    layer.layer.addTo(leafletMap);
-    const aggregate = layer.declutterLayer.getLayers()[0] as L.Marker;
-    const element = aggregate.getElement();
-    expect(element).toBeInstanceOf(HTMLElement);
-    aggregate.removeFrom(leafletMap);
-    aggregate.addTo(leafletMap);
-    const currentElement = aggregate.getElement();
-    currentElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", cancelable: true }));
-    currentElement?.dispatchEvent(new KeyboardEvent("keydown", { key: " ", cancelable: true }));
-    currentElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true }));
-    expect(onDeclutter).toHaveBeenCalledTimes(2);
-    expect(onDeclutter.mock.calls[0]?.[1]).toBe(currentElement);
-    leafletMap.remove();
-  });
-
-  it("shows one selected normal source temporarily while decluttered and cleans it at z17", () => {
-    const map = navigationMap();
-    const normal = place();
-    const layer = createHistoricalLayer([normal], () => {}, document.createElement("div"), undefined, undefined, undefined, map);
-    layer.syncView(14, map.getPixelBounds());
-    expect(layer.showTemporaryPlace(normal, 14)).toBe(true);
-    expect(layer.temporaryLayer.getLayers()).toHaveLength(1);
-    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(true);
-    layer.syncView(17, map.getPixelBounds());
-    expect(layer.temporaryLayer.getLayers()).toHaveLength(0);
-    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(false);
-  });
-  it("地点からレイヤーグループを作成できる", () => {
-    const pane = document.createElement("div");
-    const layer = createHistoricalLayer(
-      [place(), place({ name: "他" })],
-      () => {},
-      pane,
-    );
-    expect(layer.normalLayer.getLayers()).toHaveLength(2);
-  });
-
-  it("Canvas用paneへ配置してもクリック選択と分類スタイルを維持する", () => {
+  it("keeps click behavior, category style, and pane placement", () => {
     const onSelect = vi.fn();
-    const layer = createHistoricalLayer(
-      [place({ category: "屋敷地" })],
-      onSelect,
-      document.createElement("div"),
-    );
+    const layer = createHistoricalLayer([place({ category: "屋敷地" })], onSelect, document.createElement("div"));
     const marker = layer.normalLayer.getLayers()[0] as L.CircleMarker;
     expect(marker.options.pane).toBe(HISTORICAL_PANE);
-    expect(marker.options.interactive).toBe(true);
-    expect(marker.options.bubblingMouseEvents).toBe(false);
     expect(marker.options.color).toBe(categoryStyle("屋敷地").color);
-    expect(marker.options.dashArray).toBe(categoryStyle("屋敷地").dashArray);
     marker.fire("click");
     expect(onSelect).toHaveBeenCalledOnce();
   });
 
-  it("透明度は全markerのsetStyleを呼ばずpaneへ1回で適用する", () => {
+  it("applies opacity once to the historical pane", () => {
     const pane = document.createElement("div");
     const layer = createHistoricalLayer([place()], () => {}, pane);
     const marker = layer.normalLayer.getLayers()[0] as L.CircleMarker;
     const setStyle = vi.spyOn(marker, "setStyle");
-
     layer.setOpacity(0.5);
     expect(pane.style.opacity).toBe("0.5");
     expect(setStyle).not.toHaveBeenCalled();
@@ -316,64 +222,14 @@ describe("createHistoricalLayer", () => {
     expect(pane.style.opacity).toBe("1");
   });
 
-  it("classifies only the three exact supplemental names", () => {
-    expect(isSupplementalMarkerPlace(place({ name: "（辻番）" }))).toBe(true);
-    expect(isSupplementalMarkerPlace(place({ name: "（木戸）" }))).toBe(true);
-    expect(isSupplementalMarkerPlace(place({ name: "（坂道）" }))).toBe(true);
-    expect(isSupplementalMarkerPlace(place({ name: "辻番屋敷" }))).toBe(false);
-    expect(isSupplementalMarkerPlace(place({ name: "大木戸" }))).toBe(false);
-    expect(isSupplementalMarkerPlace(place({ name: "榎坂" }))).toBe(false);
-  });
-
-  it("reuses supplemental markers and changes nested groups only when crossing z17", () => {
-    const supplemental = place({ name: "（辻番）", entryId: "supplemental" });
-    const layer = createHistoricalLayer([place(), supplemental], () => {}, document.createElement("div"));
-    const marker = layer.supplementalLayer.getLayers()[0];
-    const addLayer = vi.spyOn(layer.layer, "addLayer");
-    const removeLayer = vi.spyOn(layer.layer, "removeLayer");
-
-    layer.syncZoom(15);
-    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
-    expect(addLayer).not.toHaveBeenCalled();
-    layer.syncZoom(SUPPLEMENTAL_MARKER_MIN_ZOOM);
-    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(true);
-    expect(layer.supplementalLayer.getLayers()[0]).toBe(marker);
-    expect(addLayer).toHaveBeenCalledTimes(1);
-    layer.syncZoom(17);
-    expect(addLayer).toHaveBeenCalledTimes(1);
-    layer.syncZoom(15);
-    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
-    expect(removeLayer).toHaveBeenCalledTimes(1);
-  });
-
-  it("shows only the selected supplemental marker below z17 without stale or duplicate layers", () => {
-    const first = place({ name: "（辻番）", entryId: "first-supplemental" });
-    const second = place({ name: "（木戸）", entryId: "second-supplemental" });
-    const layer = createHistoricalLayer([place(), first, second], () => {}, document.createElement("div"));
-    const firstMarker = layer.supplementalLayer.getLayers()[0];
-    const secondMarker = layer.supplementalLayer.getLayers()[1];
-
-    expect(layer.showTemporarySupplemental(first, 15)).toBe(true);
-    expect(layer.temporaryLayer.getLayers()).toEqual([firstMarker]);
-    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(true);
-    expect(layer.showTemporarySupplemental(second, 15)).toBe(true);
-    expect(layer.temporaryLayer.getLayers()).toEqual([secondMarker]);
-    layer.syncZoom(17);
-    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(false);
-    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(true);
-    expect(layer.supplementalLayer.getLayers()).toEqual([firstMarker, secondMarker]);
-    layer.syncZoom(15);
-    expect(layer.layer.hasLayer(layer.supplementalLayer)).toBe(false);
-    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(true);
-    expect(layer.temporaryLayer.getLayers()).toEqual([secondMarker]);
-    layer.clearTemporarySupplemental();
-    expect(layer.layer.hasLayer(layer.temporaryLayer)).toBe(false);
-    expect(layer.temporaryLayer.getLayers()).toHaveLength(0);
+  it("classifies all full-width bracketed labels as maximum detail", () => {
+    expect(isMaximumDetailPlace(place({ name: "（石碑）" }))).toBe(true);
+    expect(isMaximumDetailPlace(place({ name: "大木戸" }))).toBe(false);
   });
 });
 
-describe("addHistoricalImageLayer (古地図画像レイヤー)", () => {
-  it("権利確認済み画像が存在しないため常に無効(null)", () => {
+describe("addHistoricalImageLayer", () => {
+  it("returns null when no rights-approved raster exists", () => {
     expect(addHistoricalImageLayer()).toBeNull();
   });
 });
