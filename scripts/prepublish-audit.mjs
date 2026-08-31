@@ -61,6 +61,7 @@ import {
   DESCRIPTION_PRIORITY_CATALOG_PATH,
 } from "./description-priority/validate.mjs";
 import { auditDescriptionPriorityReviewRepository } from "./description-priority-review/audit.mjs";
+import { DESCRIPTION_PRIORITY_CALIBRATION_REPORT_PATH } from "./description-priority-review/calibration-report.mjs";
 import {
   DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH,
   DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH,
@@ -1269,6 +1270,7 @@ for (const file of allFiles) {
       DESCRIPTION_PRIORITY_CATALOG_PATH,
       DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH,
       DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH,
+      DESCRIPTION_PRIORITY_CALIBRATION_REPORT_PATH,
     ].includes(file.rel)
   ) {
     addFinding("error", "京都原資料", file.rel, 0, "キュレーションJSON以外の原文・画像コピーは公開禁止です");

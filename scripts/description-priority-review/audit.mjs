@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from "node:url";
 import { DESCRIPTION_PRIORITY_CATALOG_PATH } from "../description-priority/validate.mjs";
 import { EDO_SOURCE_DATA_PATH } from "../edo-place-curation-candidates.mjs";
 import { renderDescriptionPriorityReviewReport, summarizeDescriptionPriorityReview } from "./generate.mjs";
+import { DESCRIPTION_PRIORITY_CALIBRATION_REPORT_PATH, renderDescriptionPriorityCalibrationBatch1Report } from "./calibration-report.mjs";
 import {
   DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH,
   DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH,
@@ -27,7 +28,7 @@ export function auditDescriptionPriorityReviewPrivateLeakage(root) {
     for (const path of filesBelow(resolve(root, area))) {
       const rel = relative(root, path).replaceAll("\\", "/");
       const name = rel.split("/").at(-1);
-      if ([DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH, DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH].some((privatePath) => privatePath.split("/").at(-1) === name)) errors.push(`private Description Priority review file leaked to ${rel}`);
+      if ([DESCRIPTION_PRIORITY_REVIEW_CATALOG_PATH, DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH, DESCRIPTION_PRIORITY_CALIBRATION_REPORT_PATH].some((privatePath) => privatePath.split("/").at(-1) === name)) errors.push(`private Description Priority review file leaked to ${rel}`);
       if (!/\.(?:html|js|css|json|txt|xml|svg)$/iu.test(path)) continue;
       const content = readFileSync(path, "utf8");
       if (PRIVATE_MARKERS.some((marker) => content.includes(marker))) errors.push(`private Description Priority review marker leaked to ${rel}`);
@@ -52,6 +53,8 @@ export function auditDescriptionPriorityReviewRepository(root = resolve(fileURLT
     validateDescriptionPriorityReviewCatalog(review, priority, source);
     const expectedReport = renderDescriptionPriorityReviewReport(review, priority);
     if (readFileSync(resolve(root, DESCRIPTION_PRIORITY_REVIEW_REPORT_PATH), "utf8") !== expectedReport) errors.push("Description Priority review report is not deterministic or current");
+    const expectedCalibrationReport = renderDescriptionPriorityCalibrationBatch1Report(priority, review);
+    if (readFileSync(resolve(root, DESCRIPTION_PRIORITY_CALIBRATION_REPORT_PATH), "utf8") !== expectedCalibrationReport) errors.push("Description Priority calibration Batch 1 report is not deterministic or current");
     errors.push(...auditDescriptionPriorityReviewPrivateLeakage(root));
     return { errors, review, summary: summarizeDescriptionPriorityReview(review) };
   } catch (error) {
