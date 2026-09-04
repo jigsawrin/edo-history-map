@@ -63,6 +63,10 @@ describe("Description Priority calibration Batch 1 report", () => {
     expect(first).toContain("Batch 1 humanPriority: high 9, medium 6, low 9.");
     expect(first).toContain("Records outside the fixed Batch 1 set are excluded from Batch 1 percentage denominators.");
     expect(first).not.toContain("48 undecided entries");
+    expect(first).toContain("Further Human Review recommendation");
+    expect(first).toContain("Complete the remaining 48 unreviewed catalog records");
+    expect(first).not.toContain("Next 48 review recommendation");
+    expect(first).not.toContain("remaining 48 records");
   });
 
   it("keeps Batch 1 metrics stable as later catalog records are reviewed", () => {
@@ -88,7 +92,7 @@ describe("Description Priority calibration Batch 1 report", () => {
       });
       return changed;
     };
-    for (const [added, reviewedCount, unreviewedCount] of [[1, 25, 47], [24, 48, 24]] as const) {
+    for (const [added, reviewedCount, unreviewedCount] of [[1, 25, 47], [24, 48, 24], [48, 72, 0]] as const) {
       const advanced = analyzeDescriptionPriorityCalibrationBatch1(priority, advanceCatalog(added));
       expect(advanced.batch1Count).toBe(24);
       expect(batchMetrics(advanced)).toEqual(batchMetrics(baseline));
@@ -97,7 +101,16 @@ describe("Description Priority calibration Batch 1 report", () => {
       expect(report).toContain(`Current Human Review catalog: reviewed ${reviewedCount}, unreviewed ${unreviewedCount}.`);
       expect(report).toContain("Batch 1 humanPriority: high 9, medium 6, low 9.");
       expect(report).not.toContain("48 undecided entries");
-      expect(report.replace(`reviewed ${reviewedCount}, unreviewed ${unreviewedCount}`, "reviewed 24, unreviewed 48")).toBe(renderDescriptionPriorityCalibrationBatch1Report(priority, review));
+      expect(report).not.toContain("Next 48 review recommendation");
+      expect(report).not.toContain("remaining 48 records");
+      if (unreviewedCount > 0) {
+        expect(report).toContain(`Complete the remaining ${unreviewedCount} unreviewed catalog records`);
+      } else {
+        expect(report).not.toContain("Complete the remaining");
+        expect(report).toContain("The frozen 72-candidate Human Review catalog is fully reviewed.");
+        expect(report).toContain("Any scoring change belongs to a separate later step.");
+        expect(report).not.toContain("all remaining 48");
+      }
     }
   });
 

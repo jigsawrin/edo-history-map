@@ -141,6 +141,9 @@ export function renderDescriptionPriorityCalibrationBatch1Report(priority, revie
     const low = value.humanPriority.low;
     return `### Tier ${tier}\n\nReviewed: ${value.reviewed}\n\nClassification: good ${good}, structured ${value.classification["structured-only"]}, supporting ${value.classification["supporting-or-duplicate"]}, low ${value.classification["low-value"]}, uncertain ${value.classification.uncertain}.\n\nHuman priority: high ${value.humanPriority.high}, medium ${value.humanPriority.medium}, low ${low}.\n\nGood-candidate rate: ${good} / ${value.reviewed} = ${percent(good, value.reviewed)}. Low-human-priority rate: ${low} / ${value.reviewed} = ${percent(low, value.reviewed, true)}.`;
   }).join("\n\n");
+  const reviewRecommendation = a.catalogUnreviewedCount > 0
+    ? `Complete the remaining ${a.catalogUnreviewedCount} unreviewed catalog records under the SAME frozen Priority v1 before changing scoring weights; changing v1 now would contaminate comparison between algorithm prediction and human judgment.`
+    : "The frozen 72-candidate Human Review catalog is fully reviewed. Preserve the frozen Priority v1 predictions and human judgments for downstream calibration. Any scoring change belongs to a separate later step.";
   return `# Description Priority Calibration Report: Batch 1
 
 > Private workflow material. Batch 1 contains 24 deliberately selected calibration records. It is NOT a random or statistically representative sample. Percentages describe this calibration batch only. Human reason codes were assigned during the same human review and are descriptive rationale, not independent validation features. No result in this report constitutes historical evidence. No scoring change is authorized by this report.
@@ -179,7 +182,7 @@ This is a strong Batch-1 calibration signal that bracketed labels may need a dow
 
 \`generic-name\`: ${a.reasonCounts["generic-name"]} reviewed records; all 4 have humanPriority low and none is good-candidate.
 
-These are same-review rationale correlations, not independent validation. They are strong rationale patterns worth testing against the remaining 48 records.
+These are same-review rationale correlations, not independent validation. They are Batch 1 rationale patterns worth comparing against records outside the fixed Batch 1 set.
 
 ## 5. needs-evidence diagnostic
 
@@ -239,9 +242,9 @@ Frozen 72 was constructed as 9 categories x 8 candidates before global interpret
 - Global accuracy, precision, or recall of Priority v1.
 - Correct final numerical Priority v2 weights.
 
-## 13. Next 48 review recommendation
+## 13. Further Human Review recommendation
 
-Complete all remaining 48 under the SAME frozen Priority v1 before changing scoring weights; changing v1 now would contaminate comparison between algorithm prediction and human judgment. Useful contrast families include repeated generic names such as 植木屋, repeated generic facilities such as 腰掛, unreviewed Tier A 寺社, unreviewed B water or geographic names, unreviewed C 町村字, and unreviewed C 屋敷地. This is review planning only; no classification or humanPriority is assigned automatically.
+${reviewRecommendation} Useful contrast families in records outside Batch 1 include repeated generic names such as 植木屋, repeated generic facilities such as 腰掛, Tier A 寺社, B water or geographic names, C 町村字, and C 屋敷地. This is review planning only; no classification or humanPriority is assigned automatically.
 `;
 }
 
