@@ -85,12 +85,26 @@ describe("Description Priority calibration Batch 1 report", () => {
     expect(() => buildDescriptionPriorityCalibrationBatch1Report(reviewRoot)).toThrow(/reviewed identity set differs/);
   });
 
-  it("detects the private calibration report filename in public or dist", () => {
-    const root = mkdtempSync(join(tmpdir(), "description-priority-calibration-leak-"));
-    temporaryRoots.push(root);
-    mkdirSync(join(root, "public"), { recursive: true });
-    writeFileSync(join(root, "public", "description-priority-calibration-batch-1.md"), "private");
-    expect(auditDescriptionPriorityReviewPrivateLeakage(root)).toContain("private Description Priority review file leaked to public/description-priority-calibration-batch-1.md");
+  it("rejects the private calibration report across src, public, and dist without a repository false positive", () => {
+    const srcRoot = mkdtempSync(join(tmpdir(), "description-priority-calibration-src-leak-"));
+    temporaryRoots.push(srcRoot);
+    mkdirSync(join(srcRoot, "src"), { recursive: true });
+    writeFileSync(join(srcRoot, "src", "main.ts"), 'import calibrationReport from "../data-curation/reports/description-priority-calibration-batch-1.md?raw";');
+    expect(auditDescriptionPriorityReviewPrivateLeakage(srcRoot)).toEqual([
+      "runtime source imports or embeds private Description Priority review data in src/main.ts",
+    ]);
+
+    for (const area of ["public", "dist"]) {
+      const root = mkdtempSync(join(tmpdir(), `description-priority-calibration-${area}-leak-`));
+      temporaryRoots.push(root);
+      mkdirSync(join(root, area), { recursive: true });
+      writeFileSync(join(root, area, "description-priority-calibration-batch-1.md"), "private");
+      expect(auditDescriptionPriorityReviewPrivateLeakage(root)).toEqual([
+        `private Description Priority review file leaked to ${area}/description-priority-calibration-batch-1.md`,
+      ]);
+    }
+
+    expect(auditDescriptionPriorityReviewPrivateLeakage(ROOT)).toEqual([]);
     expect(prepublishAudit).toContain("DESCRIPTION_PRIORITY_CALIBRATION_REPORT_PATH");
   });
 });
