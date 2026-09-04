@@ -10,6 +10,7 @@ import {
   DESCRIPTION_PRIORITY_CALIBRATION_REPORT_PATH,
   renderDescriptionPriorityCalibrationBatch1Report,
 } from "../scripts/description-priority-review/calibration-report.mjs";
+import type { CalibrationEntry } from "../scripts/description-priority-review/calibration-report.mjs";
 import { auditDescriptionPriorityReviewPrivateLeakage } from "../scripts/description-priority-review/audit.mjs";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -59,33 +60,45 @@ describe("Description Priority calibration Batch 1 report", () => {
     expect(first).toContain("Low-human-priority rate: 4 / 4 = 100%");
     expect(first).toContain("Batch 1 records: 24.");
     expect(first).toContain("Current Human Review catalog: reviewed 24, unreviewed 48.");
+    expect(first).toContain("Batch 1 humanPriority: high 9, medium 6, low 9.");
+    expect(first).toContain("Records outside the fixed Batch 1 set are excluded from Batch 1 percentage denominators.");
+    expect(first).not.toContain("48 undecided entries");
   });
 
   it("keeps Batch 1 metrics stable as later catalog records are reviewed", () => {
-    const changed = structuredClone(review);
     const batch1Keys = new Set(BATCH_1_IDENTITIES.map(([sourceIndex, entryId]) => `${sourceIndex}\0${entryId}`));
-    const later = changed.reviewEntries.find((entry: { sourceIdentity: { sourceIndex: number; entryId: string }; reviewState: string }) =>
-      entry.reviewState === "unreviewed" && !batch1Keys.has(`${entry.sourceIdentity.sourceIndex}\0${entry.sourceIdentity.entryId}`));
-    Object.assign(later, {
-      reviewState: "reviewed",
-      classification: "uncertain",
-      humanPriority: "medium",
-      humanReasonCodes: ["needs-evidence"],
-      note: null,
-    });
     const baseline = analyzeDescriptionPriorityCalibrationBatch1(priority, review);
-    const advanced = analyzeDescriptionPriorityCalibrationBatch1(priority, changed);
     const batchMetrics = (analysis: ReturnType<typeof analyzeDescriptionPriorityCalibrationBatch1>) => {
       const metrics = structuredClone(analysis) as unknown as Record<string, unknown>;
       delete metrics.catalogReviewedCount;
       delete metrics.catalogUnreviewedCount;
       return metrics;
     };
-    expect(batchMetrics(advanced)).toEqual(batchMetrics(baseline));
-    expect([advanced.catalogReviewedCount, advanced.catalogUnreviewedCount]).toEqual([25, 47]);
-    const report = renderDescriptionPriorityCalibrationBatch1Report(priority, changed);
-    expect(report).toContain("Current Human Review catalog: reviewed 25, unreviewed 47.");
-    expect(report.replace("reviewed 25, unreviewed 47", "reviewed 24, unreviewed 48")).toBe(renderDescriptionPriorityCalibrationBatch1Report(priority, review));
+    const advanceCatalog = (count: number) => {
+      const changed = structuredClone(review) as { reviewEntries: CalibrationEntry[] };
+      const later = changed.reviewEntries.filter((entry) =>
+        entry.reviewState === "unreviewed" && !batch1Keys.has(`${entry.sourceIdentity.sourceIndex}\0${entry.sourceIdentity.entryId}`)).slice(0, count);
+      expect(later).toHaveLength(count);
+      for (const entry of later) Object.assign(entry, {
+        reviewState: "reviewed",
+        classification: "uncertain",
+        humanPriority: "medium",
+        humanReasonCodes: ["needs-evidence"],
+        note: null,
+      });
+      return changed;
+    };
+    for (const [added, reviewedCount, unreviewedCount] of [[1, 25, 47], [24, 48, 24]] as const) {
+      const advanced = analyzeDescriptionPriorityCalibrationBatch1(priority, advanceCatalog(added));
+      expect(advanced.batch1Count).toBe(24);
+      expect(batchMetrics(advanced)).toEqual(batchMetrics(baseline));
+      expect([advanced.catalogReviewedCount, advanced.catalogUnreviewedCount]).toEqual([reviewedCount, unreviewedCount]);
+      const report = renderDescriptionPriorityCalibrationBatch1Report(priority, advanceCatalog(added));
+      expect(report).toContain(`Current Human Review catalog: reviewed ${reviewedCount}, unreviewed ${unreviewedCount}.`);
+      expect(report).toContain("Batch 1 humanPriority: high 9, medium 6, low 9.");
+      expect(report).not.toContain("48 undecided entries");
+      expect(report.replace(`reviewed ${reviewedCount}, unreviewed ${unreviewedCount}`, "reviewed 24, unreviewed 48")).toBe(renderDescriptionPriorityCalibrationBatch1Report(priority, review));
+    }
   });
 
   it("writes only the report and preserves review, Priority, and source bytes", () => {

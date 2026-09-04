@@ -10,7 +10,9 @@ Current Human Review catalog: reviewed 24, unreviewed 48.
 
 Classification: good-candidate 14, structured-only 2, supporting-or-duplicate 0, low-value 7, uncertain 1.
 
-Reviewed-only humanPriority: high 9, medium 6, low 9. The 48 undecided entries are excluded from reviewed-only percentage denominators.
+Batch 1 humanPriority: high 9, medium 6, low 9.
+
+Records outside the fixed Batch 1 set are excluded from Batch 1 percentage denominators.
 
 ## 2. Tier calibration
 

@@ -153,7 +153,9 @@ Current Human Review catalog: reviewed ${a.catalogReviewedCount}, unreviewed ${a
 
 Classification: good-candidate ${a.classification["good-candidate"]}, structured-only ${a.classification["structured-only"]}, supporting-or-duplicate ${a.classification["supporting-or-duplicate"]}, low-value ${a.classification["low-value"]}, uncertain ${a.classification.uncertain}.
 
-Reviewed-only humanPriority: high ${a.humanPriority.high}, medium ${a.humanPriority.medium}, low ${a.humanPriority.low}. The 48 undecided entries are excluded from reviewed-only percentage denominators.
+Batch 1 humanPriority: high ${a.humanPriority.high}, medium ${a.humanPriority.medium}, low ${a.humanPriority.low}.
+
+Records outside the fixed Batch 1 set are excluded from Batch 1 percentage denominators.
 
 ## 2. Tier calibration
 
