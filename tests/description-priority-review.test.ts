@@ -226,6 +226,7 @@ describe("Description Priority Human Review Catalog", () => {
     const scripts = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).scripts;
     expect(scripts["data:init:description-priority-review"]).toBe("node scripts/description-priority-review/init.mjs");
     expect(scripts["data:build:description-priority-review-report"]).toBe("node scripts/description-priority-review/build-report.mjs");
+    expect(scripts["data:build:description-priority-calibration-report"]).toBe("node scripts/description-priority-review/build-calibration-report.mjs");
     expect(scripts["data:build:description-priority-review"]).toBeUndefined();
   });
 });

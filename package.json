@@ -22,6 +22,7 @@
     "audit:description-priority": "node scripts/description-priority/audit.mjs",
     "data:init:description-priority-review": "node scripts/description-priority-review/init.mjs",
     "data:build:description-priority-review-report": "node scripts/description-priority-review/build-report.mjs",
+    "data:build:description-priority-calibration-report": "node scripts/description-priority-review/build-calibration-report.mjs",
     "validate:description-priority-review": "node scripts/description-priority-review/validate.mjs",
     "audit:description-priority-review": "node scripts/description-priority-review/audit.mjs",
     "data:build:edo-map-presentation": "node scripts/edo-map-presentation-projection.mjs --build",
