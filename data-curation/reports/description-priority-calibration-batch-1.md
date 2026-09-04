@@ -4,7 +4,9 @@
 
 ## 1. Overall calibration summary
 
-Reviewed: 24. Unreviewed: 48.
+Batch 1 records: 24.
+
+Current Human Review catalog: reviewed 24, unreviewed 48.
 
 Classification: good-candidate 14, structured-only 2, supporting-or-duplicate 0, low-value 7, uncertain 1.
 
@@ -82,7 +84,7 @@ These are same-review rationale correlations, not independent validation. They a
 
 ## 7. noMultiMemberSourceRelation analysis
 
-The frozen Priority reason `no-multi-member-source-relation` appears on 24 / 24 reviewed records and 72 / 72 frozen candidates. Within the frozen 72-candidate sample this feature has no variance. Therefore Batch 1 CANNOT determine whether the +10 weight is useful, harmful, or neutral, and does not support removing it. The feature may still have affected WHICH records entered the frozen 72 from the larger source population. Evaluation requires a later counterfactual analysis against the pre-selection or full candidate universe and is out of scope.
+The frozen Priority reason `no-multi-member-source-relation` appears on 24 / 24 Batch 1 records and 72 / 72 frozen candidates. Within the frozen 72-candidate sample this feature has no variance. Therefore Batch 1 CANNOT determine whether the +10 weight is useful, harmful, or neutral, and does not support removing it. The feature may still have affected WHICH records entered the frozen 72 from the larger source population. Evaluation requires a later counterfactual analysis against the pre-selection or full candidate universe and is out of scope.
 
 ## 8. Tier A higher-tier mismatch
 

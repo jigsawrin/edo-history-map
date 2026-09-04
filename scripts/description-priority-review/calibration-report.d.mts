@@ -1,5 +1,6 @@
 export const DESCRIPTION_PRIORITY_CALIBRATION_REPORT_PATH: string;
 export const FROZEN_PRIORITY_RAW_SHA256: string;
+export const BATCH_1_JUDGMENTS_SHA256: string;
 export const BATCH_1_IDENTITIES: readonly (readonly [number, string])[];
 
 export interface CalibrationEntry {
@@ -19,8 +20,10 @@ export interface CalibrationTierMetrics {
 }
 
 export interface CalibrationAnalysis {
-  reviewedCount: number;
-  unreviewedCount: number;
+  batch1Count: number;
+  outsideBatch1Count: number;
+  catalogReviewedCount: number;
+  catalogUnreviewedCount: number;
   classification: Record<string, number>;
   humanPriority: Record<string, number>;
   tiers: Record<string, CalibrationTierMetrics>;
@@ -28,7 +31,7 @@ export interface CalibrationAnalysis {
   nonBracketed: { count: number; classification: Record<string, number>; humanPriority: Record<string, number> };
   reasonCounts: Record<string, number>;
   reasonEntries: Record<string, CalibrationEntry[]>;
-  noMultiMemberSourceRelation: { reviewed: number; frozen: number };
+  noMultiMemberSourceRelation: { batch1: number; frozen: number };
   aMismatch: CalibrationEntry[];
   cGood: CalibrationEntry[];
   dEntries: CalibrationEntry[];
