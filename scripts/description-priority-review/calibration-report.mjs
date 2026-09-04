@@ -10,6 +10,7 @@ import {
 
 export const DESCRIPTION_PRIORITY_CALIBRATION_REPORT_PATH = "data-curation/reports/description-priority-calibration-batch-1.md";
 export const FROZEN_PRIORITY_RAW_SHA256 = "b06067f2e41b89834ad92b6fabd21260fb65761b891bc8d843c7cdef1a17729b";
+export const BATCH_1_JUDGMENTS_SHA256 = "c7ae3221747bb388a30d85892ae94579a8195177edf3f44482affbaa577ee35d";
 export const BATCH_1_IDENTITIES = Object.freeze([
   [2497, "16-408"], [4543, "21-192"], [4685, "21-335"], [5058, "22-188"],
   [5263, "23-149"], [305, "11-049"], [589, "12-007"], [10, "1-011"],
@@ -45,11 +46,22 @@ function assertCounts(actual, expected, label) {
 }
 
 export function analyzeDescriptionPriorityCalibrationBatch1(priority, review) {
-  const reviewed = review.reviewEntries.filter((entry) => entry.reviewState === "reviewed");
-  const unreviewed = review.reviewEntries.filter((entry) => entry.reviewState === "unreviewed");
-  fail(reviewed.length === 24 && unreviewed.length === 48, "Batch 1 must contain exactly 24 reviewed and 48 unreviewed entries");
-  const expectedKeys = new Set(BATCH_1_IDENTITIES.map(([sourceIndex, entryId]) => `codh-edo-maps-places\0${sourceIndex}\0${entryId}`));
-  fail(reviewed.every((entry) => expectedKeys.delete(identityKey(entry))) && expectedKeys.size === 0, "Batch 1 reviewed identity set differs");
+  const entriesByKey = new Map(review.reviewEntries.map((entry) => [identityKey(entry), entry]));
+  const batch1 = BATCH_1_IDENTITIES.map(([sourceIndex, entryId]) => entriesByKey.get(`codh-edo-maps-places\0${sourceIndex}\0${entryId}`));
+  fail(batch1.length === 24 && batch1.every(Boolean), "Batch 1 must contain exactly 24 fixed identities");
+  fail(batch1.every((entry) => entry.reviewState === "reviewed"), "Every Batch 1 identity must remain reviewed");
+  const protectedJudgments = batch1.map((entry) => ({
+    sourceIdentity: entry.sourceIdentity,
+    reviewState: entry.reviewState,
+    classification: entry.classification,
+    humanPriority: entry.humanPriority,
+    humanReasonCodes: entry.humanReasonCodes,
+    note: entry.note,
+  }));
+  fail(sha256(JSON.stringify(protectedJudgments)) === BATCH_1_JUDGMENTS_SHA256, "Batch 1 protected judgments differ");
+  const reviewed = batch1;
+  const catalogReviewedCount = review.reviewEntries.filter((entry) => entry.reviewState === "reviewed").length;
+  const catalogUnreviewedCount = review.reviewEntries.filter((entry) => entry.reviewState === "unreviewed").length;
 
   const classifications = ["good-candidate", "structured-only", "supporting-or-duplicate", "low-value", "uncertain"];
   const priorities = ["high", "medium", "low"];
@@ -87,8 +99,10 @@ export function analyzeDescriptionPriorityCalibrationBatch1(priority, review) {
   const dEntries = reviewed.filter((entry) => entry.prioritySnapshot.suggestedTier === "D");
 
   const analysis = {
-    reviewedCount: reviewed.length,
-    unreviewedCount: unreviewed.length,
+    batch1Count: reviewed.length,
+    outsideBatch1Count: review.reviewEntries.length - reviewed.length,
+    catalogReviewedCount,
+    catalogUnreviewedCount,
     classification,
     humanPriority,
     tiers,
@@ -96,7 +110,7 @@ export function analyzeDescriptionPriorityCalibrationBatch1(priority, review) {
     nonBracketed: { count: nonBracketed.length, classification: countBy(nonBracketed, classifications, (entry) => entry.classification), humanPriority: countBy(nonBracketed, priorities, (entry) => entry.humanPriority) },
     reasonCounts: Object.fromEntries(["low-information-name", "generic-name", "needs-evidence", "historically-recognizable"].map((code) => [code, reason(code).length])),
     reasonEntries: Object.fromEntries(["low-information-name", "generic-name", "needs-evidence", "historically-recognizable"].map((code) => [code, reason(code)])),
-    noMultiMemberSourceRelation: { reviewed: reviewedNoRelation, frozen: frozenNoRelation },
+    noMultiMemberSourceRelation: { batch1: reviewedNoRelation, frozen: frozenNoRelation },
     aMismatch,
     cGood,
     dEntries,
@@ -127,17 +141,24 @@ export function renderDescriptionPriorityCalibrationBatch1Report(priority, revie
     const low = value.humanPriority.low;
     return `### Tier ${tier}\n\nReviewed: ${value.reviewed}\n\nClassification: good ${good}, structured ${value.classification["structured-only"]}, supporting ${value.classification["supporting-or-duplicate"]}, low ${value.classification["low-value"]}, uncertain ${value.classification.uncertain}.\n\nHuman priority: high ${value.humanPriority.high}, medium ${value.humanPriority.medium}, low ${low}.\n\nGood-candidate rate: ${good} / ${value.reviewed} = ${percent(good, value.reviewed)}. Low-human-priority rate: ${low} / ${value.reviewed} = ${percent(low, value.reviewed, true)}.`;
   }).join("\n\n");
+  const reviewRecommendation = a.catalogUnreviewedCount > 0
+    ? `Complete the remaining ${a.catalogUnreviewedCount} unreviewed catalog records under the SAME frozen Priority v1 before changing scoring weights; changing v1 now would contaminate comparison between algorithm prediction and human judgment.`
+    : "The frozen 72-candidate Human Review catalog is fully reviewed. Preserve the frozen Priority v1 predictions and human judgments for downstream calibration. Any scoring change belongs to a separate later step.";
   return `# Description Priority Calibration Report: Batch 1
 
 > Private workflow material. Batch 1 contains 24 deliberately selected calibration records. It is NOT a random or statistically representative sample. Percentages describe this calibration batch only. Human reason codes were assigned during the same human review and are descriptive rationale, not independent validation features. No result in this report constitutes historical evidence. No scoring change is authorized by this report.
 
 ## 1. Overall calibration summary
 
-Reviewed: ${a.reviewedCount}. Unreviewed: ${a.unreviewedCount}.
+Batch 1 records: ${a.batch1Count}.
+
+Current Human Review catalog: reviewed ${a.catalogReviewedCount}, unreviewed ${a.catalogUnreviewedCount}.
 
 Classification: good-candidate ${a.classification["good-candidate"]}, structured-only ${a.classification["structured-only"]}, supporting-or-duplicate ${a.classification["supporting-or-duplicate"]}, low-value ${a.classification["low-value"]}, uncertain ${a.classification.uncertain}.
 
-Reviewed-only humanPriority: high ${a.humanPriority.high}, medium ${a.humanPriority.medium}, low ${a.humanPriority.low}. The 48 undecided entries are excluded from reviewed-only percentage denominators.
+Batch 1 humanPriority: high ${a.humanPriority.high}, medium ${a.humanPriority.medium}, low ${a.humanPriority.low}.
+
+Records outside the fixed Batch 1 set are excluded from Batch 1 percentage denominators.
 
 ## 2. Tier calibration
 
@@ -161,7 +182,7 @@ This is a strong Batch-1 calibration signal that bracketed labels may need a dow
 
 \`generic-name\`: ${a.reasonCounts["generic-name"]} reviewed records; all 4 have humanPriority low and none is good-candidate.
 
-These are same-review rationale correlations, not independent validation. They are strong rationale patterns worth testing against the remaining 48 records.
+These are same-review rationale correlations, not independent validation. They are Batch 1 rationale patterns worth comparing against records outside the fixed Batch 1 set.
 
 ## 5. needs-evidence diagnostic
 
@@ -173,7 +194,7 @@ These are same-review rationale correlations, not independent validation. They a
 
 ## 7. noMultiMemberSourceRelation analysis
 
-The frozen Priority reason \`no-multi-member-source-relation\` appears on ${a.noMultiMemberSourceRelation.reviewed} / 24 reviewed records and ${a.noMultiMemberSourceRelation.frozen} / 72 frozen candidates. Within the frozen 72-candidate sample this feature has no variance. Therefore Batch 1 CANNOT determine whether the +10 weight is useful, harmful, or neutral, and does not support removing it. The feature may still have affected WHICH records entered the frozen 72 from the larger source population. Evaluation requires a later counterfactual analysis against the pre-selection or full candidate universe and is out of scope.
+The frozen Priority reason \`no-multi-member-source-relation\` appears on ${a.noMultiMemberSourceRelation.batch1} / 24 Batch 1 records and ${a.noMultiMemberSourceRelation.frozen} / 72 frozen candidates. Within the frozen 72-candidate sample this feature has no variance. Therefore Batch 1 CANNOT determine whether the +10 weight is useful, harmful, or neutral, and does not support removing it. The feature may still have affected WHICH records entered the frozen 72 from the larger source population. Evaluation requires a later counterfactual analysis against the pre-selection or full candidate universe and is out of scope.
 
 ## 8. Tier A higher-tier mismatch
 
@@ -221,9 +242,9 @@ Frozen 72 was constructed as 9 categories x 8 candidates before global interpret
 - Global accuracy, precision, or recall of Priority v1.
 - Correct final numerical Priority v2 weights.
 
-## 13. Next 48 review recommendation
+## 13. Further Human Review recommendation
 
-Complete all remaining 48 under the SAME frozen Priority v1 before changing scoring weights; changing v1 now would contaminate comparison between algorithm prediction and human judgment. Useful contrast families include repeated generic names such as 植木屋, repeated generic facilities such as 腰掛, unreviewed Tier A 寺社, unreviewed B water or geographic names, unreviewed C 町村字, and unreviewed C 屋敷地. This is review planning only; no classification or humanPriority is assigned automatically.
+${reviewRecommendation} Useful contrast families in records outside Batch 1 include repeated generic names such as 植木屋, repeated generic facilities such as 腰掛, Tier A 寺社, B water or geographic names, C 町村字, and C 屋敷地. This is review planning only; no classification or humanPriority is assigned automatically.
 `;
 }
 

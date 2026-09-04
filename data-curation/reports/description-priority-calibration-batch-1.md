@@ -4,11 +4,15 @@
 
 ## 1. Overall calibration summary
 
-Reviewed: 24. Unreviewed: 48.
+Batch 1 records: 24.
+
+Current Human Review catalog: reviewed 24, unreviewed 48.
 
 Classification: good-candidate 14, structured-only 2, supporting-or-duplicate 0, low-value 7, uncertain 1.
 
-Reviewed-only humanPriority: high 9, medium 6, low 9. The 48 undecided entries are excluded from reviewed-only percentage denominators.
+Batch 1 humanPriority: high 9, medium 6, low 9.
+
+Records outside the fixed Batch 1 set are excluded from Batch 1 percentage denominators.
 
 ## 2. Tier calibration
 
@@ -70,7 +74,7 @@ This is a strong Batch-1 calibration signal that bracketed labels may need a dow
 
 `generic-name`: 4 reviewed records; all 4 have humanPriority low and none is good-candidate.
 
-These are same-review rationale correlations, not independent validation. They are strong rationale patterns worth testing against the remaining 48 records.
+These are same-review rationale correlations, not independent validation. They are Batch 1 rationale patterns worth comparing against records outside the fixed Batch 1 set.
 
 ## 5. needs-evidence diagnostic
 
@@ -82,7 +86,7 @@ These are same-review rationale correlations, not independent validation. They a
 
 ## 7. noMultiMemberSourceRelation analysis
 
-The frozen Priority reason `no-multi-member-source-relation` appears on 24 / 24 reviewed records and 72 / 72 frozen candidates. Within the frozen 72-candidate sample this feature has no variance. Therefore Batch 1 CANNOT determine whether the +10 weight is useful, harmful, or neutral, and does not support removing it. The feature may still have affected WHICH records entered the frozen 72 from the larger source population. Evaluation requires a later counterfactual analysis against the pre-selection or full candidate universe and is out of scope.
+The frozen Priority reason `no-multi-member-source-relation` appears on 24 / 24 Batch 1 records and 72 / 72 frozen candidates. Within the frozen 72-candidate sample this feature has no variance. Therefore Batch 1 CANNOT determine whether the +10 weight is useful, harmful, or neutral, and does not support removing it. The feature may still have affected WHICH records entered the frozen 72 from the larger source population. Evaluation requires a later counterfactual analysis against the pre-selection or full candidate universe and is out of scope.
 
 ## 8. Tier A higher-tier mismatch
 
@@ -133,6 +137,6 @@ Frozen 72 was constructed as 9 categories x 8 candidates before global interpret
 - Global accuracy, precision, or recall of Priority v1.
 - Correct final numerical Priority v2 weights.
 
-## 13. Next 48 review recommendation
+## 13. Further Human Review recommendation
 
-Complete all remaining 48 under the SAME frozen Priority v1 before changing scoring weights; changing v1 now would contaminate comparison between algorithm prediction and human judgment. Useful contrast families include repeated generic names such as 植木屋, repeated generic facilities such as 腰掛, unreviewed Tier A 寺社, unreviewed B water or geographic names, unreviewed C 町村字, and unreviewed C 屋敷地. This is review planning only; no classification or humanPriority is assigned automatically.
+Complete the remaining 48 unreviewed catalog records under the SAME frozen Priority v1 before changing scoring weights; changing v1 now would contaminate comparison between algorithm prediction and human judgment. Useful contrast families in records outside Batch 1 include repeated generic names such as 植木屋, repeated generic facilities such as 腰掛, Tier A 寺社, B water or geographic names, C 町村字, and C 屋敷地. This is review planning only; no classification or humanPriority is assigned automatically.
